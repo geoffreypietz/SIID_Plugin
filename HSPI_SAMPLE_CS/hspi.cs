@@ -11,17 +11,21 @@ using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
 
+
 namespace HSPI_SAMPLE_CS
 {
     public class HSPI : IPlugInAPI
     {
-	// this API is required for ALL plugins
+        // this API is required for ALL plugins
 
 
-	public string OurInstanceFriendlyName = "";
+        public SIID_Page ourWorkingPage;
+
+    public string OurInstanceFriendlyName = "";
 		// a jquery web page
 	public WebPage pluginpage;
 	public WebTestPage pluginTestPage;
+
 	string WebPageName = "Sample_Web_Page";
 
 	public static bool bShutDown = false;
@@ -299,12 +303,38 @@ namespace HSPI_SAMPLE_CS
 				Util.hs.RegisterPage(Util.IFACE_NAME + Util.Instance, Util.IFACE_NAME, Util.Instance);
 			}
 
-			// create test page
-			pluginTestPage = new WebTestPage("Test Page");
+
+
+                //Create our working page
+                ourWorkingPage = new SIID_Page("SIID main page");
+                Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance);
+                Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance);
+
+
+                // register a normal page to appear in the HomeSeer menu
+                WebPageDesc wpd = new WebPageDesc();
+                wpd = new WebPageDesc();
+                wpd.link = "SIID main page" + Util.Instance;
+                if (!string.IsNullOrEmpty(Util.Instance))
+                {
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Util.Instance;
+                }
+                else
+                {
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page";
+                }
+                wpd.page_title = Util.IFACE_NAME + "SIID main page";
+                wpd.plugInName = Util.IFACE_NAME;
+                wpd.plugInInstance = Util.Instance;
+                Util.callback.RegisterLink(wpd);
+
+                // create test page
+                pluginTestPage = new WebTestPage("Test Page");
 			Util.hs.RegisterPage("Test Page", Util.IFACE_NAME, Util.Instance);
 
-			// register a configuration link that will appear on the interfaces page
-			WebPageDesc wpd = new WebPageDesc();
+
+                // register a configuration link that will appear on the interfaces page
+                
 			wpd.link = Util.IFACE_NAME + Util.Instance;
 			// we add the instance so it goes to the proper plugin instance when selected
 			if (!string.IsNullOrEmpty(Util.Instance)) {
@@ -331,24 +361,30 @@ namespace HSPI_SAMPLE_CS
 			wpd.plugInInstance = Util.Instance;
 			Util.callback.RegisterLink(wpd);
 
-			// register a normal page to appear in the HomeSeer menu
-			wpd = new WebPageDesc();
-			wpd.link = "Test Page" + Util.Instance;
-			if (!string.IsNullOrEmpty(Util.Instance)) {
-                wpd.linktext = Util.IFACE_NAME + " Test Page instance " + Util.Instance;
-			} else {
-                wpd.linktext = Util.IFACE_NAME + " Test Page";
-			}
-            wpd.page_title = Util.IFACE_NAME + " Test Page";
-			wpd.plugInName = Util.IFACE_NAME;
-			wpd.plugInInstance = Util.Instance;
-			Util.callback.RegisterLink(wpd);
+	
 
-			// init a speak proxy
-			//Util.callback.RegisterProxySpeakPlug(Util.IFACE_NAME, "")
 
-			// register a generic Util.callback for other plugins to raise to use
-			Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, "");
+                // register a normal page to appear in the HomeSeer menu
+                wpd = new WebPageDesc();
+                wpd.link = "Test Page" + Util.Instance;
+                if (!string.IsNullOrEmpty(Util.Instance))
+                {
+                    wpd.linktext = Util.IFACE_NAME + " Test Page instance " + Util.Instance;
+                }
+                else
+                {
+                    wpd.linktext = Util.IFACE_NAME + " Test Page";
+                }
+                wpd.page_title = Util.IFACE_NAME + " Test Page";
+                wpd.plugInName = Util.IFACE_NAME;
+                wpd.plugInInstance = Util.Instance;
+                Util.callback.RegisterLink(wpd);
+
+                // init a speak proxy
+                //Util.callback.RegisterProxySpeakPlug(Util.IFACE_NAME, "")
+
+                // register a generic Util.callback for other plugins to raise to use
+                Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, "");
 
 			Util.hs.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
 
@@ -482,8 +518,11 @@ namespace HSPI_SAMPLE_CS
 				return (pluginpage.GetPagePlugin(pageName, user, userRights, queryString));
 			case "Test Page":
 				return (pluginTestPage.GetPagePlugin(pageName, user, userRights, queryString));
-		}
-		return "page not registered";
+           case "SIID main page":
+                    return (ourWorkingPage.GetPagePlugin(pageName, user, userRights, queryString));
+
+            }
+            return "page not registered";
 	}
 
 	public string PostBackProc(string pageName, string data, string user, int userRights)
@@ -494,7 +533,9 @@ namespace HSPI_SAMPLE_CS
 				return pluginpage.postBackProc(pageName, data, user, userRights);
 			case "Test Page":
 				return pluginTestPage.postBackProc(pageName, data, user, userRights);
-		}
+            case "ModBus":
+                    return ourWorkingPage.postBackProc(pageName, data, user, userRights);
+            }
 
 		return "";
 	}
