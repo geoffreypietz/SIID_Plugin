@@ -289,27 +289,29 @@ namespace HSPI_SAMPLE_CS
 		Util.gEXEPath = Util.hs.GetAppPath();
 
 		try {
-			//AccessPlugin()
 
 
-			// create our jquery web page
-			pluginpage = new WebPage(WebPageName);
-			// register the page with the HS web server, HS will post back to the WebPage class
-			// "pluginpage" is the URL to access this page
-			// comment this out if you are going to use the GenPage/PutPage API istead
-			if (string.IsNullOrEmpty(Util.Instance)) {
-				Util.hs.RegisterPage(Util.IFACE_NAME, Util.IFACE_NAME, Util.Instance);
-			} else {
-				Util.hs.RegisterPage(Util.IFACE_NAME + Util.Instance, Util.IFACE_NAME, Util.Instance);
-			}
+                //start of SIID stuff, keep -- Mark ***********************************************
+
+                //Load data file if it exists, or make new data classes if it doesn't
+                //The way MODBUS official plugin does it is that there exists a HSPI_MODBUS.INI file in the homeseer / config folder where the settings are stored in plaintext
+
+                //Util.hs.SaveINISetting("Settings", "test", null, "hspi_SSID.ini");
+                
+
+                /*
+               May be useful:
+        string GetINISection(string section, string FileName);
+        string[] GetINISectionEx(string section, string FileName);
+        string GetINISetting(string section, string key, string default_val, string FileName = ""); 
+                 */
 
 
-
-                //Create our working page
                 ourWorkingPage = new SIID_Page("SIID main page");
-                Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance);
-                Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance);
-
+                ourWorkingPage.LoadINISettings();
+                Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance); 
+                Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
+                Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
 
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
@@ -326,7 +328,32 @@ namespace HSPI_SAMPLE_CS
                 wpd.page_title = Util.IFACE_NAME + "SIID main page";
                 wpd.plugInName = Util.IFACE_NAME;
                 wpd.plugInInstance = Util.Instance;
-                Util.callback.RegisterLink(wpd);
+                Util.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
+
+                //end of SIID stuff, keep -- Mark ***********************************************
+
+
+                //AccessPlugin()
+
+
+                // create our jquery web page
+                pluginpage = new WebPage(WebPageName);
+			// register the page with the HS web server, HS will post back to the WebPage class
+			// "pluginpage" is the URL to access this page
+			// comment this out if you are going to use the GenPage/PutPage API istead
+			if (string.IsNullOrEmpty(Util.Instance)) {
+				Util.hs.RegisterPage(Util.IFACE_NAME, Util.IFACE_NAME, Util.Instance);
+			} else {
+				Util.hs.RegisterPage(Util.IFACE_NAME + Util.Instance, Util.IFACE_NAME, Util.Instance);
+			}
+
+
+
+                //Create our working page
+       
+
+
+     
 
                 // create test page
                 pluginTestPage = new WebTestPage("Test Page");
@@ -535,6 +562,8 @@ namespace HSPI_SAMPLE_CS
 				return pluginTestPage.postBackProc(pageName, data, user, userRights);
             case "ModBus":
                     return ourWorkingPage.postBackProcModBus(pageName, data, user, userRights);
+            case "SIIDConfPage":
+                    return ourWorkingPage.psotBackSIIDConfPage(pageName, data, user, userRights);
             }
 
 		return "";

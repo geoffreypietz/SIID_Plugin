@@ -76,7 +76,7 @@ namespace HSPI_SAMPLE_CS
 
                 var value = $(this).val();
                 value = encodeURIComponent(value);
-                var theData = value+ '&id=' + '" + id + @"';
+              var theData ='&value='+ value+ '&id=' + '" + id + @"';
 console.log(theData);
                 commonAjaxPost(theData, '" + AjaxPostDestination+@"');
             });
@@ -117,7 +117,7 @@ console.log(theData);
 
                 var value = $(this)[0].checked;
                 value = encodeURIComponent(value);
-                var theData = value+ '&id=' + '" + id + @"';
+                var theData ='&value='+ value+ '&id=' + '" + id + @"';
 console.log(theData);
                 commonAjaxPost(theData, '" + AjaxPostDestination + @"');
             });
@@ -153,7 +153,7 @@ console.log(theData);
 
                 var value = $(this).val();
                 value = encodeURIComponent(value);
-                var theData = value+ '&id=' + '" + id + @"';
+              var theData ='&value='+ value+ '&id=' + '" + id + @"';
 console.log(theData);
                 commonAjaxPost(theData, '" + AjaxPostDestination + @"');
             });

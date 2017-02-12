@@ -88,6 +88,7 @@
     <Compile Include="General\javascriptBuilders.cs" />
     <Compile Include="General\SIID_Page.cs" />
     <Compile Include="hspi.cs" />
+    <Compile Include="Modbus\ModbusClasses.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
     <Compile Include="Modbus\ModbusMaster.cs" />
     <Compile Include="Program.cs" />
