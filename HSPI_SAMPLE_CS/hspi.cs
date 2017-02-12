@@ -534,7 +534,7 @@ namespace HSPI_SAMPLE_CS
 			case "Test Page":
 				return pluginTestPage.postBackProc(pageName, data, user, userRights);
             case "ModBus":
-                    return ourWorkingPage.postBackProc(pageName, data, user, userRights);
+                    return ourWorkingPage.postBackProcModBus(pageName, data, user, userRights);
             }
 
 		return "";
