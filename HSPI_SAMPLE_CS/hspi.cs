@@ -10,7 +10,7 @@ using Scheduler;
 using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
-
+using HSPI_SAMPLE_CS.Modbus;
 
 namespace HSPI_SAMPLE_CS
 {
@@ -311,6 +311,8 @@ namespace HSPI_SAMPLE_CS
                 ourWorkingPage.LoadINISettings();
                 Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance); 
                 Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
+                Util.hs.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
+                
                 Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
 
                 // register a normal page to appear in the HomeSeer menu
@@ -547,6 +549,17 @@ namespace HSPI_SAMPLE_CS
 				return (pluginTestPage.GetPagePlugin(pageName, user, userRights, queryString));
            case "SIID main page":
                     return (ourWorkingPage.GetPagePlugin(pageName, user, userRights, queryString));
+                case "AddModbusDev":
+                    {
+                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                        return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
+                    }
+                case "AddModbusGate":
+                    {
+                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                        return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
+                    }
+
 
             }
             return "page not registered";
@@ -561,9 +574,10 @@ namespace HSPI_SAMPLE_CS
 			case "Test Page":
 				return pluginTestPage.postBackProc(pageName, data, user, userRights);
             case "ModBus":
-                    return ourWorkingPage.postBackProcModBus(pageName, data, user, userRights);
-            case "SIIDConfPage":
-                    return ourWorkingPage.psotBackSIIDConfPage(pageName, data, user, userRights);
+                    return MosbusAjaxReceivers.postBackProcModBus(pageName, data, user, userRights);
+               
+                case "SIIDConfPage":
+                    return ourWorkingPage.postbackSSIDConfigPage(pageName, data, user, userRights);
             }
 
 		return "";

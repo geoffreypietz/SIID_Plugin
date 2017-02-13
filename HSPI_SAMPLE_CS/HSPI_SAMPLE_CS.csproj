@@ -90,7 +90,9 @@
     <Compile Include="hspi.cs" />
     <Compile Include="Modbus\ModbusClasses.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
+    <Compile Include="Modbus\ModbusDevicePage.cs" />
     <Compile Include="Modbus\ModbusMaster.cs" />
+    <Compile Include="Modbus\MosbusAjaxReceivers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />

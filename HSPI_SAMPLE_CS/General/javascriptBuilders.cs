@@ -17,21 +17,32 @@ namespace HSPI_SAMPLE_CS
 
         public selectorInput selectorInput(string[] selectorOptions, string id = "", string name = "", int def = 0)
         {
-            return new selectorInput(selectorOptions,id,name,def,AjaxPostDestination);
-                }
+            return new selectorInput(selectorOptions, id, name, def, AjaxPostDestination);
+        }
         public checkBoxInput checkBoxInput(string id, bool Checked = false)
         {
-            return new checkBoxInput( id,  Checked, AjaxPostDestination);
+            return new checkBoxInput(id, Checked, AjaxPostDestination);
         }
         public numberInput numberInput(string id, int def = 0)
         {
-            return new numberInput( id,  def, AjaxPostDestination);
+            return new numberInput(id, def, AjaxPostDestination);
         }
         public htmlTable htmlTable()
         {
             return new htmlTable(AjaxPostDestination);
         }
+        public Gobutton Gobutton(string id, string label)
+        {
+            return new Gobutton(id, label, AjaxPostDestination);
+        }
+        public stringInput stringInput(string id, string def) {
+            return new stringInput( id,  def, AjaxPostDestination);
+            }
+        public button button(string id, string label)
+        {
 
+            return new button(id, label, AjaxPostDestination);
+        }
 
     }
     public class htmlObject
@@ -62,6 +73,56 @@ namespace HSPI_SAMPLE_CS
                 commonAjaxPost(theData, 'Modbus_Config');
             });
         });*/
+    public class button : htmlObject
+    {
+        public button(string id, string label, string AJX)
+        {
+            AjaxPostDestination = AJX;
+                 string prescript = @"<script>  $(function()
+              {
+           $('#" + id + @"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+                      commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+                  });
+              })</script>";
+
+              html = prescript+@"
+<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
+<a class='ui-button-text' href=/" + AjaxPostDestination + @">" + label + @"</a></button>";
+
+        }
+
+    }
+
+    public class Gobutton:htmlObject
+    {
+        public Gobutton(string id, string label, string AJX)
+        {
+            AjaxPostDestination = AJX;
+      /*      string prescript = @"<script>  $(function()
+        {
+     $('#" + id + @"').click(function() {
+
+                var value =true;
+                value = encodeURIComponent(value);
+              var theData ='&value='+ value+ '&id=' + '" + id + @"';
+console.log(theData);
+                commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+            });
+        })</script>";*/
+
+           //  html = prescript+@"
+           html=@"
+<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
+<a class='ui-button-text' href=/"+AjaxPostDestination+@">" + label + @"</a></button>";
+
+        }
+
+    }
 
 
     public class selectorInput:htmlObject
@@ -137,7 +198,31 @@ console.log(theData);
 
     
 
+    public class stringInput:htmlObject
+    {
+        public stringInput(string id, string def, string aj)
+        {
+            AjaxPostDestination = aj;
 
+            string prescript = @"<script>  $(function()
+        {
+     $('#" + id + @"').bind('input', function() {
+
+                var value = $(this).val();
+                value = encodeURIComponent(value);
+              var theData ='&value='+ value+ '&id=' + '" + id + @"';
+console.log(theData);
+                commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+            });
+        })</script>";
+
+            html = prescript + @"<input id=" + id + " ><script>" + id + ".value=" + def + "</script>";
+
+        }
+
+
+
+    }
 
     public class numberInput:htmlObject
     {
@@ -195,6 +280,38 @@ console.log(theData);
                 row.Append("<td class='columnheader' width='30 % '>" + title + "</ td >");
 
             }
+            addRow(row.ToString());
+
+
+
+
+        }
+        public void addDev(string title, string value = "", bool isPicture = false)
+        {
+        StringBuilder row = new StringBuilder();
+        row.Append("<td class='tablecell' colspan='1' >" + title + "</ td >");
+        row.Append("<td class='tablecell' colspan='1'>" + value + "</ td >");
+
+            if (isPicture)
+            {
+                row.Append("<td class='tablecelldevice' colspan='1' rowspan='16' style='width:600px; text-align:center;'></td>");
+      
+
+            }
+           
+            addRow(row.ToString());
+
+
+
+
+        }
+        public void addLong(string title, string value = "")
+        {
+            StringBuilder row = new StringBuilder();
+            row.Append("<td class='tablecell_label' colspan='1' style = 'width:150px;' align='left'>" + title + "</ td >");
+            row.Append("<td class='tablecell' align='left' colspan='9'>" + value + "</ td >");
+
+          
             addRow(row.ToString());
 
 
