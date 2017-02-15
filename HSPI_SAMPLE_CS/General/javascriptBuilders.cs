@@ -43,6 +43,10 @@ namespace HSPI_SAMPLE_CS
 
             return new button(id, label, AjaxPostDestination);
         }
+        public radioButton radioButton(string id, string[] choices, int selected)
+        {
+            return new radioButton(id, choices, selected, AjaxPostDestination);
+        }
 
     }
     public class htmlObject
@@ -73,6 +77,61 @@ namespace HSPI_SAMPLE_CS
                 commonAjaxPost(theData, 'Modbus_Config');
             });
         });*/
+        public class radioButton : htmlObject
+    {
+        public radioButton(string id, string[] choices, int selected, string AJX)
+        {
+            AjaxPostDestination = AJX;
+            string prescript = @"<script>  $(function()
+              {
+           $('#" + id +"_"+ @"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+                      commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+                  });
+              })</script>";
+
+            StringBuilder body = new StringBuilder();
+            body.Append("<div id = " + id + "_Holder>");
+            int count = 0;
+            foreach(string choice in choices)
+            {
+                body.Append(@"<script>  $(function()
+              {
+           $('#" + id + "_" +count+@"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+                      commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+                  });
+              })</script>");
+                if (count == selected)
+                {
+                    body.Append("<input type=\"radio\" name=\""+id+"\" id=\""+id+"_"+count+"\" checked>");
+
+                }
+                else
+                {
+                    body.Append("<input type=\"radio\" name=\"" + id + "\" id=\"" + id + "_" + count + "\" >");
+
+                }
+                body.Append("<label for  \"" + id + "_" + count +"\">"+choice+"</label>");
+
+            }
+            body.Append("</div>");
+
+            html = prescript + body.ToString();
+
+        }
+
+    }
+        
+       
     public class button : htmlObject
     {
         public button(string id, string label, string AJX)
@@ -216,7 +275,7 @@ console.log(theData);
             });
         })</script>";
 
-            html = prescript + @"<input id=" + id + " ><script>" + id + ".value=" + def + "</script>";
+            html = prescript + @"<input id=" + id + " ><script> $('#"+id+"')[0].value = '" + def + "';</script>";
 
         }
 
@@ -244,7 +303,7 @@ console.log(theData);
             });
         })</script>";
 
-            html = prescript+@"<input id=" +id+" type='number'><script>"+id+".value="+def+"</script>";
+            html = prescript+@"<input id=" +id+" type='number'><script>$('#"+id+"')[0].value="+def+";</script>";
 
         }
       
@@ -262,6 +321,11 @@ console.log(theData);
         public  htmlTable(string aj)
         {
             AjaxPostDestination = aj;
+
+        }
+        public void addT(string title)
+        {
+            addRow("<td class=\"tableheader\" width=\"100%\" colspan=\"2\">" + title + "</td>");
 
         }
         public void add(string title, string value ="")
