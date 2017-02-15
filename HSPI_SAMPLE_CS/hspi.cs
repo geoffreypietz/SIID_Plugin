@@ -659,8 +659,9 @@ namespace HSPI_SAMPLE_CS
                 case "ModBusGateTab":
                     {
                         ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
-                        modPage.parseModbusGatewayTab(data);
-                        return "";
+
+                       return  modPage.parseModbusGatewayTab(data);
+                        
                     }
                 case "ModBusDevTab":
                     {

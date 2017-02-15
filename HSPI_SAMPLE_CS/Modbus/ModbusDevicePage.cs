@@ -96,14 +96,14 @@ namespace HSPI_SAMPLE_CS.Modbus
             parts["GateID"] = "" + GatewayID + "";
             parts["Gateway"] = Gateway.get_Name(Util.hs);
             parts["RegisterType"] = "0";//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
-            parts["SlaveId"] = "" + GParts["LinkedDevices"].Split(',').Count() + ""; //get number of slaves from gateway?
+            parts["SlaveId"] = "1"; //get number of slaves from gateway?
             parts["ReturnType"] = "0";//0 = Int16, 1=Int32,2=Float32,3=Int64,4=Bool
             parts["SignedValue"] = "false";
             parts["ScratchpadString"] = "";
             parts["DisplayFormatString"] = "{0}";
             parts["ReadOnlyDevice"] = "true";
             parts["DeviceEnabled"] = "false";
-            parts["RegisterAddress"] = "22";
+            parts["RegisterAddress"] = "1";
             return parts.ToString();
 
         }
@@ -233,7 +233,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             Unreachable.Value = 1;
             Unreachable.Status = "Available";
         
-
+          
 
             Util.hs.DeviceVSP_AddPair(dv, Unreachable);
 
@@ -300,6 +300,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             EDO.AddNamed("SSIDKey", makeNewModbusGateway());
             newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+            pingGateway(dv);
 
            // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
 
@@ -340,7 +341,8 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
             stb.Append(ModbusConfHtml.print());
         //    stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
-            stb.Append(ModbusBuilder.button(dv + "_Test", "Test").print());
+            stb.Append("<br><br>"+ModbusBuilder.ShowMesbutton(dv + "_Test", "Test").print());
+            stb.Append("<br><br><div id='conMes' style='font-size:130%;     font-weight: bold; display:none; color:red;'></div>");
             return stb.ToString();
 
         }
@@ -373,12 +375,14 @@ namespace HSPI_SAMPLE_CS.Modbus
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             //ModbusConfHtml.addDevHeader("Gateway: " + parts["Gateway"]);
            string[] GatewayStringArray = (from kvp in ModbusGates select kvp.Value).ToArray();
-            int DefGateway = (from kvp in ModbusGates which kvp.Key== Convert.ToInt32(parts["GateID"]));///here when have more hands
-            int DefGateway = ModbusGates.IndexOf(new KeyValuePair<int,string>(Convert.ToInt32(parts["GateID"]), parts["Gateway"]));
+            //OK so want the index of the selected gateway in our gateway string array
+             KeyValuePair<int, string> Item = ModbusGates.Where(x => x.Key == Convert.ToInt32(parts["GateID"])).First();
+
+            int DefGateway = ModbusGates.IndexOf(Item);
             ModbusConfHtml.add("Modbus Gateway ID: ", ModbusBuilder.selectorInput(GatewayStringArray, dv + "_GateID", "GateID", DefGateway).print());
             ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(new string[] { "Discrete Input (RO)", "Coil (RW)", "Input Register (RO)", "Holding Register (RW)" }, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
-            ModbusConfHtml.add("Register Address: ", ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print());
+            ModbusConfHtml.add("Register Address: ", "<div style:'display:inline;'><div style='float:left;'>"+ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print()+"</div><div style='float:left;' id='TrueAdd'>()</div></div>");
 
                     
 
@@ -397,7 +401,14 @@ namespace HSPI_SAMPLE_CS.Modbus
             stb.Append(ModbusConfHtml.print());
   //          stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
             stb.Append(@"<script>
+
+OffsetArray=[10000,0,30000,40000];
+UpdateTrue=function(){
+CalNum=parseInt($('#" + dv + @"_RegisterAddress')[0].value)+OffsetArray[parseInt($('#" + dv + @"_RegisterType')[0].value)];
+TrueAdd.textContent='('+CalNum+')';
+}
 UpdateDisplay=function(){
+UpdateTrue();
 value=$('#" + dv + @"_RegisterType')[0].value;
 $('#" + dv + @"_ReturnType')[0].parentElement.parentElement.style.display='';
 $('#" + dv + @"_SignedValue')[0].parentElement.parentElement.style.display='';
@@ -431,7 +442,7 @@ $('#" + dv + @"_RegisterType').change(UpdateDisplay);
 
 UpdateDisplay();
 
-
+$('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
                 
 </script>");
@@ -455,7 +466,42 @@ UpdateDisplay();
 
         }
 
-        public void parseModbusGatewayTab( string data)
+        public string pingGateway(int deviceId)
+        {
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(deviceId);
+            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            string ip = parts["Gateway"];
+            int port = Convert.ToInt32(parts["Port"]);
+            //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
+            if (!Boolean.Parse(parts["Enabled"]))
+            {
+                Util.hs.SetDeviceValueByRef(deviceId, 2, true);
+                return "Gateway is disabled";
+            }
+            else
+            {
+                System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient();
+                try
+                {
+                    Socket.Connect(ip, port);
+                    Socket.Close();
+                    Util.hs.SetDeviceValueByRef(deviceId, 1, true);
+                    return "Connection Successfull.";
+                }
+                catch(Exception e)
+                {
+
+                    Util.hs.SetDeviceValueByRef(deviceId, 0, true);
+                    return "Failed connectivty test: "+e.Message;
+                }
+      
+            }
+            return "Gateway cannot be reached";
+
+        }
+
+        public string parseModbusGatewayTab( string data)
         {
             Console.WriteLine("ConfigDevicePost: " + data);
 
@@ -464,9 +510,17 @@ UpdateDisplay();
             changed = System.Web.HttpUtility.ParseQueryString(data);
             string partID = changed["id"].Split('_')[1];
             int devId = Int32.Parse(changed["id"].Split('_')[0]);
-
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devId);
-            addSSIDExtraData(newDevice, partID, changed["value"]);
+            if(partID == "Test")
+            {
+                return(pingGateway(devId).ToString());
+            }
+            else
+            {
+                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devId);
+                addSSIDExtraData(newDevice, partID, changed["value"]);
+            }
+            return "True";
+         
  
 
         }

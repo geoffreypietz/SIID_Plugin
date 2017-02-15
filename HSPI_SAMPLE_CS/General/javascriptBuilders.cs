@@ -60,6 +60,11 @@ namespace HSPI_SAMPLE_CS
             return new Qbutton(l, n, AjaxPostDestination);
 
         }
+        public ShowMesbutton ShowMesbutton(string l, string n)
+        {
+            return new ShowMesbutton(l, n, AjaxPostDestination);
+
+        }
     }
     public class htmlObject
     {
@@ -146,8 +151,62 @@ namespace HSPI_SAMPLE_CS
         }
 
     }
-        
-       
+
+    public class ShowMesbutton : htmlObject
+    {//actually this is just for gateway connection test button
+        public ShowMesbutton(string id, string label, string AJX)
+        {
+            AjaxPostDestination = AJX;
+            string prescript = @"<script>  $(function()
+              {
+           $('#" + id + @"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+
+conMes.style.display='';
+conMes.textContent='Testing connection...';
+conMes.style.color='blue';
+ $.ajax({
+  type: 'POST',
+  async: true,
+  url: '/' + '" + AjaxPostDestination + @"',
+  data: theData,
+  error: function() {
+      $('div#errormessage').html('Page is refreshing...');
+      $('div#contentdiv').html('');
+            },
+  beforeSend: function() {
+            },
+  success: function(response) { 
+if(response.length>0){
+conMes.style.display='';
+conMes.textContent=response;
+if(response.indexOf('Connection')==0){
+conMes.style.color='#00cc00';
+}
+else if(response.indexOf('ailed')>-1){
+conMes.style.color='red';
+}
+else{
+conMes.style.color='#b38600';
+}
+}
+}
+        });
+});
+});
+              </script>";
+
+            html = prescript + @"
+<button  id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' type='button' role='button' aria-disabled='false'><span  class='ui-button-text'>" + label + @"</span></button>";
+
+        }
+
+    }
+
     public class button : htmlObject
     {
         public button(string id, string label, string AJX)
@@ -161,12 +220,26 @@ namespace HSPI_SAMPLE_CS
                       value = encodeURIComponent(value);
                     var theData ='&value='+ value+ '&id=' + '" + id + @"';
       console.log(theData);
-                      commonAjaxPost(theData, '" + AjaxPostDestination + @"');
-                  });
-              })</script>";
+
+ $.ajax({
+  type: 'POST',
+  async: true,
+  url: '/' + '"+AjaxPostDestination+@"',
+  data: theData,
+  error: function() {
+      $('div#errormessage').html('Page is refreshing...');
+      $('div#contentdiv').html('');
+            },
+  beforeSend: function() {
+            },
+  success: function(response) { console.log(response);}
+        });
+});
+});
+              </script>";
 
               html = prescript+@"
-<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'><span  class='ui-button'>" + label + @"</span></button>";
+<button  id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' type='button' role='button' aria-disabled='false'><span  class='ui-button-text'>" + label + @"</span></button>";
 
         }
 
@@ -194,7 +267,7 @@ console.log(theData);
            //  html = prescript+@"
            html=@"
 <button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/"+AjaxPostDestination+ @"><span  class='ui-button'>" + label + @"</span></a></button>";
+<a class='ui-button-text' href=/"+AjaxPostDestination+ @"><span  class='ui-button-tex'>" + label + @"</span></a></button>";
 
         }
 
@@ -220,7 +293,7 @@ console.log(theData);
             //  html = prescript+@"
             html = @"
 <button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/" + AjaxPostDestination + @"?"+id+ @"><span  class='ui-button'>" + label + @"</span></a></button>";
+<a class='ui-button-text' href=/" + AjaxPostDestination + @"?"+id+ @"><span  class='ui-button-tex'>" + label + @"</span></a></button>";
 
 
         }
