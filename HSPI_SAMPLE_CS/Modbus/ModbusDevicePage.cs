@@ -189,6 +189,12 @@ namespace HSPI_SAMPLE_CS.Modbus
             //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
             newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
 
+            newDevice.set_Relationship(Util.hs, Enums.eRelationship.Child);
+            newDevice.set_Status_Support(Util.hs, true);
+            newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
+            newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+         
+
 
 
             HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
@@ -291,9 +297,10 @@ namespace HSPI_SAMPLE_CS.Modbus
             newDevice.set_Location(Util.hs, "System");
             //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
            newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+            newDevice.set_Relationship(Util.hs, Enums.eRelationship.Parent_Root);
 
-           
-
+            newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
+            newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
             HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
             
            // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
