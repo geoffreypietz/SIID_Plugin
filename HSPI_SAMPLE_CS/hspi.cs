@@ -11,6 +11,7 @@ using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
 using HSPI_SAMPLE_CS.Modbus;
+using System.Web;
 
 namespace HSPI_SAMPLE_CS
 {
@@ -313,6 +314,8 @@ namespace HSPI_SAMPLE_CS
                 Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
                 Util.hs.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
+                Util.hs.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
+                
 
                 Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
 
@@ -515,8 +518,8 @@ namespace HSPI_SAMPLE_CS
 
             Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dvRef);
 
-            System.Collections.Specialized.NameValueCollection parts = null;
-            parts = System.Web.HttpUtility.ParseQueryString(ourDevice.get_Device_Type_String(Util.hs));
+            var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
 
             switch (parts["Type"])
@@ -558,7 +561,9 @@ namespace HSPI_SAMPLE_CS
 	public Enums.ConfigDevicePostReturn ConfigDevicePost(int dvRef, string data, string user, int userRights) //this what we need to do?
 	{ //changes made to the special tab do ajax callbacks to here
 
-            Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dvRef);
+          /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dvRef);
+            var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             switch (ourDevice.get_Device_Type_String(Util.hs))
             {
@@ -583,7 +588,7 @@ namespace HSPI_SAMPLE_CS
                    
 
             }
-
+            */
 
 		return Enums.ConfigDevicePostReturn.DoneAndCancelAndStay;
 	}
@@ -646,6 +651,28 @@ namespace HSPI_SAMPLE_CS
                         ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
                         modPage.parseModbusGatewayTab(data);
                         return "";
+                    }
+                case "AddModbusDevice":
+                    {
+                        try
+                        {
+                            var parts = HttpUtility.ParseQueryString(data);
+                                string ID = parts["id"];
+                                if (parts["id"].Split('_')[0] == "G")
+                            {
+                                ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                               // return "";
+                                return modPage.MakeSubDeviceRedirect(pageName, user, userRights, "", parts["id"].Split('_')[1]);
+                            }
+
+                        }
+                        catch
+                        {
+
+                        }
+                        return "";
+                        
+
                     }
                    
             }

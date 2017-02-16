@@ -27,9 +27,9 @@ namespace HSPI_SAMPLE_CS
         {
             return new numberInput(id, def, AjaxPostDestination);
         }
-        public htmlTable htmlTable()
+        public htmlTable htmlTable(int width=1000)
         {
-            return new htmlTable(AjaxPostDestination);
+            return new htmlTable(AjaxPostDestination,width);
         }
         public Gobutton Gobutton(string id, string label)
         {
@@ -47,7 +47,14 @@ namespace HSPI_SAMPLE_CS
         {
             return new radioButton(id, choices, selected, AjaxPostDestination);
         }
-
+        public MakeImage MakeImage(int w, int  h ,string link)
+        {
+            return new MakeImage(w, h, link);
+        }
+        public MakeLink MakeLink(string l, string n)
+        {
+            return new MakeLink(l, n);
+        }
     }
     public class htmlObject
     {
@@ -81,10 +88,12 @@ namespace HSPI_SAMPLE_CS
     {
         public radioButton(string id, string[] choices, int selected, string AJX)
         {
-            AjaxPostDestination = AJX;
-            string prescript = @"<script>  $(function()
+        
+                AjaxPostDestination = AJX;
+
+                string prescript = @"<script>  $(function()
               {
-           $('#" + id +"_"+ @"').click(function() {
+           $('#" + id + "_" + @"').click(function() {
 
                       var value =true;
                       value = encodeURIComponent(value);
@@ -93,6 +102,7 @@ namespace HSPI_SAMPLE_CS
                       commonAjaxPost(theData, '" + AjaxPostDestination + @"');
                   });
               })</script>";
+        
 
             StringBuilder body = new StringBuilder();
             body.Append("<div id = " + id + "_Holder>");
@@ -150,8 +160,7 @@ namespace HSPI_SAMPLE_CS
               })</script>";
 
               html = prescript+@"
-<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/" + AjaxPostDestination + @">" + label + @"</a></button>";
+<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>" + label + @"</button>";
 
         }
 
@@ -311,22 +320,75 @@ console.log(theData);
 
     }
 
+    public class MakeImage:htmlObject
+    {
+        public  MakeImage(int width, int height, string source)
+        {
+            html = "<img src=\"" + source + "\" height=\"" + height + "\" width=\"" + width + "\">";
 
+        }
+
+    }
+
+   public class MakeLink : htmlObject
+    {
+        public MakeLink(string link, string name )
+        {
+            html = "<a href=\"" + link + "\">" + name + "</a>";
+        }
+    }
 
   public  class htmlTable:htmlObject
     {
         public static string footer = "</tbody></table>";
-        public static string header = "<table border='0' cellpadding='0' cellspacing='0' width='1000'><tbody>";
+        public  string header = "<table border='0' cellpadding='0' cellspacing='0' width='1000'><tbody>";
         public StringBuilder body = new StringBuilder();
-        public  htmlTable(string aj)
+
+        public  htmlTable(string aj, int width=1000)
         {
             AjaxPostDestination = aj;
+            header = "<table border='0' cellpadding='0' cellspacing='0' width='"+width+"'><tbody>";
 
         }
         public void addT(string title)
         {
             addRow("<td class=\"tableheader\" width=\"100%\" colspan=\"2\">" + title + "</td>");
 
+        }
+        public void addDevHeader(string title)
+        {
+            addRow("<td class=\"columnheader\" colspan=\"4\">"+title+"</td>");
+
+    }
+
+
+        public void addSubHeader(string I1,string I2, string I3, string I4, string I5)
+        {
+            StringBuilder row = new StringBuilder();
+            row.Append("<td width = '2%' ></td>");
+            row.Append("<td class ='columnheader' width='20px'>"+I1+"</td>");
+            row.Append("<td class ='columnheader' >" + I2 + "</td>");
+            row.Append("<td class ='columnheader' >" + I3 + "</td>");
+            row.Append("<td class ='columnheader' >" + I4 + "</td>");
+            row.Append("<td class ='columnheader' >" + I5 + "</td>");
+            addRow(row.ToString());
+        }
+        public void addSubMain(string I1, string I2, string I3, string I4, string I5)
+        {
+            StringBuilder row = new StringBuilder();
+            row.Append("<td width = '2%' ></td>");
+            row.Append("<td class ='tableroweven' width='5%'>" + I1 + "</td>");
+            row.Append("<td class ='tableroweven' >" + I2 + "</td>");
+            row.Append("<td class ='tablecell' width='100px' >" + I3 + "</td>");
+            row.Append("<td class ='tablecell' width='15%'>" + I4 + "</td>");
+            row.Append("<td class ='tablecell'>" + I5 + "</td>");
+            addRow(row.ToString());
+
+        }
+
+        public void addDevMain(string Item1, string Item2)
+        {
+            addRow("<td class=\"tableroweven\" width='80%'>" + Item1 + "</td> <td class=\"tableroweven\" >" + Item2 + "</td>");
         }
         public void add(string title, string value ="")
         {

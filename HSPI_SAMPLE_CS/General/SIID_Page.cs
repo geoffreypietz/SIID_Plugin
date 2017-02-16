@@ -82,6 +82,86 @@ namespace HSPI_SAMPLE_CS
 
             return base.postBackProc(page, data, user, userRights);
         }
+        public string AllModbusDevices()
+        {//gets list of all associated devices. 
+         //Get the collection of these devices which are modbus gateways or devices
+         //build Gateway / Devices table with the appropriate links and the appropriate Add Device buttons
+         //returns the built html string
+            StringBuilder sb = new StringBuilder();
+            htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice");
+
+            Scheduler.Classes.clsDeviceEnumeration DevNum =(Scheduler.Classes.clsDeviceEnumeration) Util.hs.GetDeviceEnumerator();
+             List<int> ModbusGates= new List<int>();
+            List<int> ModbusDevs = new List<int>();
+            //Scheduler.Classes.DeviceClass
+            var Dev = DevNum.GetNext();
+            while(Dev != null)
+            {
+                try
+                {
+                    var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string s = parts["Type"];
+                        if (parts["Type"] == "Modbus Gateway")
+                    {
+                        ModbusGates.Add(Dev.get_Ref(Util.hs));
+                    }
+                    if (parts["Type"] == "Modbus Device")
+                    {
+                        ModbusDevs.Add(Dev.get_Ref(Util.hs));
+                    }
+
+                }
+                catch
+                {
+
+                }
+                    Dev = DevNum.GetNext();
+               
+                
+            }
+            htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
+            sb.Append("<br>");
+            foreach (int GateRef in ModbusGates)
+            {
+                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(GateRef);
+                ModbusConfHtml.addDevHeader("Gateway");
+                Gateway.get_Image(Util.hs);
+                Gateway.get_Name(Util.hs);
+                ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16,16, Gateway.get_Image(Util.hs)).print()+
+                    ModbusBuilder.MakeLink("/deviceutility?ref="+GateRef
+                    +"&edit=1", Gateway.get_Name(Util.hs)).print(), ModbusBuilder.button("G_"+GateRef,"Add Device").print());
+                sb.Append(ModbusConfHtml.print());
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+                ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
+               
+                
+                foreach (int DevRef in ModbusDevs)
+                {
+                    Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(DevRef);
+                    var EDO = MDevice.get_PlugExtraData_Get(Util.hs);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    if (Convert.ToInt32(parts["GateID"]) == GateRef)
+                    {
+                        ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
+                           ModbusBuilder.MakeLink("/deviceutility?ref=" + DevRef + "&edit=1", MDevice.get_Name(Util.hs)).print(),
+                           parts["SlaveId"],
+                           parts["RegisterType"],
+                           parts["ReturnType"]);
+
+                    }
+
+                }
+                sb.Append(ModbusConfHtml.print());
+                sb.Append("<br>");
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+            }
+
+
+           
+            return sb.ToString();
+        }
+
 
         public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
         {
@@ -128,9 +208,10 @@ namespace HSPI_SAMPLE_CS
                 //Also list all associated modbus devices
                 htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate");
                 StringBuilder ModbusDevPage = new StringBuilder();
-                ModbusDevPage.Append("<br><br>");
+                ModbusDevPage.Append("<br><br><div style='display:block;'>");
                 ModbusDevPage.Append(AddModbusDevBuilder.Gobutton("addModGateway", "Add Modbus IP Gateway").print()); 
-                ModbusDevPage.Append("<br>");
+                ModbusDevPage.Append("</div><br>");
+                ModbusDevPage.Append(AllModbusDevices());
                 tab.tabContent = ModbusDevPage.ToString();
 
                 jqtabs.postOnTabClick = true;

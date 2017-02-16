@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Scheduler;
 using System.Web;
+using HomeSeerAPI;
 
 namespace HSPI_SAMPLE_CS.Modbus
 {
@@ -40,6 +41,75 @@ namespace HSPI_SAMPLE_CS.Modbus
             return parts.ToString();
        
         }
+        public string makeNewModbusDevice(int GatewayID)
+        {
+            var parts = HttpUtility.ParseQueryString(string.Empty);
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
+
+
+            parts["Type"] = "Modbus Device";
+            parts["GateID"] = ""+GatewayID+"";
+            parts["Gateway"] = Gateway.get_Name(Util.hs) ;
+            parts["RegisterType"] = MosbusAjaxReceivers.modbusDefaultPoll.ToString();
+            parts["SlaveId"] = "1"; //get number of slaves from gateway?
+            parts["ReturnType"] = "Int16";
+            parts["SignedValue"] = "false";
+            parts["ScratchpadString"] = "";
+            parts["DisplayFormatString"] = "{0}";
+            parts["ReadOnlyDevice"] = "true";
+            parts["DeviceEnabled"] = "false";
+            parts["RegisterAddress"] = "22";
+            return parts.ToString();
+
+        }
+
+
+        public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
+        {
+          
+
+            var EDO = Device.get_PlugExtraData_Get(Util.hs);
+           var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            parts[Key] = value;
+            EDO.RemoveNamed("SSIDKey");
+            EDO.AddNamed("SSIDKey", parts.ToString());
+            Device.set_PlugExtraData_Set(Util.hs, EDO);
+
+        }
+
+    
+
+        public string MakeSubDeviceRedirect(string pageName, string user, int userRights, string queryString, string GatewayID)
+        {
+
+            StringBuilder stb = new StringBuilder();
+            ModbusDevicePage page = this;
+
+            var dv = Util.hs.NewDeviceRef("Modbus Device");
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
+            newDevice.set_Location2(Util.hs, "Modbus");
+            newDevice.set_Location(Util.hs, "System");
+            //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
+            newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+
+
+            HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
+
+            // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+
+            EDO.AddNamed("SSIDKey", makeNewModbusDevice(Convert.ToInt32(GatewayID)));
+            newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+
+            // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+
+
+
+
+            stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
+            //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
+            page.AddBody(stb.ToString());
+            return page.BuildPage();
+        }
 
         public string MakeDeviceRedirect(string pageName, string user, int userRights, string queryString)
         {
@@ -54,9 +124,17 @@ namespace HSPI_SAMPLE_CS.Modbus
             //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
            newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
 
-            newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
 
-           
+            HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
+            
+           // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+
+            EDO.AddNamed("SSIDKey", makeNewModbusGateway());
+            newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+
+           // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+
+
 
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
@@ -68,8 +146,8 @@ namespace HSPI_SAMPLE_CS.Modbus
         public string BuildModbusGatewayTab(int dv1)
         {//Need to pull from device associated modbus information. Need to create when new device is made
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv1);
-            System.Collections.Specialized.NameValueCollection parts = null;
-            parts = System.Web.HttpUtility.ParseQueryString(newDevice.get_Device_Type_String(Util.hs));
+            var EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             string dv = "" + dv1 + "";
             StringBuilder stb = new StringBuilder();
@@ -88,8 +166,8 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay", Int32.Parse(parts["Delay"])).print());
             ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
             stb.Append(ModbusConfHtml.print());
-            stb.Append(ModbusBuilder.button("Done", "Done").print());
-            stb.Append(ModbusBuilder.button("Test", "Test").print());
+            stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
+            stb.Append(ModbusBuilder.button(dv + "_Test", "Test").print());
             return stb.ToString();
 
         }
@@ -108,18 +186,15 @@ namespace HSPI_SAMPLE_CS.Modbus
         {
             Console.WriteLine("ConfigDevicePost: " + data);
 
-            // handle form items:
+ 
             System.Collections.Specialized.NameValueCollection changed = null;
             changed = System.Web.HttpUtility.ParseQueryString(data);
             string partID = changed["id"].Split('_')[1];
             int devId = Int32.Parse(changed["id"].Split('_')[0]);
 
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devId);
-            System.Collections.Specialized.NameValueCollection parts = null;
-            parts = System.Web.HttpUtility.ParseQueryString(newDevice.get_Device_Type_String(Util.hs));
-
-            parts[partID] = changed["value"];
-            newDevice.set_Device_Type_String(Util.hs, parts.ToString());
+            addSSIDExtraData(newDevice, partID, changed["value"]);
+ 
 
         }
         public void parseModbusDeviceTab(string data)
