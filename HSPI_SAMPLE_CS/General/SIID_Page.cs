@@ -5,19 +5,27 @@ using System.Text;
 using Scheduler;
 using System.Web;
 
+using System.Threading;
 using HSPI_SAMPLE_CS.Modbus;
 
 namespace HSPI_SAMPLE_CS
 {
-   public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
+    public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 
     {
         public ModbusDevicePage ModPage { get; set; }
-       
+
+        public static Dictionary<int, System.Threading.Timer> PluginTimerDictionary = new Dictionary<int, Timer>(); //Indexed by device ID, value is timers, intended for modbus gateway polls. idea is one per gateway ID
+       //Needs to instance this when the plugin initializes, needs to update when a new gateway is added or when the polling interval changes
+
+
         public SIID_Page(string pagename) : base(pagename)
         {
-          
+            ModPage = new ModbusDevicePage("SIID UTILITY PAGE");
+            ItializeModbusGatewayTimers();
         }
+
+       
 
         public int selectedPlugin { get; set; }
 
@@ -84,6 +92,29 @@ namespace HSPI_SAMPLE_CS
 
             return base.postBackProc(page, data, user, userRights);
         }
+
+        public void ItializeModbusGatewayTimers()
+        {
+            List<int> ModbusGates = ModbusDevicePage.getAllGateways().ToList();
+            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
+
+            foreach (int GID in ModbusGates)
+            {
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(GID));
+                var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+
+
+                System.Threading.Timer GateTimer = new System.Threading.Timer(ModPage.PollActiveFromGate,GID,100000, Convert.ToInt32(parts["Poll"]));
+                
+
+                PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
+            }
+
+            
+        }
+
+
         public string AllModbusDevices()
         {//gets list of all associated devices. 
          //Get the collection of these devices which are modbus gateways or devices

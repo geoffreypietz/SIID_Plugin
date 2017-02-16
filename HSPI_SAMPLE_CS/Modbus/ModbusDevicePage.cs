@@ -225,7 +225,11 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
 
+            var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+            DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
 
+
+            newDevice.set_DeviceType_Set(Util.hs, DevINFO);
 
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
@@ -326,9 +330,22 @@ namespace HSPI_SAMPLE_CS.Modbus
             newDevice.set_PlugExtraData_Set(Util.hs, EDO);
             pingGateway(dv);
 
-           // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+            // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+          var DevINFO=  new DeviceTypeInfo_m.DeviceTypeInfo();
+            DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
 
 
+            newDevice.set_DeviceType_Set(Util.hs, DevINFO);
+
+
+
+       /*     var DeviceValue = new VSVGPairs.VSPair(ePairStatusControl.Status);
+            DeviceValue.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            DeviceValue.Render = Enums.CAPIControlType.TextBox_String;
+            DeviceValue.Value = 0;
+            DeviceValue.Status = "Unknown";
+            
+            Util.hs.DeviceVSP_AddPair(dv, DeviceValue);*/
 
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
@@ -408,7 +425,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
             ModbusConfHtml.add("Register Address: ", "<div style:'display:inline;'><div style='float:left;'>"+ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print()+"</div><div style='float:left;' id='TrueAdd'>()</div></div>");
 
-
+            string ScratchpadHelpText = "";
 
 
 
@@ -420,7 +437,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Boolean", "Int16", "Int32", "Float32", "Int64", "Double64",
             "2 character string","4 character string","6 character string","8 character string"}, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
-                        ModbusConfHtml.add("Scratch Pad: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
+                        ModbusConfHtml.add("Calculator: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
                         ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
 
@@ -495,6 +512,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         }
 
+
+
+
         public string pingGateway(int deviceId)
         {
             Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(deviceId);
@@ -556,6 +576,13 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devId);
                 addSSIDExtraData(newDevice, partID, changed["value"]);
             }
+            if(partID== "Poll")
+            {
+                //Update timer dictionary
+                SIID_Page.PluginTimerDictionary[devId].Change(0, Convert.ToInt32(changed["value"]));
+
+
+            }
             return "True";
          
  
@@ -588,11 +615,71 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             //  ModbusTcpMasterReadInputs();
 
-            //TESTING FUNCTIONS
-            ReadFromModbusDevice(devId);
-            ProcessScratchPad(devId);
+
         }
 
+    public  void PollActiveFromGate(object RawID)
+        {
+            //First, check if device even exits
+
+            int GateID=Convert.ToInt32((int)RawID);
+            //Check if gate is active
+            Scheduler.Classes.DeviceClass Gateway = null;
+            try
+            {
+                Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(GateID);
+            }
+            catch
+            {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
+                SIID_Page.PluginTimerDictionary[GateID].Dispose();
+                SIID_Page.PluginTimerDictionary.Remove(GateID);
+
+
+            }
+            if (Gateway != null)
+            {
+
+
+                var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                if (bool.Parse(parts["Enabled"]))
+                {
+                    //Get list of devices
+                    //If they're enabled, poll them
+                    //Use the time-between and retry things
+                    foreach (var subId in parts["LinkedDevices"].Split(','))
+                    {
+                        try
+                        {
+                            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
+                            if (MDevice != null)
+                            {
+                                var EDO2 = MDevice.get_PlugExtraData_Get(Util.hs);
+                                var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+                                if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
+                                {
+                                    //Add read write retries here
+                                    //Add read/write timeout here
+                                    ReadFromModbusDevice(Convert.ToInt32(subId));
+                                    ProcessCalculator(Convert.ToInt32(subId));
+                                    //add delay between each address poll here
+
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+
+                    }
+
+
+                }
+            }
+
+        }
 
         public void FlipBits(ushort[] Input)
         {
@@ -608,7 +695,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         }
 
-        public void ProcessScratchPad(int devID)
+        public void ProcessCalculator(int devID)
         {
             Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
             var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
@@ -633,17 +720,17 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //parse the expression as a double and save that result as the processed (or save the error string as the processed value)
             List<int> Raws = new List<int>();
             List<int> Processed = new List<int>();
-            Match m = Regex.Match(ScratchPadString,@"(\$\()+(\d+)(\))+");
+            Match m = Regex.Match(ScratchPadString, @"(\$\()+(\d+)(\))+");
             while (m.Success)
             {
                 if (!Raws.Contains(int.Parse(m.Groups[2].ToString())))
                 {
-                    
+
                     Raws.Add(int.Parse(m.Groups[2].ToString()));
                 }
                 m = m.NextMatch();
             }
-             m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
+            m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
             while (m.Success)
             {
                 if (!Processed.Contains(int.Parse(m.Groups[2].ToString())))
@@ -653,7 +740,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 m = m.NextMatch();
             }
             StringBuilder FinalString = new StringBuilder(ScratchPadString);
-            foreach(int dv in Raws)
+            foreach (int dv in Raws)
             {
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
                 var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
@@ -662,7 +749,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 FinalString.Replace("$(" + dv + ")", Rep);
 
             }
-            foreach(int dv in Processed)
+            foreach (int dv in Processed)
             {
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
                 var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
@@ -673,12 +760,28 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             string OutValue = "NAN";
             try
             {
-                 OutValue = Convert.ToDouble(new DataTable().Compute(FinalString.ToString(), null)).ToString();
-              
+                if (int.Parse(parts["ReturnType"]) > 5 || int.Parse(parts["ReturnType"]) ==0) //return is a string or a bool
+                {
+                    OutValue = FinalString.ToString();
+                }
+                else
+                {
+                    OutValue = Convert.ToDouble(new DataTable().Compute(FinalString.ToString(), null)).ToString();
+                }
+
             }
             catch { }
-         
+        
+
             addSSIDExtraData(ModDev, "ProcessedValue", OutValue);
+
+
+            string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
+            Util.hs.SetDeviceString(devID,ValueString,true);
+
+     
+
+
         }
 
 
