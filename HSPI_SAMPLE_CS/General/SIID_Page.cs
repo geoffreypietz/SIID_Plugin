@@ -105,11 +105,15 @@ namespace HSPI_SAMPLE_CS
                         if (parts["Type"] == "Modbus Gateway")
                     {
                         ModbusGates.Add(Dev.get_Ref(Util.hs));
+                        foreach(var subId in parts["LinkedDevices"].Split(','))
+                        {
+                            ModbusDevs.Add(Convert.ToInt32(subId));
+                        }
                     }
-                    if (parts["Type"] == "Modbus Device")
-                    {
-                        ModbusDevs.Add(Dev.get_Ref(Util.hs));
-                    }
+                 //   if (parts["Type"] == "Modbus Device")
+               //     {
+                //        ModbusDevs.Add(Dev.get_Ref(Util.hs));
+                //    }
 
                 }
                 catch
@@ -130,7 +134,7 @@ namespace HSPI_SAMPLE_CS
                 Gateway.get_Name(Util.hs);
                 ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16,16, Gateway.get_Image(Util.hs)).print()+
                     ModbusBuilder.MakeLink("/deviceutility?ref="+GateRef
-                    +"&edit=1", Gateway.get_Name(Util.hs)).print(), ModbusBuilder.button("G_"+GateRef,"Add Device").print());
+                    +"&edit=1", Gateway.get_Name(Util.hs)).print(), ModbusBuilder.Qbutton("G_"+GateRef,"Add Device").print());
                 sb.Append(ModbusConfHtml.print());
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
                 ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
@@ -139,16 +143,19 @@ namespace HSPI_SAMPLE_CS
                 foreach (int DevRef in ModbusDevs)
                 {
                     Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(DevRef);
-                    var EDO = MDevice.get_PlugExtraData_Get(Util.hs);
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    if (Convert.ToInt32(parts["GateID"]) == GateRef)
+                    if (MDevice != null)
                     {
-                        ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
-                           ModbusBuilder.MakeLink("/deviceutility?ref=" + DevRef + "&edit=1", MDevice.get_Name(Util.hs)).print(),
-                           parts["SlaveId"],
-                           parts["RegisterType"],
-                           parts["ReturnType"]);
+                        var EDO = MDevice.get_PlugExtraData_Get(Util.hs);
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        if (Convert.ToInt32(parts["GateID"]) == GateRef)
+                        {
+                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + DevRef + "&edit=1", MDevice.get_Name(Util.hs)).print(),
+                               parts["SlaveId"],
+                               parts["RegisterType"],
+                               parts["ReturnType"]);
 
+                        }
                     }
 
                 }

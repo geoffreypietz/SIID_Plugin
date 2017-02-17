@@ -55,6 +55,11 @@ namespace HSPI_SAMPLE_CS
         {
             return new MakeLink(l, n);
         }
+        public Qbutton Qbutton(string l, string n)
+        {
+            return new Qbutton(l, n, AjaxPostDestination);
+
+        }
     }
     public class htmlObject
     {
@@ -113,7 +118,7 @@ namespace HSPI_SAMPLE_CS
               {
            $('#" + id + "_" +count+@"').click(function() {
 
-                      var value =true;
+                      var value ="+count+@";
                       value = encodeURIComponent(value);
                     var theData ='&value='+ value+ '&id=' + '" + id + @"';
       console.log(theData);
@@ -131,6 +136,7 @@ namespace HSPI_SAMPLE_CS
 
                 }
                 body.Append("<label for  \"" + id + "_" + count +"\">"+choice+"</label>");
+                count++;
 
             }
             body.Append("</div>");
@@ -166,6 +172,8 @@ namespace HSPI_SAMPLE_CS
 
     }
 
+ 
+
     public class Gobutton:htmlObject
     {
         public Gobutton(string id, string label, string AJX)
@@ -191,6 +199,35 @@ console.log(theData);
         }
 
     }
+    public class Qbutton : htmlObject
+    {
+        public Qbutton(string id, string label, string AJX)
+        {
+
+            AjaxPostDestination = AJX;
+            /*      string prescript = @"<script>  $(function()
+              {
+           $('#" + id + @"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+                      commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+                  });
+              })</script>";*/
+
+            //  html = prescript+@"
+            html = @"
+<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
+<a class='ui-button-text' href=/" + AjaxPostDestination + @"?"+id+@">" + label + @"</a></button>";
+
+
+        }
+
+
+    }
+
 
 
     public class selectorInput:htmlObject

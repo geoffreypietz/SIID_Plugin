@@ -314,8 +314,12 @@ namespace HSPI_SAMPLE_CS
                 Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
                 Util.hs.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
+                Util.hs.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
+
                 
+
+
 
                 Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
 
@@ -626,6 +630,12 @@ namespace HSPI_SAMPLE_CS
                         return modPage.MakeDeviceRedirect(pageName, user, userRights, queryString);
                        // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
                     }
+                case "AddModbusDevice":
+                    {
+
+                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                        return modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
+                    }
          
 
 
@@ -652,29 +662,14 @@ namespace HSPI_SAMPLE_CS
                         modPage.parseModbusGatewayTab(data);
                         return "";
                     }
-                case "AddModbusDevice":
+                case "ModBusDevTab":
                     {
-                        try
-                        {
-                            var parts = HttpUtility.ParseQueryString(data);
-                                string ID = parts["id"];
-                                if (parts["id"].Split('_')[0] == "G")
-                            {
-                                ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
-                               // return "";
-                                return modPage.MakeSubDeviceRedirect(pageName, user, userRights, "", parts["id"].Split('_')[1]);
-                            }
-
-                        }
-                        catch
-                        {
-
-                        }
+                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                        modPage.parseModbusDeviceTab(data);
                         return "";
-                        
-
                     }
-                   
+                  
+
             }
 
 
