@@ -13,6 +13,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Data;
+using HSPI_SIID.General;
 
 namespace HSPI_SIID_ModBusDemo.Modbus
 {
@@ -919,8 +920,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             foreach (int dv in Raws)
             {
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
-                var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
-                var Tempparts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var TempEDO = TempDev.get_PlugExtraData_Get(Util.hs);
+                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 string Rep = Tempparts["RawValue"];
                 FinalString.Replace("$(" + dv + ")", Rep);
 
@@ -928,8 +929,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             foreach (int dv in Processed)
             {
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
-                var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
-                var Tempparts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var TempEDO = TempDev.get_PlugExtraData_Get(Util.hs);
+                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 string Rep = Tempparts["ProcessedValue"];
                 FinalString.Replace("$(" + dv + ")", Rep);
             }
@@ -942,11 +943,16 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 }
                 else
                 {
-                    OutValue = Convert.ToDouble(new DataTable().Compute(FinalString.ToString(), null)).ToString();
+
+                    OutValue = GeneralHelperFunctions.Evaluate(FinalString.ToString()).ToString();
+
+                    
                 }
 
             }
-            catch { }
+            catch(Exception e) {
+                OutValue = "Calculator parse error: " + e.Message+" \nFinal string:"+ FinalString.ToString();
+            }
         
 
             addSSIDExtraData(ModDev, "ProcessedValue", OutValue);
