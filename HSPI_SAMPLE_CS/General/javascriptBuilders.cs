@@ -166,7 +166,7 @@ namespace HSPI_SAMPLE_CS
               })</script>";
 
               html = prescript+@"
-<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>" + label + @"</button>";
+<button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'><span  class='ui-button'>" + label + @"</span></button>";
 
         }
 
@@ -194,7 +194,7 @@ console.log(theData);
            //  html = prescript+@"
            html=@"
 <button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/"+AjaxPostDestination+@">" + label + @"</a></button>";
+<a class='ui-button-text' href=/"+AjaxPostDestination+ @"><span  class='ui-button'>" + label + @"</span></a></button>";
 
         }
 
@@ -220,7 +220,7 @@ console.log(theData);
             //  html = prescript+@"
             html = @"
 <button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/" + AjaxPostDestination + @"?"+id+@">" + label + @"</a></button>";
+<a class='ui-button-text' href=/" + AjaxPostDestination + @"?"+id+ @"><span  class='ui-button'>" + label + @"</span></a></button>";
 
 
         }

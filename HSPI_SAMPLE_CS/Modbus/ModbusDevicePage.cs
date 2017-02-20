@@ -187,7 +187,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay", Int32.Parse(parts["Delay"])).print());
             ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
             stb.Append(ModbusConfHtml.print());
-            stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
+        //    stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
             stb.Append(ModbusBuilder.button(dv + "_Test", "Test").print());
             return stb.ToString();
 
@@ -211,42 +211,61 @@ namespace HSPI_SAMPLE_CS.Modbus
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
             ModbusConfHtml.add("Register Address: ", ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print());
 
-            switch (parts["RegisterType"])
-            {
-                case ("0")://Discrete input
-                    {
+                    
+
               
-                        break;
-                    }
-                case ("1")://Coil
-                    {
-                        ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
+                      
 
-                        break;
-                    }
-                case ("2")://Input Register 
-                    {//0 = Int16, 1=Int32,2=Float32,3=Int64,4=Bool
-                        ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Int16", "Int32", "Float32", "Int64", "Bool" }, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
-                        ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
-                        ModbusConfHtml.add("Scratch Pad: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
-                        ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
-                        break;
-                    }
-                case ("3")://Holding Register
-                    {
                         ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Int16", "Int32", "Float32", "Int64", "Bool" }, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
                         ModbusConfHtml.add("Scratch Pad: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
                         ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
-                        break;
-                    }
 
-            }
+             
+           
             ModbusConfHtml.add("Device Enabled: ", ModbusBuilder.checkBoxInput(dv + "_DeviceEnabled", Boolean.Parse(parts["DeviceEnabled"])).print());
             stb.Append(ModbusConfHtml.print());
-            stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
+  //          stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
+            stb.Append(@"<script>
+UpdateDisplay=function(){
+value=$('#" + dv + @"_RegisterType')[0].value;
+$('#" + dv + @"_ReturnType')[0].parentElement.parentElement.style.display='';
+$('#" + dv + @"_SignedValue')[0].parentElement.parentElement.style.display='';
+$('#" + dv + @"_ScratchpadString')[0].parentElement.parentElement.style.display='';
+$('#" + dv + @"_DisplayFormatString')[0].parentElement.parentElement.style.display='';
+$('#" + dv + @"_ReadOnlyDevice')[0].parentElement.parentElement.style.display='';
 
+
+if(value==0){
+$('#" + dv + @"_ReturnType')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_SignedValue')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_ScratchpadString')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_DisplayFormatString')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_ReadOnlyDevice')[0].parentElement.parentElement.style.display='none';
+}
+if(value==1){
+$('#" + dv + @"_ReturnType')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_SignedValue')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_ScratchpadString')[0].parentElement.parentElement.style.display='none';
+$('#" + dv + @"_DisplayFormatString')[0].parentElement.parentElement.style.display='none';
+}
+if(value==2){
+$('#" + dv + @"_ReadOnlyDevice')[0].parentElement.parentElement.style.display='none';
+}
+if(value==3){
+
+}
+};
+
+$('#" + dv + @"_RegisterType').change(UpdateDisplay);
+
+UpdateDisplay();
+
+
+
+                
+</script>");
 
 
 

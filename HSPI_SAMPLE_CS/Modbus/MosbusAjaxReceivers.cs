@@ -102,7 +102,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             //then in PostBackProc in the main plugin stuff, the pagename that comes back will be our ajax call
             //n
-
+           
 
             saveModbusConfig();
             return "true";// base.postBackProc(page, data, user, userRights);

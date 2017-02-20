@@ -92,7 +92,7 @@ namespace HSPI_SAMPLE_CS
 
             Scheduler.Classes.clsDeviceEnumeration DevNum =(Scheduler.Classes.clsDeviceEnumeration) Util.hs.GetDeviceEnumerator();
              List<int> ModbusGates= new List<int>();
-            List<int> ModbusDevs = new List<int>();
+            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
             //Scheduler.Classes.DeviceClass
             var Dev = DevNum.GetNext();
             while(Dev != null)
@@ -105,10 +105,23 @@ namespace HSPI_SAMPLE_CS
                         if (parts["Type"] == "Modbus Gateway")
                     {
                         ModbusGates.Add(Dev.get_Ref(Util.hs));
+                        StringBuilder updatedList = new StringBuilder();
                         foreach(var subId in parts["LinkedDevices"].Split(','))
                         {
-                            ModbusDevs.Add(Convert.ToInt32(subId));
+                            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
+                            if (MDevice != null)
+                            {
+                                ModbusDevs.Add(MDevice);
+                                updatedList.Append(subId + ",");
+                            }
+                           
+                                
                         }
+                        parts["LinkedDevices"] += updatedList.ToString();
+                        EDO.RemoveNamed("SSIDKey");
+                        EDO.AddNamed("SSIDKey", parts.ToString());
+                        Dev.set_PlugExtraData_Set(Util.hs, EDO);
+
                     }
                  //   if (parts["Type"] == "Modbus Device")
                //     {
@@ -140,9 +153,9 @@ namespace HSPI_SAMPLE_CS
                 ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
                
                 
-                foreach (int DevRef in ModbusDevs)
+                foreach (Scheduler.Classes.DeviceClass MDevice in ModbusDevs)
                 {
-                    Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(DevRef);
+                 
                     if (MDevice != null)
                     {
                         var EDO = MDevice.get_PlugExtraData_Get(Util.hs);
@@ -150,13 +163,14 @@ namespace HSPI_SAMPLE_CS
                         if (Convert.ToInt32(parts["GateID"]) == GateRef)
                         {
                             ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
-                               ModbusBuilder.MakeLink("/deviceutility?ref=" + DevRef + "&edit=1", MDevice.get_Name(Util.hs)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Util.hs) + "&edit=1", MDevice.get_Name(Util.hs)).print(),
                                parts["SlaveId"],
                                parts["RegisterType"],
                                parts["ReturnType"]);
 
                         }
                     }
+
 
                 }
                 sb.Append(ModbusConfHtml.print());
