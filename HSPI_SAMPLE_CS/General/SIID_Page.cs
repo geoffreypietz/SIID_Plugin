@@ -12,9 +12,11 @@ namespace HSPI_SAMPLE_CS
    public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 
     {
-
+        public ModbusDevicePage ModPage { get; set; }
+       
         public SIID_Page(string pagename) : base(pagename)
         {
+          
         }
 
         public int selectedPlugin { get; set; }
@@ -90,53 +92,39 @@ namespace HSPI_SAMPLE_CS
             StringBuilder sb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice");
 
-            Scheduler.Classes.clsDeviceEnumeration DevNum =(Scheduler.Classes.clsDeviceEnumeration) Util.hs.GetDeviceEnumerator();
-             List<int> ModbusGates= new List<int>();
+          List<int>  ModbusGates=ModbusDevicePage.getAllGateways().ToList();
             List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
-            //Scheduler.Classes.DeviceClass
-            var Dev = DevNum.GetNext();
-            while(Dev != null)
+
+            foreach (int GID in ModbusGates)
             {
-                try
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(GID));
+                 var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                StringBuilder updatedList = new StringBuilder();
+                foreach (var subId in parts["LinkedDevices"].Split(','))
                 {
-                    var EDO = Dev.get_PlugExtraData_Get(Util.hs);
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string s = parts["Type"];
-                        if (parts["Type"] == "Modbus Gateway")
+                    try
                     {
-                        ModbusGates.Add(Dev.get_Ref(Util.hs));
-                        StringBuilder updatedList = new StringBuilder();
-                        foreach(var subId in parts["LinkedDevices"].Split(','))
+                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
+                        if (MDevice != null)
                         {
-                            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
-                            if (MDevice != null)
-                            {
-                                ModbusDevs.Add(MDevice);
-                                updatedList.Append(subId + ",");
-                            }
-                           
-                                
+                            ModbusDevs.Add(MDevice);
+                            updatedList.Append(subId + ",");
                         }
-                        parts["LinkedDevices"] += updatedList.ToString();
-                        EDO.RemoveNamed("SSIDKey");
-                        EDO.AddNamed("SSIDKey", parts.ToString());
-                        Dev.set_PlugExtraData_Set(Util.hs, EDO);
+                    }
+                    catch
+                    {
 
                     }
-                 //   if (parts["Type"] == "Modbus Device")
-               //     {
-                //        ModbusDevs.Add(Dev.get_Ref(Util.hs));
-                //    }
+
 
                 }
-                catch
-                {
-
-                }
-                    Dev = DevNum.GetNext();
-               
-                
+                parts["LinkedDevices"] = updatedList.ToString();
+                EDO.RemoveNamed("SSIDKey");
+                EDO.AddNamed("SSIDKey", parts.ToString());
+                Dev.set_PlugExtraData_Set(Util.hs, EDO);
             }
+
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
             sb.Append("<br>");
             foreach (int GateRef in ModbusGates)
@@ -178,8 +166,8 @@ namespace HSPI_SAMPLE_CS
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
             }
 
-
-           
+            
+            ModbusDevicePage.UpdateGateList(ModbusGates.ToArray());
             return sb.ToString();
         }
 
