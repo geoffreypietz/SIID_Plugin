@@ -250,12 +250,28 @@ namespace HSPI_SAMPLE_CS.Modbus
             Util.hs.DeviceVSP_AddPair(dv, Unreachable);
 
             var Graphic = new VSVGPairs.VGPair();
-            Graphic.PairType = VSVGPairs.VSVGPairType.Range;
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/SIIDDisabledPlaceholder.png";
             Graphic.Set_Value=0;
 
             Util.hs.DeviceVGP_AddPair(dv, Graphic);
 
+            Util.hs.DeviceVSP_AddPair(dv, Unreachable);
+
+             Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/SIIDGoodPlaceholder.png";
+            Graphic.Set_Value = 1;
+
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
+            Util.hs.DeviceVSP_AddPair(dv, Unreachable);
+
+             Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/SIIDMedPlaceholder.png";
+            Graphic.Set_Value = 2;
+
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
 
 
         }
@@ -357,6 +373,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             //ModbusConfHtml.addDevHeader("Gateway: " + parts["Gateway"]);
            string[] GatewayStringArray = (from kvp in ModbusGates select kvp.Value).ToArray();
+            int DefGateway = (from kvp in ModbusGates which kvp.Key== Convert.ToInt32(parts["GateID"]));///here when have more hands
             int DefGateway = ModbusGates.IndexOf(new KeyValuePair<int,string>(Convert.ToInt32(parts["GateID"]), parts["Gateway"]));
             ModbusConfHtml.add("Modbus Gateway ID: ", ModbusBuilder.selectorInput(GatewayStringArray, dv + "_GateID", "GateID", DefGateway).print());
             ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(new string[] { "Discrete Input (RO)", "Coil (RW)", "Input Register (RO)", "Holding Register (RW)" }, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
