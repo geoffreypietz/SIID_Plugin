@@ -479,7 +479,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string ip = parts["Gateway"];
-            int port = Convert.ToInt32(parts["Port"]);
+          //  int port = Convert.ToInt32(parts["TCP"]);
             //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
             if (!Boolean.Parse(parts["Enabled"]))
             {
@@ -488,19 +488,27 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             else
             {
+                System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
                 System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient();
                 try
                 {
-                    Socket.Connect(ip, port);
-                    Socket.Close();
-                    Util.hs.SetDeviceValueByRef(deviceId, 1, true);
-                    return "Connection Successfull.";
+                   var Rep= Ping.Send(ip);
+                    //  Socket.Connect(ip, port);
+                    //  Socket.Close();
+                    if (Rep.Status.ToString() == "Success") {
+                        Util.hs.SetDeviceValueByRef(deviceId, 1, true);
+                        return "Connection Successfull.";
+                    }
+                    else{
+                        Util.hs.SetDeviceValueByRef(deviceId, 0, true);
+                        return "Failed connectivty test: "+ Rep.Status.ToString();
+                    }
                 }
                 catch(Exception e)
                 {
-
                     Util.hs.SetDeviceValueByRef(deviceId, 0, true);
-                    return "Failed connectivty test: "+e.Message;
+                    return "Failed connectivty test: " + e.Message;
+
                 }
       
             }
