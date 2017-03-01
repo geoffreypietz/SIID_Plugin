@@ -70,6 +70,10 @@
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HSCF.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="NModbus4, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Scheduler">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\Scheduler.dll</HintPath>
     </Reference>
@@ -104,6 +108,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="HSPI_SAMPLE_CS_TemporaryKey.pfx" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
