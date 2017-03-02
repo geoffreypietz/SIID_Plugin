@@ -11,6 +11,8 @@ using Modbus.Utility;
 
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
+using System.Data;
 
 namespace HSPI_SAMPLE_CS.Modbus
 {
@@ -86,10 +88,12 @@ namespace HSPI_SAMPLE_CS.Modbus
             parts["Delay"] = "0";
             parts["RegWrite"] = "1";
             parts["LinkedDevices"] = "";
+            parts["RawValue"] = "0";
+            parts["ProcessedValue"] = "0";
             return parts.ToString();
 
         }
-        public string makeNewModbusDevice(int GatewayID)
+        public string makeNewModbusDevice(int GatewayID, int DeviceID)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
             Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
@@ -110,11 +114,13 @@ namespace HSPI_SAMPLE_CS.Modbus
             //So coil and discrete are bool ONLY
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
             parts["SignedValue"] = "false";
-            parts["ScratchpadString"] = "";
+            parts["ScratchpadString"] = "$("+ DeviceID + ")";
             parts["DisplayFormatString"] = "{0}";
             parts["ReadOnlyDevice"] = "true";
             parts["DeviceEnabled"] = "false";
             parts["RegisterAddress"] = "1";
+            parts["RawValue"] = "0";
+            parts["ProcessedValue"] = "0";
             return parts.ToString();
             //uint is unsigned int,
         }
@@ -212,7 +218,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
 
-            EDO.AddNamed("SSIDKey", makeNewModbusDevice(Convert.ToInt32(GatewayID)));
+            EDO.AddNamed("SSIDKey", makeNewModbusDevice(Convert.ToInt32(GatewayID),dv));
             newDevice.set_PlugExtraData_Set(Util.hs, EDO);
 
             AddDeviceToGateway(dv, Convert.ToInt32(GatewayID));
@@ -411,7 +417,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
             //So coil and discrete are bool ONLY
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
-            ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Boolean", "Int16", "Int32", "Float32", "Int64",
+            ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Boolean", "Int16", "Int32", "Float32", "Int64", "Double64",
             "2 character string","4 character string","6 character string","8 character string"}, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
                         ModbusConfHtml.add("Scratch Pad: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
@@ -580,15 +586,249 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             
                 addSSIDExtraData(newDevice, partID, changed["value"]);
 
-            ModbusTcpMasterReadInputs();
+            //  ModbusTcpMasterReadInputs();
+
+            //TESTING FUNCTIONS
+            ReadFromModbusDevice(devId);
+            ProcessScratchPad(devId);
+        }
+
+
+        public void FlipBits(ushort[] Input)
+        {
+           int  index = 0;
+            foreach(ushort Item in Input){
+                byte[] temp = BitConverter.GetBytes(Item);
+                Array.Reverse(temp);
+                Input[index] = BitConverter.ToUInt16(temp,0);
+                index++;
+            }
+
 
 
         }
 
+        public void ProcessScratchPad(int devID)
+        {
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            string ScratchPadString = parts["ScratchpadString"];
 
-  //need to make a read, and a write function
+            //OK scratchpad rules
+            //All variables are numbers
+            //The result will be a number, output formatting can happen from the format string stuff and there we can add $ for money or Kw/H or whatever
 
-        public uint[] OpenModDeviceConnection(int devID, bool Read=true, uint[] Data=null)
+            //$(DevId) is the Raw value from the device DevId, and can pull from other devices in this way
+            //#(DevId) is the Processed value (the result of their scratchpad calculation)
+            //Maybe need a special destination thing.  i.e. 'LOL' <- $(141) + #(222) means add the raw for device 141 to the processed 222 and put this as the value of device named LOL
+            //I guess it's time to learn RegEx
+            //Note that can do a double.Parse(ScratchPadString) once I convert all the number (will not do complicated things like power or squareroots 
+            //(Requirements only call for addition,subtraction,multiplication,division,accumulator)
+            //accumulator will be special, rest is already built into the double.parse
+
+            //Get set of Devices Raw and Devices processed in the string
+            //retrive the raw/processed device values
+            //replace the call with the values (Or NAN of whatever if not)
+            //parse the expression as a double and save that result as the processed (or save the error string as the processed value)
+            List<int> Raws = new List<int>();
+            List<int> Processed = new List<int>();
+            Match m = Regex.Match(ScratchPadString,@"(\$\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Raws.Contains(int.Parse(m.Groups[2].ToString())))
+                {
+                    
+                    Raws.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+             m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Processed.Contains(int.Parse(m.Groups[2].ToString())))
+                {
+                    Processed.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+            StringBuilder FinalString = new StringBuilder(ScratchPadString);
+            foreach(int dv in Raws)
+            {
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
+                var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
+                var Tempparts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                string Rep = Tempparts["RawValue"];
+                FinalString.Replace("$(" + dv + ")", Rep);
+
+            }
+            foreach(int dv in Processed)
+            {
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dv);
+                var TempEDO = ModDev.get_PlugExtraData_Get(Util.hs);
+                var Tempparts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                string Rep = Tempparts["ProcessedValue"];
+                FinalString.Replace("$(" + dv + ")", Rep);
+            }
+            string OutValue = "NAN";
+            try
+            {
+                 OutValue = Convert.ToDouble(new DataTable().Compute(FinalString.ToString(), null)).ToString();
+              
+            }
+            catch { }
+         
+            addSSIDExtraData(ModDev, "ProcessedValue", OutValue);
+        }
+
+
+            public void ReadFromModbusDevice(int devID) //Takes device ID, does a read action on it and puts it in the RawValue component of the extra data
+        {
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5 = double64, 6=string2,7=string4,8=string6,9=string8
+            bool Signed = bool.Parse(parts["SignedValue"]);
+            var Returned = OpenModDeviceConnection(devID);
+            string RawString = "";
+            switch (parts["ReturnType"])
+            {
+                case ("0"):
+                    {
+                        RawString = "true";
+                        if (Returned[0] == 0){
+                            RawString = "false";
+                        }
+
+                        break;
+                    }
+                case ("1"):
+                case ("2"):
+                case ("4")://Ints
+                    {
+                        byte[] Bytes = new byte[Returned.Count()*2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        if (Signed)
+                        {
+                            switch (Returned.Count())
+                            {
+                                case (1):
+                                    {
+                                        RawString = BitConverter.ToInt16(Bytes,0).ToString();
+                                        break;
+                                    }
+                                case (2):
+                                    {
+                                        RawString = BitConverter.ToInt32(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        RawString = BitConverter.ToInt64(Bytes, 0).ToString();
+                                        break;
+                                    }
+
+
+                            }
+
+                        }
+                        else
+                        {
+                            switch (Returned.Count())
+                            {
+                                case (1):
+                                    {
+                                        RawString = BitConverter.ToUInt16(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                case (2):
+                                    {
+                                        RawString = BitConverter.ToUInt32(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        RawString = BitConverter.ToUInt64(Bytes, 0).ToString();
+                                        break;
+                                    }
+
+
+                            }
+                        }
+                    
+                        break;
+                    }
+           
+                case ("3"): //float
+                    {
+                        byte[] Bytes = new byte[Returned.Count() * 2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        RawString = BitConverter.ToSingle(Bytes, 0).ToString();
+                        break;
+                    }
+                case ("5")://double
+                    {
+                        byte[] Bytes = new byte[Returned.Count() * 2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        RawString = BitConverter.ToDouble(Bytes, 0).ToString();
+                        break;
+                        break;
+                    }
+                default:
+                    {//string
+                        StringBuilder OUT = new StringBuilder();
+
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Array.Reverse(temp);
+                            OUT.Append(System.Text.Encoding.Default.GetString(temp));
+
+
+                        }
+                        RawString = OUT.ToString();
+                        break;
+                    }
+                  
+
+
+            }
+
+           // parts["RawValue"] = RawString;
+            //  parts["ProcessedValue"] = "0";
+            addSSIDExtraData(ModDev, "RawValue", RawString);
+           
+
+        }
+
+        public ushort[] OpenModDeviceConnection(int devID, ushort[] Data=null) //General modbus read/write function.
         {
             Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
             var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
@@ -598,57 +838,106 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             var EDOGate = Gatrway.get_PlugExtraData_Get(Util.hs);
             var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
 
-            
+            bool flipbits = bool.Parse(partsGate["BigE"]);
+
             int Offset = 0;
             if(bool.Parse(partsGate["ZeroB"])){
                 Offset = -1;
             }
-            OffsetArray =[10000, 0, 30000, 40000];
+            ushort[] OffsetArray =new ushort[] { 10000, 0, 30000, 40000 };
 
-            int StartAddress = Int32.Parse(parts["RegisterAddress"]) + Offset + OffsetArray[Int32.Parse(parts["RegisterType"])];
+            // int Taddress = Int32.Parse(parts["RegisterAddress"]) + Offset + OffsetArray[Int32.Parse(parts["RegisterType"])];
+            // ushort startAddress = (ushort)Math.Max(0, Taddress);
+            int Taddress = Int32.Parse(parts["RegisterAddress"]) + Offset ;
+            ushort startAddress = (ushort)Math.Max(0, Taddress);
+
             //Use bigE to reverse or not the retuned bytes before passing them up to wherever they're going, (or down in case of write)
 
-            NumRegArrray =[1, 1, 2, 2, 4, 1, 2, 3, 4];
-            //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=string2,6=string4,7=string6,8=string8
+            ushort[] NumRegArrray =new ushort[] { 1, 1, 2, 2, 4, 4,1, 2, 3, 4 };
+            //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=double64, 6=string2,7=string4,8=string6,9=string8
             //tells us how many registers to read/write and also how to parse returns
             //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
             //So coil and discrete are bool ONLY
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
 
-            uint[] Return = null;
+            ushort[] Return = null;
             ushort numInputs = NumRegArrray[Int32.Parse(parts["ReturnType"])]; //Should hava a check if Data is not null to see that it's appropriate to write.
-            using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
+            try
             {
-                ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
-                master.Transport.ReadTimeout = Int32.Parse(parts["RWTime"]);
-                master.Transport.Retries = Int32.Parse(parts["RWRetry"]);
-                master.Transport.WaitToRetryMilliseconds = Int32.Parse(parts["Delay"]);
-                if (Read)
+                using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
                 {
-                    if (Int32.Parse(parts["RegisterType"]) > 3) //It's a coil or Discrete Input
+                    ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
+                    master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
+                    master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
+                    master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
+                    if (Data==null)
                     {
-                        Return = master.ReadCoils(startAddress, numInputs);
-                    }
+                        if (Int32.Parse(parts["RegisterType"]) < 3) //It's a coil or Discrete Input
+                        {
+                            bool Returned = master.ReadCoils(startAddress, 1)[0];
+                            if (Returned)
+                                Return = new ushort[] { 1 };
+                            else
+                                Return =new ushort[] { 0 };
+
+                        }
+                        else
+                        {
+                            Return = master.ReadHoldingRegisters(startAddress, numInputs);
+                            if (flipbits)
+                            { //Note according to blog here: https://ctlsys.com/common_modbus_protocol_misconceptions/
+                              //Each register is in Big Endian and the little endienness is the order we read the registers
+                              //so::
+                                Return.Reverse();
+                                // FlipBits(Return);//may not just be flip bits, may be flip the array also
+                                //IDEA is we have a returned array
+                                /*
+                                 * [B1B2]
+                                 * [B3B4]
+                                 * [B5B6] 
+                                 * [B7B8]
+                                 * 
+                                 * So each register is 2 bytes is 16 bits
+                                 * 
+                                 * Depenging on our datatype, we want to parse these 4 registers as a single thing
+                                 */
+                            }
+                        }
+                        return Return;
+    
+
+                }
                     else
                     {
-                        Return = master.ReadHoldingRegisters(startAddress, numInputs);
-                    }
-                    
-                }
-                else
-                {
-                    if (Int32.Parse(parts["RegisterType"]) > 3) //It's a coil or Discrete Input
-                    {
 
-                        Return = master.WriteSingleCoil(startAddress, (bool)Data[0]);
-                    }
-                    else
-                    {
-                        Return = master.WriteMultipleRegisters(startAddress, Data);
-                       
+                        if (Int32.Parse(parts["RegisterType"]) < 3) //It's a coil or Discrete Input
+                        {
+                            bool Send = true;
+                            if (Data[0] == 0)
+                            {
+                                Send = false;
+                            }
+                            master.WriteSingleCoil(startAddress, Send);
+                        }
+                        else
+                        {
+                            if (flipbits)
+                            {
+                                Data.Reverse();
+                                //FlipBits(Data);
+                            }
+                            master.WriteMultipleRegisters(startAddress, Data);
+
+                        }
+                        return new ushort[] { 1 };
+
                     }
 
                 }
+            }
+            catch(Exception e)
+            {
+                return new ushort[] { 0 };
 
             }
                 
@@ -701,7 +990,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public static void ModbusTcpMasterReadInputs()
         {
-            StringBuilder Printout = new StringBuilder();
+           /* StringBuilder Printout = new StringBuilder();
             using (TcpClient client = new TcpClient("129.82.36.221", 502))
             {
                 ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
@@ -736,7 +1025,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             // Input 101=0
             // Input 102=0
             // Input 103=0
-            // Input 104=0
+            // Input 104=0*/
         }
 
 
