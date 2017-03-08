@@ -22,7 +22,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
     {
 
-       
+        public static HashSet<string> WhoIsBeingPolled = new HashSet<string>();
 
         public ModbusDevicePage(string pagename) : base(pagename)
         {
@@ -231,6 +231,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             newDevice.set_DeviceType_Set(Util.hs, DevINFO);
 
+            MakeSubDeviceGraphicsAndStatus(dv);
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
             //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
@@ -238,8 +239,33 @@ namespace HSPI_SAMPLE_CS.Modbus
             return page.BuildPage();
         }
 
-   
-    
+
+        public void MakeSubDeviceGraphicsAndStatus(int dv)
+        {
+            var Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/MDevDisabled.png";
+            Graphic.Set_Value = 0;
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
+
+            Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/MDevSuccess.png";
+            Graphic.Set_Value = 1;
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
+
+            Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/MDevTimeout.png";
+            Graphic.Set_Value = 2;
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
+
+            Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/SIID/MDevFailed.png";
+            Graphic.Set_Value = 3;
+            Util.hs.DeviceVGP_AddPair(dv, Graphic);
+        }
 
         public void MakeGatewayGraphicsAndStatus(int dv)
         {
@@ -282,8 +308,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             Graphic.Set_Value=0;
 
             Util.hs.DeviceVGP_AddPair(dv, Graphic);
-
-            Util.hs.DeviceVSP_AddPair(dv, Unreachable);
+            
 
              Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -291,7 +316,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             Graphic.Set_Value = 1;
 
             Util.hs.DeviceVGP_AddPair(dv, Graphic);
-            Util.hs.DeviceVSP_AddPair(dv, Unreachable);
+       
 
              Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -521,7 +546,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string ip = parts["Gateway"];
-          //  int port = Convert.ToInt32(parts["TCP"]);
+            int port = Convert.ToInt32(parts["TCP"]);
             //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
             if (!Boolean.Parse(parts["Enabled"]))
             {
@@ -530,10 +555,12 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             else
             {
-                System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
-                System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient();
+              //  System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
+               
                 try
                 {
+                    System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient(ip, port);
+                    /*
                    var Rep= Ping.Send(ip);
                     //  Socket.Connect(ip, port);
                     //  Socket.Close();
@@ -544,6 +571,16 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     else{
                         Util.hs.SetDeviceValueByRef(deviceId, 0, true);
                         return "Failed connectivty test: "+ Rep.Status.ToString();
+                    }*/
+                    if (Socket.Connected)
+                    {
+                        Util.hs.SetDeviceValueByRef(deviceId, 1, true);
+                        return "Connection Successfull.";
+                    }
+                    else
+                    {
+                        Util.hs.SetDeviceValueByRef(deviceId, 0, true);
+                        return "Failed connectivty test: ";
                     }
                 }
                 catch(Exception e)
@@ -579,7 +616,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             if(partID== "Poll")
             {
                 //Update timer dictionary
-                SIID_Page.PluginTimerDictionary[devId].Change(0, Convert.ToInt32(changed["value"]));
+                if (SIID_Page.PluginTimerDictionary.ContainsKey(devId)){
+                    SIID_Page.PluginTimerDictionary[devId].Change(0, Convert.ToInt32(changed["value"]));
+                }
+                else
+                {
+                    System.Threading.Timer GateTimer = new System.Threading.Timer(PollActiveFromGate, devId, 100000, Convert.ToInt32(changed["value"]));
+                    SIID_Page.PluginTimerDictionary[devId] = GateTimer;
+                }
 
 
             }
@@ -612,17 +656,18 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             
                 addSSIDExtraData(newDevice, partID, changed["value"]);
-
+            Util.hs.SetDeviceValueByRef(devId, 0, false);
             //  ModbusTcpMasterReadInputs();
 
 
         }
-
+      public static System.Threading.Mutex OneAtATime = new System.Threading.Mutex();
     public  void PollActiveFromGate(object RawID)
         {
             //First, check if device even exits
 
             int GateID=Convert.ToInt32((int)RawID);
+            Console.WriteLine("Polling Gateway: " + GateID);
             //Check if gate is active
             Scheduler.Classes.DeviceClass Gateway = null;
             try
@@ -644,32 +689,61 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 if (bool.Parse(parts["Enabled"]))
                 {
+                    
                     //Get list of devices
                     //If they're enabled, poll them
                     //Use the time-between and retry things
-                    foreach (var subId in parts["LinkedDevices"].Split(','))
+                        foreach (var subId in parts["LinkedDevices"].Split(','))
                     {
-                        try
+                        if (!WhoIsBeingPolled.Contains(subId))
                         {
-                            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
-                            if (MDevice != null)
+                            try
                             {
-                                var EDO2 = MDevice.get_PlugExtraData_Get(Util.hs);
-                                var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
-                                if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
+                                WhoIsBeingPolled.Add(subId);
+                                Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
+                                if (MDevice != null)
                                 {
-                                    //Add read write retries here
-                                    //Add read/write timeout here
-                                    ReadFromModbusDevice(Convert.ToInt32(subId));
-                                    ProcessCalculator(Convert.ToInt32(subId));
-                                    //add delay between each address poll here
+                                    var EDO2 = MDevice.get_PlugExtraData_Get(Util.hs);
+                                    var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+                                    if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
+                                    {
+                                          //OneAtATime.WaitOne();
 
+                                        try
+                                        {
+                                            Console.WriteLine("         Polling Device: " + subId);
+                                            ReadFromModbusDevice(Convert.ToInt32(subId));
+                                            ProcessCalculator(Convert.ToInt32(subId));
+
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine("Exception: " + e.StackTrace);
+                                            Util.hs.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
+                                            Util.hs.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+
+
+                                        }
+                                        finally
+                                        {
+                                              //OneAtATime.ReleaseMutex();
+                                            WhoIsBeingPolled.Remove(subId);
+                                        }
+                                        System.Threading.Thread.Sleep(Convert.ToInt32(parts["Delay"]));
+                                        //add delay between each address poll here
+
+                                    }
+                                    else
+                                    {
+                                        Util.hs.SetDeviceValueByRef(Convert.ToInt32(subId), 0, true);
+                                    }
                                 }
                             }
-                        }
-                        catch
-                        {
 
+                            catch
+                            {
+
+                            }
                         }
 
 
@@ -694,6 +768,56 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
 
         }
+
+
+        public void ReadWriteIfMod(CAPI.CAPIControl ActionIn)
+        {
+            try
+            {
+                var devID = ActionIn.Ref;
+                Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
+                var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                if (parts != null)
+                {
+                    if (parts["Type"].ToLower() == "Modbus Device".ToLower())
+                    {
+                       var Send= ActionIn.ControlValue;
+                        //Send is a double = 32 bits
+                        //Need to convert to whatever we write, depending on the thing we're writing to
+                        
+
+
+                        try
+                        {
+                            Console.WriteLine("         Writign to Device: " + devID);
+                            WriteToModbusDevice(devID, Send);
+            
+                            ReadFromModbusDevice(Convert.ToInt32(devID));
+                            ProcessCalculator(Convert.ToInt32(devID));
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Exception: " + e.StackTrace);
+                            Util.hs.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
+                            Util.hs.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+
+
+                        }
+                    }
+
+
+                }
+            }
+            catch
+            {
+
+            }
+
+        }
+
+
 
         public void ProcessCalculator(int devID)
         {
@@ -778,12 +902,154 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Util.hs.SetDeviceString(devID,ValueString,true);
+            Util.hs.SetDeviceValueByRef(devID, 1, true);
+            Console.WriteLine(devID+ " : " + ValueString);
 
-     
 
 
         }
 
+
+        public void WriteToModbusDevice(int devID, object InData)
+        {//InData will be cast by whatever we're expecting from the return type, but is a double
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5 = double64, 6=string2,7=string4,8=string6,9=string8
+        
+            //CURRENTLY WORKIN HERE
+
+            //MAY NEED TO CONVERT INDATA TO APPROPRIATE USHORT ARRAY, THEN PASS IT AS AN ARG TO MODBUS CONNECTION
+
+
+            switch (parts["ReturnType"])
+            {
+                case ("0"): //Is a bool
+                    {
+                       
+
+                        break;
+                    }
+                case ("1"):
+                case ("2"):
+                case ("4")://Ints
+                    {
+                        byte[] Bytes = new byte[Returned.Count() * 2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        if (Signed)
+                        {
+                            switch (Returned.Count())
+                            {
+                                case (1):
+                                    {
+                                        RawString = BitConverter.ToInt16(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                case (2):
+                                    {
+                                        RawString = BitConverter.ToInt32(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        RawString = BitConverter.ToInt64(Bytes, 0).ToString();
+                                        break;
+                                    }
+
+
+                            }
+
+                        }
+                        else
+                        {
+                            switch (Returned.Count())
+                            {
+                                case (1):
+                                    {
+                                        RawString = BitConverter.ToUInt16(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                case (2):
+                                    {
+                                        RawString = BitConverter.ToUInt32(Bytes, 0).ToString();
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        RawString = BitConverter.ToUInt64(Bytes, 0).ToString();
+                                        break;
+                                    }
+
+
+                            }
+                        }
+
+                        break;
+                    }
+
+                case ("3"): //float
+                    {
+                        byte[] Bytes = new byte[Returned.Count() * 2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        RawString = BitConverter.ToSingle(Bytes, 0).ToString();
+                        break;
+                    }
+                case ("5")://double
+                    {
+                        byte[] Bytes = new byte[Returned.Count() * 2];
+                        int index = 0;
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Bytes[index] = temp[0];
+                            index++;
+                            Bytes[index] = temp[1];
+                            index++;
+
+                        }
+                        RawString = BitConverter.ToDouble(Bytes, 0).ToString();
+                        break;
+
+                    }
+                default:
+                    {//string
+                        StringBuilder OUT = new StringBuilder();
+
+                        foreach (ushort Item in Returned)
+                        {
+                            byte[] temp = BitConverter.GetBytes(Item);
+                            Array.Reverse(temp);
+                            OUT.Append(System.Text.Encoding.Default.GetString(temp));
+
+
+                        }
+                        RawString = OUT.ToString();
+                        break;
+                    }
+
+
+            }
+
+
+        }
 
             public void ReadFromModbusDevice(int devID) //Takes device ID, does a read action on it and puts it in the RawValue component of the extra data
         {
@@ -902,7 +1168,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         }
                         RawString = BitConverter.ToDouble(Bytes, 0).ToString();
                         break;
-                        break;
+                        
                     }
                 default:
                     {//string
@@ -969,7 +1235,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
                 using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
                 {
+                    
                     ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
+                  
                     master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
                     master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
                     master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
@@ -986,7 +1254,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         }
                         else
                         {
-                            Return = master.ReadHoldingRegisters(startAddress, numInputs);
+                            
+                                Return = master.ReadHoldingRegisters(startAddress, numInputs);
+                     
+
                             if (flipbits)
                             { //Note according to blog here: https://ctlsys.com/common_modbus_protocol_misconceptions/
                               //Each register is in Big Endian and the little endienness is the order we read the registers
@@ -1006,7 +1277,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                  */
                             }
                         }
-                        return Return;
+                     //   return Return;
     
 
                 }
@@ -1032,17 +1303,25 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             master.WriteMultipleRegisters(startAddress, Data);
 
                         }
-                        return new ushort[] { 1 };
+                        Return = new ushort[] { 1 };
+                        // return new ushort[] { 1 };
 
                     }
+                   
+                    client.Close();
 
                 }
             }
             catch(Exception e)
             {
-                return new ushort[] { 0 };
+           
+                throw e;
+               // return new ushort[] { 0 };
 
             }
+            
+                return Return;
+            
                 
 
             

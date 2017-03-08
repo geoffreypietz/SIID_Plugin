@@ -104,11 +104,13 @@ namespace HSPI_SAMPLE_CS
                 var EDO = Dev.get_PlugExtraData_Get(Util.hs);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
+                if (!PluginTimerDictionary.ContainsKey(Convert.ToInt32(GID)))
+                {
+                    System.Threading.Timer GateTimer = new System.Threading.Timer(ModPage.PollActiveFromGate, GID, 10000, Convert.ToInt32(parts["Poll"]));
 
-                System.Threading.Timer GateTimer = new System.Threading.Timer(ModPage.PollActiveFromGate,GID,100000, Convert.ToInt32(parts["Poll"]));
-                
-
-                PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
+                    Console.WriteLine("Starting Polling timer for gateway: " + GID);
+                    PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
+                }
             }
 
             

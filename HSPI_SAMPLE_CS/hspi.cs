@@ -26,8 +26,10 @@ namespace HSPI_SAMPLE_CS
 		// a jquery web page
 	public WebPage pluginpage;
 	public WebTestPage pluginTestPage;
+        public ModbusDevicePage modPage;
 
-	string WebPageName = "Sample_Web_Page";
+        string WebPageName = "Sample_Web_Page";
+
 
 	public static bool bShutDown = false;
 
@@ -288,8 +290,8 @@ namespace HSPI_SAMPLE_CS
 
         string[] plugins = Util.hs.GetPluginsList();
 		Util.gEXEPath = Util.hs.GetAppPath();
-
-		try {
+            modPage = new ModbusDevicePage("ModbusDevicePage");
+            try {
 
 
                 //start of SIID stuff, keep -- Mark ***********************************************
@@ -530,12 +532,12 @@ namespace HSPI_SAMPLE_CS
             {
                 case ("Modbus Gateway"):
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                    
                         return modPage.BuildModbusGatewayTab(dvRef);
                     }
                 case ("Modbus Device"):
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                       
                         return modPage.BuildModbusDeviceTab(dvRef);
                     }
                 case ("BacNet")://????
@@ -626,14 +628,14 @@ namespace HSPI_SAMPLE_CS
             
                 case "AddModbusGate":
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                       
                         return modPage.MakeDeviceRedirect(pageName, user, userRights, queryString);
                        // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
                     }
                 case "AddModbusDevice":
                     {
 
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                
                         return modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
                     }
          
@@ -658,14 +660,14 @@ namespace HSPI_SAMPLE_CS
                     return ourWorkingPage.postbackSSIDConfigPage(pageName, data, user, userRights);
                 case "ModBusGateTab":
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                 
 
                        return  modPage.parseModbusGatewayTab(data);
                         
                     }
                 case "ModBusDevTab":
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
+                      
                         modPage.parseModbusDeviceTab(data);
                         return "";
                     }
@@ -712,7 +714,19 @@ namespace HSPI_SAMPLE_CS
 
 	public void SetIOMulti(System.Collections.Generic.List<HomeSeerAPI.CAPI.CAPIControl> colSend)
 	{
-		foreach ( CAPI.CAPIControl CC in colSend) {
+           
+       
+
+            //OK, we will take this function over for modbus actions.
+            foreach (CAPI.CAPIControl CC in colSend)
+            {
+                modPage.ReadWriteIfMod(CC);
+          
+
+            }
+
+
+                foreach ( CAPI.CAPIControl CC in colSend) {
             Console.WriteLine("SetIOMulti set value: " + CC.ControlValue.ToString() + "->ref:" + CC.Ref.ToString());
 
 			if (CC.ControlType == Enums.CAPIControlType.List_Text_from_List) {
@@ -1143,6 +1157,7 @@ namespace HSPI_SAMPLE_CS
 
 
 		Util.strAction strAction;
+            Console.WriteLine(ActInfo.ToString());
 
 		if (ValidAct(ActInfo.TANumber)) {
 			if (ActInfo.TANumber == 1) {
