@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace HSPI_SAMPLE_CS.Modbus
+namespace HSPI_SIID_ModBusDemo.Modbus
 {
     class ModbusDevice
     {

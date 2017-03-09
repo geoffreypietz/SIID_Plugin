@@ -6,9 +6,9 @@ using Scheduler;
 using System.Web;
 
 using System.Threading;
-using HSPI_SAMPLE_CS.Modbus;
+using HSPI_SIID_ModBusDemo.Modbus;
 
-namespace HSPI_SAMPLE_CS
+namespace HSPI_SIID_ModBusDemo
 {
     public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 
@@ -186,8 +186,8 @@ namespace HSPI_SAMPLE_CS
                             ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
                                ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Util.hs) + "&edit=1", MDevice.get_Name(Util.hs)).print(),
                                parts["SlaveId"],
-                               parts["RegisterType"],
-                               parts["ReturnType"]);
+                               ModPage.GetReg(parts["RegisterType"]),
+                               ModPage.GetRet(parts["ReturnType"]));
 
                         }
                     }
@@ -264,7 +264,7 @@ namespace HSPI_SAMPLE_CS
                 tab.tabDIVID = "modBusConfTab";
 
 
-                new HSPI_SAMPLE_CS.Modbus.ModbusClasses.ModbusGeneralConfigSettings();
+                new HSPI_SIID_ModBusDemo.Modbus.ModbusClasses.ModbusGeneralConfigSettings();
 
 
                     htmlTable ModbusConfHtml =  ModbusBuilder.htmlTable();

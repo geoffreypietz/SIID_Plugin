@@ -10,10 +10,10 @@ using Scheduler;
 using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
-using HSPI_SAMPLE_CS.Modbus;
+using HSPI_SIID_ModBusDemo.Modbus;
 using System.Web;
 
-namespace HSPI_SAMPLE_CS
+namespace HSPI_SIID_ModBusDemo
 {
     public class HSPI : IPlugInAPI
     {
@@ -712,84 +712,20 @@ namespace HSPI_SAMPLE_CS
 		return true;
 	}
 
-	public void SetIOMulti(System.Collections.Generic.List<HomeSeerAPI.CAPI.CAPIControl> colSend)
-	{
-           
-       
+        public void SetIOMulti(System.Collections.Generic.List<HomeSeerAPI.CAPI.CAPIControl> colSend)
+        {
+
+
 
             //OK, we will take this function over for modbus actions.
             foreach (CAPI.CAPIControl CC in colSend)
             {
                 modPage.ReadWriteIfMod(CC);
-          
+
 
             }
 
-
-                foreach ( CAPI.CAPIControl CC in colSend) {
-            Console.WriteLine("SetIOMulti set value: " + CC.ControlValue.ToString() + "->ref:" + CC.Ref.ToString());
-
-			if (CC.ControlType == Enums.CAPIControlType.List_Text_from_List) {
-				try {
-					Console.WriteLine("Selected Strings:" + string.Join(",", CC.ControlStringList));
-                    Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) Util.hs.GetDeviceByRef(CC.Ref);
-                    dv.set_StringSelected(Util.hs, CC.ControlStringList);
-					// for testing, we just set the array back to the device to show the selection
-
-					if (dv != null) {
-						foreach (string st in CC.ControlStringList) {
-							// get each string selected and handle any control here
-						}
-					}
-					Util.hs.SetDeviceString(CC.Ref, string.Join(",", CC.ControlStringList), true);
-				} catch (Exception) {
-				}
-			} else {
-				// check if our special control button was pressed, the function here is to speak hello
-				if (CC.ControlValue == 1000) {
-					// this is our button from the sample device that executes a special function but does not set any device value
-					Util.hs.WriteLog(Util.IFACE_NAME, "Special control button pressed, value is " + CC.ControlValue.ToString());
-					Util.hs.Speak("Hello");
-				} else {
-					// call function here to control the hardware, then update the actual values
-					// assume hardware has been set and update HS with new values
-					Util.hs.SetDeviceValueByRef(CC.Ref, CC.ControlValue, true);
-					Util.hs.SetDeviceString(CC.Ref, CC.ControlString, true);
-
-                    Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) Util.hs.GetDeviceByRef(CC.Ref);
-					DeviceTypeInfo_m.DeviceTypeInfo DT = default(DeviceTypeInfo_m.DeviceTypeInfo);
-					DT = dv.get_DeviceType_Get(Util.hs);
-					if (DT.Device_Type == (int) DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Operating_Mode) {
-						int[] list = dv.get_AssociatedDevices(Util.hs);
-						if (list != null) {
-							int dvRef = list[0];
-							// child device will only have one associated device which is the root
-							Scheduler.Classes.DeviceClass child_dv = FindThermChildByType(dvRef, DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Operating_State);
-							if (child_dv != null) {
-								// ignore AUTO value for status, status can only be Idle,Heat, or Cool
-								if (CC.ControlValue < 3) {
-									Util.hs.SetDeviceValueByRef(child_dv.get_Ref(null), CC.ControlValue, true);
-								}
-							}
-						}
-					} else if (DT.Device_Type == (int) DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Fan_Mode_Set) {
-						int[] list = dv.get_AssociatedDevices(Util.hs);
-						if (list != null) {
-							int dvRef = list[0];
-							// child device will only have one associated device which is the root
-							Scheduler.Classes.DeviceClass child_dv = FindThermChildByType(dvRef, DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat.Fan_Status);
-							if (child_dv != null) {
-								Util.hs.SetDeviceValueByRef(child_dv.get_Ref(null), CC.ControlValue, true);
-							}
-						}
-					}
-				}
-
-			}
-
-
-		}
-	}
+        }
 
 	private Scheduler.Classes.DeviceClass FindThermChildByType(int root_dv, DeviceTypeInfo_m.DeviceTypeInfo.eDeviceType_Thermostat dev_type)
 	{

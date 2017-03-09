@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 
-namespace HSPI_SAMPLE_CS
+namespace HSPI_SIID_ModBusDemo
 {
 	
 	static class Classes

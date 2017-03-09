@@ -8,8 +8,8 @@
     <ProjectGuid>{3450DE70-52C9-4077-B25E-567E7BE44278}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HSPI_SAMPLE_CS</RootNamespace>
-    <AssemblyName>HSPI_SAMPLE_CS</AssemblyName>
+    <RootNamespace>HSPI_SIID</RootNamespace>
+    <AssemblyName>HSPI_SIID_ModBusDemo</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

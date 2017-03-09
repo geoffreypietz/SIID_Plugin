@@ -5,7 +5,7 @@ using System.Text;
 using System.Web;
 using Scheduler;
 
-namespace HSPI_SAMPLE_CS.Modbus
+namespace HSPI_SIID_ModBusDemo.Modbus
 {
     class MosbusAjaxReceivers
     {

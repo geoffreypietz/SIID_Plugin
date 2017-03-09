@@ -9,7 +9,7 @@ using System.Web;
 using Scheduler;
 
 
-namespace HSPI_SAMPLE_CS
+namespace HSPI_SIID_ModBusDemo
 {
     
     public class WebPage : PageBuilderAndMenu.clsPageBuilder

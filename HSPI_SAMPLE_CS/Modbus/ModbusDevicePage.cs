@@ -14,7 +14,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Data;
 
-namespace HSPI_SAMPLE_CS.Modbus
+namespace HSPI_SIID_ModBusDemo.Modbus
 {
 
 
@@ -26,11 +26,11 @@ namespace HSPI_SAMPLE_CS.Modbus
 
         public ModbusDevicePage(string pagename) : base(pagename)
         {
-            UpdateGateList( getAllGateways());
+            UpdateGateList(getAllGateways());
         }
 
         htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGatewayPage");
-        public static List<KeyValuePair<int,string>> ModbusGates { get; set; }
+        public static List<KeyValuePair<int, string>> ModbusGates { get; set; }
 
 
         public static int[] getAllGateways()
@@ -38,7 +38,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Util.hs.GetDeviceEnumerator();
             List<int> ModbusGates = new List<int>();
-          
+
             //Scheduler.Classes.DeviceClass
             var Dev = DevNum.GetNext();
             while (Dev != null)
@@ -51,7 +51,7 @@ namespace HSPI_SAMPLE_CS.Modbus
                     if (parts["Type"] == "Modbus Gateway")
                     {
                         ModbusGates.Add(Dev.get_Ref(Util.hs));
-   
+
 
                     }
                     //   if (parts["Type"] == "Modbus Device")
@@ -70,6 +70,36 @@ namespace HSPI_SAMPLE_CS.Modbus
             }
             return ModbusGates.ToArray();
         }
+
+        public string[] RegTypeArray = new string[] { "Discrete Input (RO)", "Coil (RW)", "Input Register (RO)", "Holding Register (RW)" };
+        public string[] RetTypeArray = new string[] { "Boolean", "Int16", "Int32", "Float32", "Int64", "Double64",
+            "2 character string","4 character string","6 character string","8 character string"};
+public string GetReg(string instring)
+        {
+            try
+            {
+                return RegTypeArray[Convert.ToInt32(instring)];
+            }
+            catch
+            {
+                return instring;
+            }
+
+        }
+        public string GetRet(string instring)
+        {
+            try
+            {
+                return RetTypeArray[Convert.ToInt32(instring)];
+
+            }
+            catch
+            {
+                return instring;
+            }
+
+        }
+
 
         public string makeNewModbusGateway()
         {
@@ -446,7 +476,7 @@ namespace HSPI_SAMPLE_CS.Modbus
 
             int DefGateway = ModbusGates.IndexOf(Item);
             ModbusConfHtml.add("Modbus Gateway ID: ", ModbusBuilder.selectorInput(GatewayStringArray, dv + "_GateID", "GateID", DefGateway).print());
-            ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(new string[] { "Discrete Input (RO)", "Coil (RW)", "Input Register (RO)", "Holding Register (RW)" }, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
+            ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(RegTypeArray, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
             ModbusConfHtml.add("Register Address: ", "<div style:'display:inline;'><div style='float:left;'>"+ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print()+"</div><div style='float:left;' id='TrueAdd'>()</div></div>");
 
@@ -459,8 +489,7 @@ namespace HSPI_SAMPLE_CS.Modbus
             //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
             //So coil and discrete are bool ONLY
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
-            ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(new string[] { "Boolean", "Int16", "Int32", "Float32", "Int64", "Double64",
-            "2 character string","4 character string","6 character string","8 character string"}, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
+            ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(RetTypeArray, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
                         ModbusConfHtml.add("Calculator: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
@@ -720,7 +749,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                         {
                                             Console.WriteLine("Exception: " + e.StackTrace);
                                             Util.hs.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
-                                            Util.hs.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+                                            if (MDevice.get_devValue(Util.hs) == 2 || MDevice.get_devValue(Util.hs) == 1)
+                                            {
+                                                Util.hs.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
+                                            }
+                                            else
+                                            {
+                                                Util.hs.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+                                            }
 
 
                                         }
@@ -790,9 +826,13 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
                         try
                         {
-                            Console.WriteLine("         Writign to Device: " + devID);
+                            if (bool.Parse(parts["ReadOnlyDevice"])|| Convert.ToInt32(parts["RegisterType"])==1 || Convert.ToInt32(parts["RegisterType"]) == 2)//Read only or a read only type
+                            {
+                                throw new Exception("Device is set to be read only. Write commands disabled");
+                            }
+                            Console.WriteLine("         Writing to Device: " + devID);
                             WriteToModbusDevice(devID, Send);
-            
+                            Console.WriteLine("         Reading from Device: " + devID);
                             ReadFromModbusDevice(Convert.ToInt32(devID));
                             ProcessCalculator(Convert.ToInt32(devID));
 
@@ -801,7 +841,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         {
                             Console.WriteLine("Exception: " + e.StackTrace);
                             Util.hs.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
-                            Util.hs.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+                            if (ModDev.get_devValue(Util.hs) == 2 || ModDev.get_devValue(Util.hs) == 1)
+                            {
+                                Util.hs.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
+                            }
+                            else
+                            {
+                                Util.hs.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+                            }
 
 
                         }
@@ -910,141 +957,120 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
         }
 
 
-        public void WriteToModbusDevice(int devID, object InData)
+        public void WriteToModbusDevice(int devID, double InData)
         {//InData will be cast by whatever we're expecting from the return type, but is a double
             Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(devID);
             var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5 = double64, 6=string2,7=string4,8=string6,9=string8
-        
+            ushort[] Data = null;
             //CURRENTLY WORKIN HERE
-
-            //MAY NEED TO CONVERT INDATA TO APPROPRIATE USHORT ARRAY, THEN PASS IT AS AN ARG TO MODBUS CONNECTION
-
-
-            switch (parts["ReturnType"])
+            string RetType = parts["ReturnType"];
+            if (Convert.ToInt32(parts["RegisterType"]) < 3) // Then its a bool
             {
-                case ("0"): //Is a bool
-                    {
-                       
+                RetType = "0";
+            }
 
-                        break;
-                    }
-                case ("1"):
-                case ("2"):
-                case ("4")://Ints
+            byte[] ZEROS = new byte[2] { 0, 0 };
+            ushort[] NumRegArrray = new ushort[] { 1, 1, 2, 2, 4, 4, 1, 2, 3, 4 };
+            //OK, if the type is supposed to be a bool or int we cast as an int, if it's a double we put the bytes uncase, and if a string... 
+            switch (RetType)
+            {
+               
+                case ("0")://bool//0 is false, 1 is true
+                case ("1")://int 16
+                case ("2")://int 32
+                case ("4")://ints 64
                     {
-                        byte[] Bytes = new byte[Returned.Count() * 2];
-                        int index = 0;
-                        foreach (ushort Item in Returned)
-                        {
-                            byte[] temp = BitConverter.GetBytes(Item);
-                            Bytes[index] = temp[0];
-                            index++;
-                            Bytes[index] = temp[1];
-                            index++;
+                     
 
-                        }
-                        if (Signed)
+                        byte[] temp = BitConverter.GetBytes((int)InData); //OK doubles are always big endian, so temp[0] is the most significant digit
+                        ushort NumRegs = NumRegArrray[Convert.ToInt32(RetType)];
+                        Data = new ushort[NumRegs];
+                        for (int i = 0; i < NumRegs; i++)
                         {
-                            switch (Returned.Count())
+                            if (2 * i > temp.Count())
                             {
-                                case (1):
-                                    {
-                                        RawString = BitConverter.ToInt16(Bytes, 0).ToString();
-                                        break;
-                                    }
-                                case (2):
-                                    {
-                                        RawString = BitConverter.ToInt32(Bytes, 0).ToString();
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        RawString = BitConverter.ToInt64(Bytes, 0).ToString();
-                                        break;
-                                    }
-
-
+                                Data[i] = BitConverter.ToUInt16(ZEROS, 0);
                             }
-
-                        }
-                        else
-                        {
-                            switch (Returned.Count())
+                            else
                             {
-                                case (1):
-                                    {
-                                        RawString = BitConverter.ToUInt16(Bytes, 0).ToString();
-                                        break;
-                                    }
-                                case (2):
-                                    {
-                                        RawString = BitConverter.ToUInt32(Bytes, 0).ToString();
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        RawString = BitConverter.ToUInt64(Bytes, 0).ToString();
-                                        break;
-                                    }
-
-
+                                Data[i] = BitConverter.ToUInt16(temp, 2 * i);
                             }
                         }
+
 
                         break;
                     }
 
                 case ("3"): //float
                     {
-                        byte[] Bytes = new byte[Returned.Count() * 2];
-                        int index = 0;
-                        foreach (ushort Item in Returned)
+                        byte[] temp = BitConverter.GetBytes((float)InData); //OK doubles are always big endian, so temp[0] is the most significant digit
+                        ushort NumRegs = NumRegArrray[Convert.ToInt32(RetType)];
+                         Data = new ushort[NumRegs];
+                        for (int i = 0; i < NumRegs; i++)
                         {
-                            byte[] temp = BitConverter.GetBytes(Item);
-                            Bytes[index] = temp[0];
-                            index++;
-                            Bytes[index] = temp[1];
-                            index++;
-
+                            if (2 * i > temp.Count())
+                            {
+                                Data[i] = BitConverter.ToUInt16(ZEROS, 0);
+                            }
+                            else
+                            {
+                                Data[i] = BitConverter.ToUInt16(temp, 2 * i);
+                            }
                         }
-                        RawString = BitConverter.ToSingle(Bytes, 0).ToString();
+
                         break;
                     }
                 case ("5")://double
                     {
-                        byte[] Bytes = new byte[Returned.Count() * 2];
-                        int index = 0;
-                        foreach (ushort Item in Returned)
+                        byte[] temp = BitConverter.GetBytes(InData); //OK doubles are always big endian, so temp[0] is the most significant digit
+                        ushort NumRegs = NumRegArrray[Convert.ToInt32(RetType)];
+                         Data = new ushort[NumRegs];
+                        for (int i = 0; i < NumRegs; i++)
                         {
-                            byte[] temp = BitConverter.GetBytes(Item);
-                            Bytes[index] = temp[0];
-                            index++;
-                            Bytes[index] = temp[1];
-                            index++;
-
+                            if (2 * i > temp.Count())
+                            {
+                                Data[i] = BitConverter.ToUInt16(ZEROS, 0);
+                            }
+                            else
+                            {
+                                Data[i] = BitConverter.ToUInt16(temp, 2 * i);
+                            }
                         }
-                        RawString = BitConverter.ToDouble(Bytes, 0).ToString();
                         break;
 
                     }
                 default:
                     {//string
-                        StringBuilder OUT = new StringBuilder();
-
-                        foreach (ushort Item in Returned)
+                        byte[] temp = BitConverter.GetBytes(InData); //OK doubles are always big endian, so temp[0] is the most significant digit
+                        //OK doubles are always big endian, so temp[0] is the most significant digit
+                        ushort NumRegs = NumRegArrray[Convert.ToInt32(RetType)];
+                        Data = new ushort[NumRegs];
+                        for (int i = 0; i < NumRegs; i++)
                         {
-                            byte[] temp = BitConverter.GetBytes(Item);
-                            Array.Reverse(temp);
-                            OUT.Append(System.Text.Encoding.Default.GetString(temp));
-
+                            if (2 * i > temp.Count())
+                            {
+                                Data[i] = BitConverter.ToUInt16(ZEROS,0);
+                            }
+                            else
+                            {
+                                Data[i] = BitConverter.ToUInt16(temp, 2 * i);
+                            }
+                         
 
                         }
-                        RawString = OUT.ToString();
                         break;
                     }
 
+
+            }
+
+
+
+            if (Data != null)
+            {
+                OpenModDeviceConnection(devID, Data);
 
             }
 
@@ -1060,7 +1086,13 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             bool Signed = bool.Parse(parts["SignedValue"]);
             var Returned = OpenModDeviceConnection(devID);
             string RawString = "";
-            switch (parts["ReturnType"])
+
+            string RetType = parts["ReturnType"];
+            if (Convert.ToInt32(parts["RegisterType"]) < 3) // Then its a bool
+            {
+                RetType = "0";
+            } 
+            switch (RetType)
             {
                 case ("0"):
                     {
@@ -1086,7 +1118,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             index++;
 
                         }
-                        if (Signed)
+                        if (Signed) //bits aren't any different for signed or unsigned,. so 
                         {
                             switch (Returned.Count())
                             {
