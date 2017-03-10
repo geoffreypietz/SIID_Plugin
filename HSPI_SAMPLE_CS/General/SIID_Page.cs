@@ -7,6 +7,8 @@ using System.Web;
 
 using System.Threading;
 using HSPI_SIID_ModBusDemo.Modbus;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace HSPI_SIID_ModBusDemo
 {
@@ -59,6 +61,81 @@ namespace HSPI_SIID_ModBusDemo
         }
 
        
+        public string ReturnDevicesInExportForm()
+        {
+            string FileName = Util.IFACE_NAME + "_" + Util.Instance + "_" + "Export_Devices.CSV";
+            StringBuilder FileContent = new StringBuilder();
+            string header = "Device Name,Floor,Room,Code,Address,Status Only Device,Is Dimmable, Hide device from views, Do not log commands from this device, Voice command" +
+                ",Confirm voice command,Include in power fail recovery, Use pop-up dialog for control, Do not update device last change time if device value does not change, User Access, Notes" +
+                ",SIID 1,SIID 2,SIID 3, SIID 4,SIID 5,SIID 6, SIID 7,SIID 8,SIID 9,Base64 Encoding of actual object\r\n";
+            FileContent.Append(header);
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Util.hs.GetDeviceEnumerator();
+            var Dev = DevNum.GetNext();
+            while (Dev != null)
+            {
+                try
+                {
+                    byte[] bytes;
+                    long length = 0;
+                    MemoryStream ws = new MemoryStream();
+                    BinaryFormatter sf = new BinaryFormatter();
+                    sf.Serialize(ws, Dev);
+                    length = ws.Length;
+                    bytes = ws.GetBuffer();
+                    string encodedData = bytes.Length + ":" + Convert.ToBase64String(bytes, 0, bytes.Length, Base64FormattingOptions.None);
+                    
+                    StringBuilder Row = new StringBuilder();
+                    var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString()); //So it is a SIID device
+                   if (Dev.get_Interface(Util.hs).ToString() == Util.IFACE_NAME.ToString()) //Then it's one of ours (Need maybe an extra chack for Instance
+                        {
+                        
+                        Row.Append(Dev.get_Name(Util.hs)+","+ Dev.get_Location2(Util.hs)+ "," + Dev.get_Location(Util.hs) + "," + Dev.get_Code(Util.hs) + "," 
+                            + Dev.get_Address(Util.hs) + "," + Dev.get_Status_Support(Util.hs) + "," + Dev.get_Can_Dim(Util.hs) + ",");
+
+                        switch (parts["Type"])
+                        {
+                            case ("BacNet???"):
+                                {
+
+                                    break;
+                                }
+                            case ("Modbus Gateway"):
+                                {
+
+                                    break;
+                                }
+                            case ("Modbus Device"):
+                                {
+
+                                    break;
+                                }
+
+
+                        }
+
+                    
+                        }
+
+
+                    
+                    //   if (parts["Type"] == "Modbus Device")
+                    //     {
+                    //        ModbusDevs.Add(Dev.get_Ref(Util.hs));
+                    //    }
+
+                }
+                catch
+                {
+
+                }
+                Dev = DevNum.GetNext();
+
+
+            }
+
+            return "THIS IS A TEST STRING WOO";
+        }
 
         public string postbackSSIDConfigPage(string page, string data, string user, int userRights)
         {
@@ -67,10 +144,26 @@ namespace HSPI_SIID_ModBusDemo
             string ID = parts["id"].Split('_')[0];
             switch (ID)
             {
+                case "Import":
+                    {
+                        
+                        break;
+                    }
+                case "Export":
+                    {
+                        return ReturnDevicesInExportForm();   
+                        break;
+                    }
+                case "Scratchpad":
+                    {
+                        
+
+                        break;
+                    }
                 case "SelectPlugin":
                     {
                         selectedPlugin = Convert.ToInt32(parts["pluginSelection"]);
-
+                        SaveAllINISettings();
                         break;
                     }
             }
@@ -78,7 +171,7 @@ namespace HSPI_SIID_ModBusDemo
             //So I guess AJAX calls come back here?
             //need to register
 
-            SaveAllINISettings();
+          
             return base.postBackProc(page, data, user, userRights);
         }
 
@@ -217,7 +310,19 @@ namespace HSPI_SIID_ModBusDemo
 
                 page.AddHeader(Util.hs.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
 
-                //
+                htmlBuilder GeneralPageStuff = new htmlBuilder("SIIDConfPage");
+                stb.Append("<hr>SIID Options<br><br>");
+                stb.Append("<div>");
+                stb.Append(GeneralPageStuff.button("Import", "Import SIID Devices from CSV File").print());
+                stb.Append(GeneralPageStuff.Downloadbutton("Export", "Export SIID Devices to CSV File").print());
+                stb.Append(GeneralPageStuff.button("Scratchpag", "Make new Scratchpad Rule").print());
+
+                stb.Append("</div>");
+
+
+
+
+
                 stb.Append("<hr>Select plugin API<br><br>");
                clsJQuery.jqRadioButton rb = new clsJQuery.jqRadioButton("pluginSelection", "SIIDConfPage", false);
                

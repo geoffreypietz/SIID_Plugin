@@ -60,6 +60,12 @@ namespace HSPI_SIID_ModBusDemo
             return new Qbutton(l, n, AjaxPostDestination);
 
         }
+        public Downloadbutton Downloadbutton(string l, string n)
+        {
+            return new Downloadbutton(l, n, AjaxPostDestination);
+
+        }
+        
         public ShowMesbutton ShowMesbutton(string l, string n)
         {
             return new ShowMesbutton(l, n, AjaxPostDestination);
@@ -206,6 +212,51 @@ conMes.style.color='#b38600';
         }
 
     }
+
+
+    public class Downloadbutton : htmlObject
+    {
+        public Downloadbutton(string id, string label, string AJX)
+        {
+            AjaxPostDestination = AJX;
+            string prescript = @"<script>  $(function()
+              {
+           $('#" + id + @"').click(function() {
+
+                      var value =true;
+                      value = encodeURIComponent(value);
+                    var theData ='&value='+ value+ '&id=' + '" + id + @"';
+      console.log(theData);
+
+ $.ajax({
+  type: 'POST',
+  async: true,
+  url: '/' + '" + AjaxPostDestination + @"',
+  data: theData,
+  error: function() {
+      $('div#errormessage').html('Page is refreshing...');
+      $('div#contentdiv').html('');
+            },
+  beforeSend: function() {
+            },
+  success: function(response) { console.log(response);
+
+//Take string response, parse it into FileName, FileContent
+//Make the file of that name and content, and download it
+
+}
+        });
+});
+});
+              </script>";
+
+            html = prescript + @"
+<button  id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' type='button' role='button' aria-disabled='false'><span  class='ui-button-text'>" + label + @"</span></button>";
+
+        }
+
+    }
+
 
     public class button : htmlObject
     {

@@ -50,7 +50,10 @@ namespace HSPI_SIID_ModBusDemo.Modbus
                     string s = parts["Type"];
                     if (parts["Type"] == "Modbus Gateway")
                     {
-                        ModbusGates.Add(Dev.get_Ref(Util.hs));
+                        if (Dev.get_Interface(Util.hs).ToString() == Util.IFACE_NAME.ToString()) //Then it's one of ours
+                        {
+                            ModbusGates.Add(Dev.get_Ref(Util.hs));
+                        }
 
 
                     }

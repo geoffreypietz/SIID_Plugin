@@ -318,9 +318,9 @@ namespace HSPI_SIID_ModBusDemo
                 Util.hs.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
+        
 
                 
-
 
 
                 Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
@@ -343,8 +343,8 @@ namespace HSPI_SIID_ModBusDemo
                 Util.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
 
 
+               
 
- 
 
 
 
@@ -671,7 +671,8 @@ namespace HSPI_SIID_ModBusDemo
                         modPage.parseModbusDeviceTab(data);
                         return "";
                     }
-                  
+
+         
 
             }
 
