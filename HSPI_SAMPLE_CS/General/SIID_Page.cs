@@ -65,56 +65,53 @@ namespace HSPI_SIID_ModBusDemo
         {
             string FileName = Util.IFACE_NAME + "_" + Util.Instance + "_" + "Export_Devices.CSV";
             StringBuilder FileContent = new StringBuilder();
-            string header = "Device Name,Floor,Room,Code,Address,Status Only Device,Is Dimmable, Hide device from views, Do not log commands from this device, Voice command" +
+            string header = "UniqueID,Device Name,Floor,Room,Code,Address,Status Only Device,Is Dimmable, Hide device from views, Do not log commands from this device, Voice command" +
                 ",Confirm voice command,Include in power fail recovery, Use pop-up dialog for control, Do not update device last change time if device value does not change, User Access, Notes" +
-                ",SIID 1,SIID 2,SIID 3, SIID 4,SIID 5,SIID 6, SIID 7,SIID 8,SIID 9,Base64 Encoding of actual object\r\n";
-            FileContent.Append(header);
+                "Relationship Status,SIID 1,SIID 2,SIID 3, SIID 4,SIID 5,SIID 6, SIID 7,SIID 8,SIID 9\r\n";
+          //  FileContent.Append(header);
             Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Util.hs.GetDeviceEnumerator();
             var Dev = DevNum.GetNext();
+            List<int> ModGateways = new List<int>();
+            List<int> ModDevices = new List<int>();
+            List<int> BackNetDevices = new List<int>();
             while (Dev != null)
             {
                 try
                 {
-                    byte[] bytes;
-                    long length = 0;
-                    MemoryStream ws = new MemoryStream();
-                    BinaryFormatter sf = new BinaryFormatter();
-                    sf.Serialize(ws, Dev);
-                    length = ws.Length;
-                    bytes = ws.GetBuffer();
-                    string encodedData = bytes.Length + ":" + Convert.ToBase64String(bytes, 0, bytes.Length, Base64FormattingOptions.None);
                     
-                    StringBuilder Row = new StringBuilder();
+                    //StringBuilder Row = new StringBuilder();
+                 
+
+
                     var EDO = Dev.get_PlugExtraData_Get(Util.hs);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString()); //So it is a SIID device
                    if (Dev.get_Interface(Util.hs).ToString() == Util.IFACE_NAME.ToString()) //Then it's one of ours (Need maybe an extra chack for Instance
                         {
-                        
-                        Row.Append(Dev.get_Name(Util.hs)+","+ Dev.get_Location2(Util.hs)+ "," + Dev.get_Location(Util.hs) + "," + Dev.get_Code(Util.hs) + "," 
-                            + Dev.get_Address(Util.hs) + "," + Dev.get_Status_Support(Util.hs) + "," + Dev.get_Can_Dim(Util.hs) + ",");
-
                         switch (parts["Type"])
                         {
                             case ("BacNet???"):
                                 {
-
+                                    BackNetDevices.Add(Dev.get_Ref(Util.hs));
                                     break;
                                 }
                             case ("Modbus Gateway"):
                                 {
-
+                                    ModGateways.Add(Dev.get_Ref(Util.hs));
                                     break;
                                 }
                             case ("Modbus Device"):
                                 {
-
+                                    ModDevices.Add(Dev.get_Ref(Util.hs));
                                     break;
                                 }
 
+                             
 
-                        }
 
-                    
+                                  }
+                                  
+
+
                         }
 
 
@@ -125,16 +122,51 @@ namespace HSPI_SIID_ModBusDemo
                     //    }
 
                 }
-                catch
+                catch(Exception e)
                 {
-
+                    int a = 1;
                 }
                 Dev = DevNum.GetNext();
 
 
             }
 
-            return "THIS IS A TEST STRING WOO";
+            if (BackNetDevices.Count > 0)
+            {
+                FileContent.Append("Backnet Devices\r\n");
+                FileContent.Append(new HSPI_SIID.SIIDDevice(BackNetDevices[0]).ReturnCSVHead());
+                foreach (int ID in BackNetDevices)
+                {
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                }
+            }
+            if (ModGateways.Count > 0)
+            {
+                FileContent.Append("Modbus Gateways\r\n");
+                FileContent.Append(new HSPI_SIID.SIIDDevice(ModGateways[0]).ReturnCSVHead());
+                foreach (int ID in ModGateways)
+                {
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                }
+            }
+            if (ModDevices.Count > 0)
+            {
+                FileContent.Append("Modbus Devices\r\n");
+                FileContent.Append(new HSPI_SIID.SIIDDevice(ModDevices[0]).ReturnCSVHead());
+                foreach (int ID in ModDevices)
+                {
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                }
+            }
+
+
+
+
+
+     
+         
+       
+            return FileName+"_)(*&^%$#@!"+ FileContent.ToString();
         }
 
         public string postbackSSIDConfigPage(string page, string data, string user, int userRights)
@@ -146,7 +178,8 @@ namespace HSPI_SIID_ModBusDemo
             {
                 case "Import":
                     {
-                        
+                    
+                        int a = 1;
                         break;
                     }
                 case "Export":
@@ -313,7 +346,7 @@ namespace HSPI_SIID_ModBusDemo
                 htmlBuilder GeneralPageStuff = new htmlBuilder("SIIDConfPage");
                 stb.Append("<hr>SIID Options<br><br>");
                 stb.Append("<div>");
-                stb.Append(GeneralPageStuff.button("Import", "Import SIID Devices from CSV File").print());
+                stb.Append(GeneralPageStuff.Uploadbutton("Import", "Import SIID Devices from CSV File").print());
                 stb.Append(GeneralPageStuff.Downloadbutton("Export", "Export SIID Devices to CSV File").print());
                 stb.Append(GeneralPageStuff.button("Scratchpag", "Make new Scratchpad Rule").print());
 

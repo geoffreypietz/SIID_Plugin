@@ -65,7 +65,14 @@ namespace HSPI_SIID_ModBusDemo
             return new Downloadbutton(l, n, AjaxPostDestination);
 
         }
+
+        public Uploadbutton Uploadbutton(string l, string n)
+        {
+            return new Uploadbutton(l, n, AjaxPostDestination);
+
+        }
         
+
         public ShowMesbutton ShowMesbutton(string l, string n)
         {
             return new ShowMesbutton(l, n, AjaxPostDestination);
@@ -214,6 +221,76 @@ conMes.style.color='#b38600';
     }
 
 
+    public class Uploadbutton : htmlObject
+    {
+        public Uploadbutton(string id, string label, string AJX)
+        {
+            AjaxPostDestination = AJX;
+            //OK on click open file selector
+            //On select, send the file to backend via ajax
+            string prescript = @"<script>  $(function()
+              {
+
+
+function handleFileSelect(e){
+console.log('ARRIVED IN THERE');
+ f = e.target.files[0];
+ fr = new FileReader();
+fr.onload = function(e){
+console.log( e.target.result);
+V= e.target.result;
+ var theData ='&value='+  e.target.result+ '&id=' + '" + id + @"';
+
+$.ajax({
+  type: 'POST',
+  async: true,
+  url: '/' + '" + AjaxPostDestination + @"',
+  data: theData,
+  error: function() {
+      $('div#errormessage').html('Page is refreshing...');
+      $('div#contentdiv').html('');
+            },
+  beforeSend: function() {
+            },
+  success: function(response) { console.log(response);
+
+        }
+        });
+
+
+
+};
+fr.readAsText(f);
+
+     }
+
+link=document.createElement('input');
+link.type='file';
+link.id=this.id+'Upload';
+link.style.display='none';
+document.body.appendChild(link);
+link.addEventListener('change', handleFileSelect, false);
+
+           $('#" + id + @"').click(function() {
+
+            link.click();
+console.log(link.id);
+});
+
+
+
+
+
+});
+              </script>";
+
+            html = prescript + @"
+<button  id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' type='button' role='button' aria-disabled='false'><span  class='ui-button-text'>" + label + @"</span></button>";
+
+        }
+
+    }
+
     public class Downloadbutton : htmlObject
     {
         public Downloadbutton(string id, string label, string AJX)
@@ -240,11 +317,20 @@ conMes.style.color='#b38600';
   beforeSend: function() {
             },
   success: function(response) { console.log(response);
+G=response.split('_)(*&^%$#@!');
+FileName=G[0];
+FileContent=G[1];
+
+var link=document.createElement('a');
+ link.download = FileName;
+            link.href = 'data:text/UTF8,' + escape(FileContent);
+            link.click()
+
 
 //Take string response, parse it into FileName, FileContent
 //Make the file of that name and content, and download it
 
-}
+        }
         });
 });
 });
