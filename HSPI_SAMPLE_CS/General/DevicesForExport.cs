@@ -35,7 +35,7 @@ namespace HSPI_SIID
             public int[] associatedDevices;
             */
 
-            public List<string> listOfAttributes = new List<string> {             "ID",
+            public  List<string> listOfAttributes = new List<string> {             "ID", 
              "Name",
              "Floor",
              "Room",
@@ -62,6 +62,9 @@ namespace HSPI_SIID
             {
                 GenericDeviceStuff(DeviceID);
             }
+        public HomeSeerDevice()//To get general information about length of attributes list
+        {
+        }
 
            public void GenericDeviceStuff(int DeviceID)
             {

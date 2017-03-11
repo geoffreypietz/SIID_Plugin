@@ -60,15 +60,43 @@ namespace HSPI_SIID_ModBusDemo
 
         }
 
-       
+
+        public void ImportDevices(string RawCsv)
+        {
+            int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
+            List<Tuple<int, string>> DevicesToImport = new List<Tuple<int, string>>();
+            Dictionary<int, int> OldToNew = new Dictionary<int, int>();
+            string[] CSVRows = RawCsv.Split('\n');
+            foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
+            {
+                int ID = 0;
+                int.TryParse(row.Split(',')[0], out ID);
+                if (ID != 0){
+                    var dv = Util.hs.NewDeviceRef("ImportingDevice");
+                    DevicesToImport.Add(new Tuple<int, string>(dv, row.Replace("\r","")));
+                    OldToNew[ID] = dv;
+                }
+
+            }
+            //OK so now have a list of ints and strings, the int is the device reference in homeseer, and the string is the import row including the old ID which we will use to point associated devices to the new ids
+            string regexPattern = @""" ?\s *,\s * "" ?";
+            foreach (Tuple<int, string> Entry in DevicesToImport)
+            {
+                string[] Cells = System.Text.RegularExpressions.Regex.Split(
+    Entry.Item2.Substring(1, Entry.Item2.Length - 2), regexPattern); //https://stackoverflow.com/questions/17207269/how-to-properly-split-a-csv-using-c-sharp-split-function
+                //By SIID convention, Cell[commonrowOffset] should be the "Type" for the SIID 
+
+
+            }
+
+
+        }
+
         public string ReturnDevicesInExportForm()
         {
             string FileName = Util.IFACE_NAME + "_" + Util.Instance + "_" + "Export_Devices.CSV";
             StringBuilder FileContent = new StringBuilder();
-            string header = "UniqueID,Device Name,Floor,Room,Code,Address,Status Only Device,Is Dimmable, Hide device from views, Do not log commands from this device, Voice command" +
-                ",Confirm voice command,Include in power fail recovery, Use pop-up dialog for control, Do not update device last change time if device value does not change, User Access, Notes" +
-                "Relationship Status,SIID 1,SIID 2,SIID 3, SIID 4,SIID 5,SIID 6, SIID 7,SIID 8,SIID 9\r\n";
-          //  FileContent.Append(header);
+  
             Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Util.hs.GetDeviceEnumerator();
             var Dev = DevNum.GetNext();
             List<int> ModGateways = new List<int>();
@@ -178,8 +206,8 @@ namespace HSPI_SIID_ModBusDemo
             {
                 case "Import":
                     {
-                    
-                        int a = 1;
+                        ImportDevices(parts["value"]);
+                        return ""; 
                         break;
                     }
                 case "Export":
