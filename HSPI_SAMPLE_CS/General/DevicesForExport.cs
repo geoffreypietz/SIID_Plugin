@@ -151,7 +151,28 @@ namespace HSPI_SIID
                 Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.Util.hs.GetDeviceByRef(DeviceID);
                 var EDO = Device.get_PlugExtraData_Get(Util.hs);
             System.Collections.Specialized.NameValueCollection parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                foreach (var Ent in parts.AllKeys)
+            //Need to grab the key order from somewhere 
+            switch (parts["Type"]) {
+                case ("Modbus Gateway"): {
+
+                        break;
+                    }
+                case ("Modbus Device"):
+                    {
+
+                        break;
+                    }
+                case ("Bacnet Device"):
+                    {
+
+                        break;
+                    }
+
+
+
+            }
+
+            foreach (var Ent in parts.AllKeys)
                 {
                 
                     Values[Ent] = parts[Ent];

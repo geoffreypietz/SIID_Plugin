@@ -33,6 +33,24 @@ namespace HSPI_SIID_ModBusDemo.Modbus
         #endregion
 
 
+        public string[] Attributes = new string[]{
+
+            "Type",
+        "Gateway",
+           "TCP",
+              "Poll",
+        "Enabled",
+            "BigE",
+            "ZeroB",
+            "RWRetry",
+            "RWTime",
+            "Delay",
+            "RegWrite",
+            "LinkedDevices",
+            "RawValue",
+            "ProcessedValue"};
+
+      
 
 
 
