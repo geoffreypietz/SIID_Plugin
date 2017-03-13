@@ -253,7 +253,7 @@ $.ajax({
   beforeSend: function() {
             },
   success: function(response) { console.log(response);
-
+location.reload();
         }
         });
 

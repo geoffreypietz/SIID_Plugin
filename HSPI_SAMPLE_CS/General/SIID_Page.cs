@@ -9,6 +9,7 @@ using System.Threading;
 using HSPI_SIID_ModBusDemo.Modbus;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using HomeSeerAPI;
 
 namespace HSPI_SIID_ModBusDemo
 {
@@ -63,39 +64,242 @@ namespace HSPI_SIID_ModBusDemo
 
         public void ImportDevices(string RawCsv)
         {
-        //    int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
-            List<Tuple<int, string>> DevicesToImport = new List<Tuple<int, string>>();
-            Dictionary<int, int> OldToNew = new Dictionary<int, int>();
-            string[] CSVRows = RawCsv.Split('\n');
-            foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
+            try
             {
-                //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
-                int CellCount = row.Split(',').Count();
-                if (CellCount > 0)
+                //    int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
+                List<Tuple<int, int, string>> DevicesToImport = new List<Tuple<int, int, string>>(); //Dv to replace, header index, row
+                Dictionary<int, int> OldToNew = new Dictionary<int, int>();
+                string[] CSVRows = RawCsv.Split('\n');
+                List<string> Headers = new List<string>();
+                bool HasHeader = false;
+
+                foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
                 {
+                    //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
+                    int CellCount = row.Split(',').Count();
+                    if (CellCount > 0) //Then either a header row or a Device row
+                    {
+                        int ID = 0;
+
+                        int.TryParse(row.Split(',')[0], out ID); //First cell is always ID or a header, If it parses as a number 
+                        if (ID != 0 && HasHeader) //ID was a valid number
+                        {
+                            var dv = Util.hs.NewDeviceRef("ImportingDevice");
+                            DevicesToImport.Add(new Tuple<int, int, string>(dv, Headers.Count - 1, row.Replace("\r", "")));
+                            OldToNew[ID] = dv;
+                        }
+                        else
+                        {
+                            HasHeader = true;
+                            Headers.Add(row.ToLower());
+
+                        }
+
+                    }
+
 
                 }
-                int ID = 0;
-                
-                int.TryParse(row.Split(',')[0], out ID);
-                if (ID != 0){
-                    var dv = Util.hs.NewDeviceRef("ImportingDevice");
-                    DevicesToImport.Add(new Tuple<int, string>(dv, row.Replace("\r","")));
-                    OldToNew[ID] = dv;
+                //OK so now have a list of ints, ints and strings, first int is the device reference in homeseer, second int is the index of the associated header, and the string is the import row including the old ID which we will use to point associated devices to the new ids
+                string regexPattern = @""" ?\s *,\s * "" ?";
+                Dictionary<int, Dictionary<string, int>> HeaderDict = new Dictionary<int, Dictionary<string, int>>();
+                int count = 0;
+
+                foreach (string row in Headers)
+                {
+                    int minicount = 0;
+                    foreach (string cell in System.Text.RegularExpressions.Regex.Split(
+        Headers[count].Substring(1, Headers[count].Length - 2), regexPattern))
+                    {
+                        HeaderDict[count][cell] = minicount;
+
+                        minicount++;
+                    }
+
+                    count++;
+                }
+
+
+
+
+                foreach (Tuple<int, int, string> Entry in DevicesToImport)
+                {
+                    string[] Cells = System.Text.RegularExpressions.Regex.Split(
+        Entry.Item3.Substring(1, Entry.Item3.Length - 2), regexPattern); //https://stackoverflow.com/questions/17207269/how-to-properly-split-a-csv-using-c-sharp-split-function
+                                                                         //By SIID convention, Cell[commonrowOffset] should be the "Type" for the SIID 
+
+                    //Want ThisHeader to act as: Given a key, here is the column index
+                    Dictionary<string, int> ThisHeader = HeaderDict[Entry.Item2];
+                    try
+                    {
+                        Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Entry.Item1);
+                        newDevice.set_Name(Util.hs, FetchAttribute(Cells, ThisHeader, "Name"));
+                        newDevice.set_Location2(Util.hs, FetchAttribute(Cells, ThisHeader, "Floor"));
+                        newDevice.set_Location(Util.hs, FetchAttribute(Cells, ThisHeader, "Room"));
+                        //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
+                        newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+                        newDevice.set_Address(Util.hs, FetchAttribute(Cells, ThisHeader, "address"));
+                        newDevice.set_Code(Util.hs, FetchAttribute(Cells, ThisHeader, "code"));
+                        //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
+                        newDevice.set_Status_Support(Util.hs, bool.Parse(FetchAttribute(Cells, ThisHeader, "statusOnly")));
+                        newDevice.set_Can_Dim(Util.hs, bool.Parse(FetchAttribute(Cells, ThisHeader, "CanDim")));
+                        newDevice.set_UserAccess(Util.hs, FetchAttribute(Cells, ThisHeader, "useraccess"));
+                        newDevice.set_UserNote(Util.hs, FetchAttribute(Cells, ThisHeader, "notes"));
+                        newDevice.set_Device_Type_String(Util.hs, FetchAttribute(Cells, ThisHeader, "deviceTypeString"));
+                        newDevice.set_Relationship(Util.hs, (Enums.eRelationship)int.Parse(FetchAttribute(Cells, ThisHeader, "RelationshipStatus")));
+                        if (bool.Parse(FetchAttribute(Cells, ThisHeader, "donotlog")))
+                        {
+                            newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
+
+                        }
+                        try
+                        {
+                            string[] DeviceTypes = FetchAttribute(Cells, ThisHeader, "DeviceType").Split('_');
+
+                            if (DeviceTypes.Count() == 6)
+                            {
+                                var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+                                DevINFO.Device_API = (DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI)int.Parse(DeviceTypes[0]);
+                                DevINFO.Device_SubType = int.Parse(DeviceTypes[2]);
+                                DevINFO.Device_SubType_Description = DeviceTypes[3];
+                                DevINFO.Device_Type = int.Parse(DeviceTypes[4]);
+                                newDevice.set_DeviceType_Set(Util.hs, DevINFO);
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                        //Now replace associated devices with their new ID:
+                        string[] OldAssocDeviceList = FetchAttribute(Cells, ThisHeader, "associatedDevicesList").Split(',');
+                        foreach (string Old in OldAssocDeviceList)
+                        {
+                            newDevice.AssociatedDevice_Add(Util.hs, OldToNew[int.Parse(Old)]);
+                        }
+                        HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
+                        switch (Cells[ThisHeader["Type"]])
+                        {
+                            case ("BacNet???"):
+                                {
+                                   
+                                    break;
+                                }
+                            case ("Modbus Gateway"):
+                                {
+                                    ModPage.MakeGatewayGraphicsAndStatus(Entry.Item1);
+                                    newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+
+
+
+                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+
+
+                                    parts["Type"] = FetchAttribute(Cells, ThisHeader, "type");
+                                    parts["Gateway"] = FetchAttribute(Cells, ThisHeader, "gateway");
+                                    parts["TCP"] = FetchAttribute(Cells, ThisHeader, "tcp");
+                                    parts["Poll"] = FetchAttribute(Cells, ThisHeader, "poll");
+                                    parts["Enabled"] = FetchAttribute(Cells, ThisHeader, "enabled");
+                                    parts["BigE"] = FetchAttribute(Cells, ThisHeader, "bige");
+                                    parts["ZeroB"] = FetchAttribute(Cells, ThisHeader, "zerob");
+                                    parts["RWRetry"] = FetchAttribute(Cells, ThisHeader, "rwretry");
+                                    parts["RWTime"] = FetchAttribute(Cells, ThisHeader, "rwtime");
+                                    parts["Delay"] = FetchAttribute(Cells, ThisHeader, "delay");
+                                    parts["RegWrite"] = FetchAttribute(Cells, ThisHeader, "regwrite");
+
+                                    StringBuilder NewRef = new StringBuilder();
+                                    foreach(string old in FetchAttribute(Cells, ThisHeader, "LinkedDevices").Split(','))
+                                    {
+                                        try
+                                        {
+                                            NewRef.Append(OldToNew[int.Parse(old)]+',');
+                                        }
+                                        catch
+                                        {
+
+                                        }
+                                    }
+
+                                    parts["LinkedDevices"] = NewRef.ToString();
+                                    parts["RawValue"] = FetchAttribute(Cells, ThisHeader, "RawValue");
+                                    parts["ProcessedValue"] = FetchAttribute(Cells, ThisHeader, "ProcessedValue");
+                                    EDO.AddNamed("SSIDKey", parts.ToString());
+                                   
+                             
+
+                                    break;
+                                }
+                            case ("Modbus Device"):
+                                {
+                                    ModPage.MakeSubDeviceGraphicsAndStatus(Entry.Item1);
+                                    newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+                                    parts["Type"] = FetchAttribute(Cells, ThisHeader, "type");
+
+                                    parts["GateID"] = OldToNew[int.Parse(FetchAttribute(Cells, ThisHeader, "GateID"))].ToString(); //Replace
+
+
+                                    parts["Gateway"] = FetchAttribute(Cells, ThisHeader, "Gateway");
+                                    parts["RegisterType"] = FetchAttribute(Cells, ThisHeader, "RegisterType");//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
+                                    parts["SlaveId"] = FetchAttribute(Cells, ThisHeader, "SlaveId"); //get number of slaves from gateway?
+                                    parts["ReturnType"] = FetchAttribute(Cells, ThisHeader, "ReturnType");
+                                    //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=string2,6=string4,7=string6,8=string8
+                                    //tells us how many registers to read/write and also how to parse returns
+                                    //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
+                                    //So coil and discrete are bool ONLY
+                                    //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
+                                    parts["SignedValue"] = FetchAttribute(Cells, ThisHeader, "SignedValue");
+
+
+                                    string ScratchString = FetchAttribute(Cells, ThisHeader, "ScratchpadString");
+                                    foreach (KeyValuePair<int,int> OLDTONEW in OldToNew)
+                                    {
+                                        ScratchString.Replace("$(" + OLDTONEW.Key + ")", "$(" + OLDTONEW.Value + ")");
+                                        ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                    }
+                                    parts["ScratchpadString"] = ScratchString; //Replace
+                                    parts["DisplayFormatString"] = FetchAttribute(Cells, ThisHeader, "DisplayFormatString");
+                                    parts["ReadOnlyDevice"] = FetchAttribute(Cells, ThisHeader, "ReadOnlyDevice");
+                                    parts["DeviceEnabled"] = FetchAttribute(Cells, ThisHeader, "DeviceEnabled");
+                                    parts["RegisterAddress"] = FetchAttribute(Cells, ThisHeader, "RegisterAddress");
+                                    parts["RawValue"] = FetchAttribute(Cells, ThisHeader, "RawValue");
+                                    parts["ProcessedValue"] = FetchAttribute(Cells, ThisHeader, "ProcessedValue");
+
+                                    EDO.AddNamed("SSIDKey", parts.ToString());
+                                    break;
+                                }
+
+                        }
+                        newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+
+                    }
+                    catch
+                    {
+                        //format of our row is wrong, skip it
+                   
+                    }
+
+
+
                 }
 
             }
-            //OK so now have a list of ints and strings, the int is the device reference in homeseer, and the string is the import row including the old ID which we will use to point associated devices to the new ids
-            string regexPattern = @""" ?\s *,\s * "" ?";
-            foreach (Tuple<int, string> Entry in DevicesToImport)
+            catch //Fails for some reason
             {
-                string[] Cells = System.Text.RegularExpressions.Regex.Split(
-    Entry.Item2.Substring(1, Entry.Item2.Length - 2), regexPattern); //https://stackoverflow.com/questions/17207269/how-to-properly-split-a-csv-using-c-sharp-split-function
-                //By SIID convention, Cell[commonrowOffset] should be the "Type" for the SIID 
 
 
             }
 
+        }
+        public string FetchAttribute(string[] Cells, Dictionary<string, int> ThisHeader, string key)
+        {
+           try
+            {
+
+                return Cells[ThisHeader[key.ToLower()]];
+            }
+            catch
+            {
+                return "False";
+            }
 
         }
 

@@ -360,7 +360,7 @@ public string GetReg(string instring)
 
 
         }
-        public string MakeDeviceRedirect(string pageName, string user, int userRights, string queryString)
+        public string MakeGatewayRedirect(string pageName, string user, int userRights, string queryString)
         {
             
             StringBuilder stb = new StringBuilder();

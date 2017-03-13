@@ -629,7 +629,7 @@ namespace HSPI_SIID_ModBusDemo
                 case "AddModbusGate":
                     {
                        
-                        return modPage.MakeDeviceRedirect(pageName, user, userRights, queryString);
+                        return modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
                        // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
                     }
                 case "AddModbusDevice":
