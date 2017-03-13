@@ -20,7 +20,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
             //So coil and discrete are bool ONLY
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
             "SignedValue",
-            "ScratchpadString"],
+            "ScratchpadString",
             "DisplayFormatString",
             "ReadOnlyDevice",
             "DeviceEnabled",
