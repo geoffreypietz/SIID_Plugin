@@ -56,7 +56,7 @@ namespace HSPI_SIID
              "deviceTypeString",
              "RelationshipStatus",
              "associatedDevicesList",
-             "associatedDevices"
+            // "associatedDevices"
         };
 
          public    HomeSeerDevice(int DeviceID)
@@ -80,7 +80,7 @@ namespace HSPI_SIID
              Values["address"]=Device.get_Address(Util.hs);
              Values["statusOnly"]=Device.get_Status_Support(Util.hs);
              Values["CanDim"]=Device.get_Can_Dim(Util.hs);
-             //hideDev "]= Device.;
+
              Values["doNotLog"]= Util.hs.DeviceNoLog(DeviceID);
                 //    voiceC=Util.hs.DeviceProperty_Boolean(DeviceID", HomeSeerAPI.Enums.eDeviceProperty.Prop;
                 //   includeInPower=Util.hs.;
