@@ -1,4 +1,5 @@
 ﻿using HSPI_SIID_ModBusDemo;
+using HSPI_SIID_ModBusDemo.Modbus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -152,14 +153,15 @@ namespace HSPI_SIID
                 var EDO = Device.get_PlugExtraData_Get(Util.hs);
             System.Collections.Specialized.NameValueCollection parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //Need to grab the key order from somewhere 
+           string[] Orderlist = null;
             switch (parts["Type"]) {
                 case ("Modbus Gateway"): {
-
+                        Orderlist = ModbusMaster.Attributes;
                         break;
                     }
                 case ("Modbus Device"):
                     {
-
+                        Orderlist = ModbusDevice.Attributes;
                         break;
                     }
                 case ("Bacnet Device"):
@@ -172,7 +174,7 @@ namespace HSPI_SIID
 
             }
 
-            foreach (var Ent in parts.AllKeys)
+            foreach (var Ent in Orderlist)
                 {
                 
                     Values[Ent] = parts[Ent];

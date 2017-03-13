@@ -63,13 +63,20 @@ namespace HSPI_SIID_ModBusDemo
 
         public void ImportDevices(string RawCsv)
         {
-            int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
+        //    int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
             List<Tuple<int, string>> DevicesToImport = new List<Tuple<int, string>>();
             Dictionary<int, int> OldToNew = new Dictionary<int, int>();
             string[] CSVRows = RawCsv.Split('\n');
             foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
             {
+                //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
+                int CellCount = row.Split(',').Count();
+                if (CellCount > 0)
+                {
+
+                }
                 int ID = 0;
+                
                 int.TryParse(row.Split(',')[0], out ID);
                 if (ID != 0){
                     var dv = Util.hs.NewDeviceRef("ImportingDevice");

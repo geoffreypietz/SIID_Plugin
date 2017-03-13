@@ -33,7 +33,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
         #endregion
 
 
-        public string[] Attributes = new string[]{
+        public static string[] Attributes = new string[]{
 
             "Type",
         "Gateway",
