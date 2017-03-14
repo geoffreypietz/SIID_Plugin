@@ -16,18 +16,18 @@ namespace HSPI_SIID_ModBusDemo.Modbus
 
         public static void loadModbusConfig()
         {
-            MosbusAjaxReceivers.modbusDefaultPoll = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "DefaultPoll", "300000", "hspi_SIID.INI"));
-            MosbusAjaxReceivers.modbusLogLevel = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "LogLevel", "2", "hspi_SIID.INI"));
-            MosbusAjaxReceivers.modbusLogToFile = bool.Parse(Util.hs.GetINISetting("MODBUS_CONFIG", "LogToFile", "false", "hspi_SIID.INI"));
+            MosbusAjaxReceivers.modbusDefaultPoll = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "DefaultPoll", "300000", Util.IFACE_NAME+Util.Instance+".INI"));
+            MosbusAjaxReceivers.modbusLogLevel = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "LogLevel", "2", Util.IFACE_NAME+Util.Instance+".INI"));
+            MosbusAjaxReceivers.modbusLogToFile = bool.Parse(Util.hs.GetINISetting("MODBUS_CONFIG", "LogToFile", "false", Util.IFACE_NAME+Util.Instance+".INI"));
 
         }
 
         public static void saveModbusConfig()
         {
 
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "DefaultPoll", MosbusAjaxReceivers.modbusDefaultPoll.ToString(), "hspi_SIID.INI");
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogLevel", MosbusAjaxReceivers.modbusLogLevel.ToString(), "hspi_SIID.INI");
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogToFile", MosbusAjaxReceivers.modbusLogToFile.ToString(), "hspi_SIID.INI");
+            Util.hs.SaveINISetting("MODBUS_CONFIG", "DefaultPoll", MosbusAjaxReceivers.modbusDefaultPoll.ToString(), Util.IFACE_NAME + Util.Instance + ".INI");
+            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogLevel", MosbusAjaxReceivers.modbusLogLevel.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
+            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogToFile", MosbusAjaxReceivers.modbusLogToFile.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
         }
 
         /*public static string addModbusDev(string page, string data, string user, int userRights)

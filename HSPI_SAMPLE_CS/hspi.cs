@@ -23,99 +23,98 @@ namespace HSPI_SIID_ModBusDemo
         public SIID_Page ourWorkingPage;
 
     public string OurInstanceFriendlyName = "";
-		// a jquery web page
-	public WebPage pluginpage;
-	public WebTestPage pluginTestPage;
+
+	
         public ModbusDevicePage modPage;
 
-        string WebPageName = "Sample_Web_Page";
+
 
 
 	public static bool bShutDown = false;
 
-	#region "Externally Accessible Methods/Procedures - e.g. Script Commands"
+        #region "Externally Accessible Methods/Procedures - e.g. Script Commands"
+        /*
+            public int MyLocalFunction()
+            {
+                return 555;
+            }
 
-	public int MyLocalFunction()
-	{
-		return 555;
-	}
+            public double MySquareFunction(object[] parms)
+            {
+                if (parms == null)
+                    return 0;
+                if (parms.Length < 1)
+                    return 0;
+                if (parms[0] == null)
+                    return 0;
+                if (!Information.IsNumeric(parms[0]))
+                    return 0;
 
-	public double MySquareFunction(object[] parms)
-	{
-		if (parms == null)
-			return 0;
-		if (parms.Length < 1)
-			return 0;
-		if (parms[0] == null)
-			return 0;
-		if (!Information.IsNumeric(parms[0]))
-			return 0;
+                System.Type NType = new object().GetType();
+                //Default to object.
+                try {
+                    NType = parms[0].GetType();
+                } catch (Exception ) {
+                }
+                try {
+                return Math.Pow((double)parms[0], (double)2);
+                } catch (Exception ex) {
+                    Util.Log("MySquareFunction returned an exception - bad input perhaps? Type of input=" + NType.ToString() + ", Ex=" + ex.Message, Util.LogType.LOG_TYPE_ERROR);
+                    return 0;
+                }
+            }*/
 
-		System.Type NType = new object().GetType();
-		//Default to object.
-		try {
-			NType = parms[0].GetType();
-		} catch (Exception ) {
-		}
-		try {
-		return Math.Pow((double)parms[0], (double)2);
-		} catch (Exception ex) {
-			Util.Log("MySquareFunction returned an exception - bad input perhaps? Type of input=" + NType.ToString() + ", Ex=" + ex.Message, Util.LogType.LOG_TYPE_ERROR);
-			return 0;
-		}
-  	}
+        #endregion
 
-	#endregion
+        #region "Common Interface"
 
-	#region "Common Interface"
+        // For search demonstration purposes only.
+        string[] Zone = new string[6];
+        Scheduler.Classes.DeviceClass OneOfMyDevices = new Scheduler.Classes.DeviceClass();
+        public HomeSeerAPI.SearchReturn[] Search(string SearchString, bool RegEx)
+        {
+              // Not yet implemented in the Sample
+              //
+              // Normally we would do a search on plug-in actions, triggers, devices, etc. for the string provided, using
+              //   the string as a regular expression if RegEx is True.
+              //
+              System.Collections.Generic.List<SearchReturn> colRET = new System.Collections.Generic.List<SearchReturn>();
+              SearchReturn RET;
 
-		// For search demonstration purposes only.
-	string[] Zone = new string[6];
-	Scheduler.Classes.DeviceClass OneOfMyDevices = new Scheduler.Classes.DeviceClass();
-	public HomeSeerAPI.SearchReturn[] Search(string SearchString, bool RegEx)
-	{
-		// Not yet implemented in the Sample
-		//
-		// Normally we would do a search on plug-in actions, triggers, devices, etc. for the string provided, using
-		//   the string as a regular expression if RegEx is True.
-		//
-		System.Collections.Generic.List<SearchReturn> colRET = new System.Collections.Generic.List<SearchReturn>();
-		SearchReturn RET;
+              //So let's pretend we searched through all of the plug-in resources (triggers, actions, web pages, perhaps zone names, songs, etc.) 
+              // and found a few matches....  
 
-		//So let's pretend we searched through all of the plug-in resources (triggers, actions, web pages, perhaps zone names, songs, etc.) 
-		// and found a few matches....  
+              //   The matches can be returned as just the string value...:
+              RET = new SearchReturn();
+              RET.RType = eSearchReturn.r_String_Other;
+              RET.RDescription = "Found in the zone description for zone 4";
+              RET.RValue = Zone[4];
+              colRET.Add(RET);
+              //   The matches can be returned as a URL:
+              RET = new SearchReturn();
+              RET.RType = eSearchReturn.r_URL;
+              RET.RValue = Util.IFACE_NAME + Util.Instance;
+              // Could have put something such as /DeviceUtility?ref=12345&edit=1     to take them directly to the device properties of a device.
+              colRET.Add(RET);
+              //   The matches can be returned as an Object:
+              //   This will be VERY infrequently used as it is restricted to object types that can go through the HomeSeer-Plugin interface.
+              //   Normal data type objects (Date, String, Integer, Enum, etc.) can go through, but very few complex objects such as the 
+              //       HomeSeer DeviceClass will make it through the interface unscathed.
+              RET = new SearchReturn();
+              RET.RType = eSearchReturn.r_Object;
+              RET.RDescription = "Found in a device.";
+              RET.RValue = Util.hs.DeviceName(OneOfMyDevices.get_Ref(Util.hs));
+              //Returning a string in the RValue is optional since this is an object type return
+              RET.RObject = OneOfMyDevices;
+              colRET.Add(RET);
 
-		//   The matches can be returned as just the string value...:
-		RET = new SearchReturn();
-		RET.RType = eSearchReturn.r_String_Other;
-		RET.RDescription = "Found in the zone description for zone 4";
-		RET.RValue = Zone[4];
-		colRET.Add(RET);
-		//   The matches can be returned as a URL:
-		RET = new SearchReturn();
-		RET.RType = eSearchReturn.r_URL;
-		RET.RValue = Util.IFACE_NAME + Util.Instance;
-		// Could have put something such as /DeviceUtility?ref=12345&edit=1     to take them directly to the device properties of a device.
-		colRET.Add(RET);
-		//   The matches can be returned as an Object:
-		//   This will be VERY infrequently used as it is restricted to object types that can go through the HomeSeer-Plugin interface.
-		//   Normal data type objects (Date, String, Integer, Enum, etc.) can go through, but very few complex objects such as the 
-		//       HomeSeer DeviceClass will make it through the interface unscathed.
-		RET = new SearchReturn();
-		RET.RType = eSearchReturn.r_Object;
-		RET.RDescription = "Found in a device.";
-		RET.RValue = Util.hs.DeviceName(OneOfMyDevices.get_Ref(Util.hs));
-		//Returning a string in the RValue is optional since this is an object type return
-		RET.RObject = OneOfMyDevices;
-		colRET.Add(RET);
-
-		return colRET.ToArray();
-
-	}
+              return colRET.ToArray();
+              
+        }
 
 
-	// a custom call to call a specific procedure in the plugin
-	public object PluginFunction(string proc, object[] parms)
+    // a custom call to call a specific procedure in the plugin
+    public object PluginFunction(string proc, object[] parms)
 	{
 		try {
 			Type ty = this.GetType();
@@ -170,29 +169,29 @@ namespace HSPI_SIID_ModBusDemo
 
 	public int Capabilities()
 	{
-        return (int)(HomeSeerAPI.Enums.eCapabilities.CA_IO | HomeSeerAPI.Enums.eCapabilities.CA_Thermostat);
+            return 0;// (int)(HomeSeerAPI.Enums.eCapabilities.CA_IO | HomeSeerAPI.Enums.eCapabilities.CA_Thermostat);
 	}
 
 	// return 1 for a free plugin
 	// return 2 for a licensed (for pay) plugin
 	public int AccessLevel()
 	{
-		return 1;
+		return 1; //setting this to 2 causes null reference exception currently. Maybe can't run remotely when set to licensed
 	}
 
 	public bool HSCOMPort {
 			//We want HS to give us a com port number for accessing the hardware via a serial port
-		get { return true; }
+		get { return false; }
 	}
 
 	public bool SupportsMultipleInstances()
 	{
-		return false;
+            return true;// false;
 	}
 
 	public bool SupportsMultipleInstancesSingleEXE()
 	{
-		return false;
+            return true;// false;
 	}
 
 	public string InstanceFriendlyName()
@@ -200,76 +199,6 @@ namespace HSPI_SIID_ModBusDemo
 		return OurInstanceFriendlyName;
 	}
 
-	private System.Timers.Timer test_timer = new System.Timers.Timer();
-   
-    private void start_test_timer()
-    {
-        test_timer.Elapsed += test_timer_Elapsed;
-        test_timer.Interval = 10000;
-		test_timer.Enabled = true;
-    }
-	private double timerVal;
-	private void test_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-	{
-		timerVal += 1;
-		// increment our test value so we can see it change on the device and test triggers
-		// find our device, we only have one
-		Scheduler.Classes.DeviceClass dv = default(Scheduler.Classes.DeviceClass);
-		int dvRef = 0;
-		try {
-			Scheduler.Classes.clsDeviceEnumeration EN = default(Scheduler.Classes.clsDeviceEnumeration);
-			EN = (Scheduler.Classes.clsDeviceEnumeration) Util.hs.GetDeviceEnumerator();
-			if (EN == null)
-				throw new Exception(Util.IFACE_NAME + " failed to get a device enumerator from HomeSeer.");
-			do {
-				dv = EN.GetNext();
-				if (dv == null)
-					continue;
-				if (dv.get_Interface(null) != null) {
-					if (dv.get_Interface(null).Trim() == Util.IFACE_NAME) {
-						if (dv.get_Ref(null) == Util.MyDevice) {
-							dvRef = dv.get_Ref(null);
-							Console.WriteLine("Updating device with ref " + dvRef.ToString() + " to value " + timerVal.ToString());
-                            Util.hs.SetDeviceValueByRef(dvRef, timerVal, true);
-						} else if (dv.get_Ref(null) == Util.MyTempDevice) {
-							dvRef = dv.get_Ref(null);
-							Util.hs.SetDeviceValueByRef(dvRef, 72, true);
-							// simulate setting the thermostat temp
-						}
-					}
-				}
-			} while (!(EN.Finished));
-        }
-        catch (Exception ex)
-        {
-			Util.hs.WriteLog(Util.IFACE_NAME + " Error", "Exception in Find_Create_Devices/Enumerator: " + ex.Message);
-		}
-
-		// as a test, raise our generic callback here, our HSEvent will then be called.
-		Util.callback.RaiseGenericEventCB("sample_type", new String[]{"1","2"}, Util.IFACE_NAME, "");
-	}
-
-	public int CustomFunction()
-	{
-		return 123;
-	}
-
-	// this sub demonstrates how to access another plugin by plugin name and instance
-
-	private void AccessPlugin()
-	{
-		PluginAccess pa = new PluginAccess(ref Util.hs, "Z-Wave", "");
-		if ((bool) pa.Connected) {
-			Util.hs.WriteLog(Util.IFACE_NAME, "Connected to plugin Z-Wave");
-			Util.hs.WriteLog(Util.IFACE_NAME, "Interface name: " + pa.Name + " Interface status: " + pa.InterfaceStatus().intStatus.ToString());
-
-			int r = 0;
-			r = (int) pa.PluginFunction("CustomFunction", null);
-			Util.hs.WriteLog(Util.IFACE_NAME, "r:" + r.ToString());
-		} else {
-			Util.hs.WriteLog(Util.IFACE_NAME, "Could not connect to plugin Z-Wave, is it running?");
-		}
-	}
 
 	#if PlugDLL
 	// These 2 functions for internal use only
@@ -312,17 +241,15 @@ namespace HSPI_SIID_ModBusDemo
 
                 ourWorkingPage = new SIID_Page("SIID main page");
                 ourWorkingPage.LoadINISettings();
+
+
+                //All may not be needed or used, is for ajax callbacks
                 Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance); 
                 Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
                 Util.hs.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
                 Util.hs.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
-        
-
-                
-
-
                 Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
 
                 // register a normal page to appear in the HomeSeer menu
@@ -341,9 +268,9 @@ namespace HSPI_SIID_ModBusDemo
                 wpd.plugInName = Util.IFACE_NAME;
                 wpd.plugInInstance = Util.Instance;
                 Util.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
+                Util.callback.RegisterConfigLink(wpd);
 
 
-               
 
 
 
@@ -436,7 +363,7 @@ namespace HSPI_SIID_ModBusDemo
                 //Util.callback.RegisterProxySpeakPlug(Util.IFACE_NAME, "")
 
                 // register a generic Util.callback for other plugins to raise to use
-                Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, "");
+               // Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, ""); //Maybe look into this later, for other SIID plugins
 
 			Util.hs.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
 

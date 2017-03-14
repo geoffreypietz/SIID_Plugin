@@ -495,7 +495,7 @@ public string GetReg(string instring)
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
             ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(RetTypeArray, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
-                        ModbusConfHtml.add("Calculator: ", ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print());
+                        ModbusConfHtml.add(" Calculator: ", "<div style: 'display:inline;'><div style = 'float:left;'> "+ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print() + "</div><div style='float:left;' id='HelpText'>$(DeviceID) is the raw value for the homeseer device with ID DeviceID. #(DeviceID) is the value resulting from the device's calculator. Any SIID device's value can be called here.</div>");
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
                         ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
 
@@ -649,8 +649,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             if(partID== "Poll")
             {
                 //Update timer dictionary
+                int PollVal = Math.Max(Convert.ToInt32(changed["value"]), 10000);
                 if (SIID_Page.PluginTimerDictionary.ContainsKey(devId)){
-                    SIID_Page.PluginTimerDictionary[devId].Change(0, Convert.ToInt32(changed["value"]));
+                    SIID_Page.PluginTimerDictionary[devId].Change(0, PollVal);
                 }
                 else
                 {
@@ -700,7 +701,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //First, check if device even exits
 
             int GateID=Convert.ToInt32((int)RawID);
-            Console.WriteLine("Polling Gateway: " + GateID);
+            
             //Check if gate is active
             Scheduler.Classes.DeviceClass Gateway = null;
             try
@@ -716,7 +717,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             if (Gateway != null)
             {
-
+                Console.WriteLine("Polling Gateway: " + GateID);
 
                 var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
@@ -956,7 +957,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             Util.hs.SetDeviceValueByRef(devID, 1, true);
             Console.WriteLine(devID+ " : " + ValueString);
 
-
+            Util.hs.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
 
         }
 
