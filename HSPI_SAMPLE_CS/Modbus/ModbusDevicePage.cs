@@ -831,7 +831,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
                         try
                         {
-                            if (bool.Parse(parts["ReadOnlyDevice"])|| Convert.ToInt32(parts["RegisterType"])==1 || Convert.ToInt32(parts["RegisterType"]) == 2)//Read only or a read only type
+                            if (bool.Parse(parts["ReadOnlyDevice"])|| Convert.ToInt32(parts["RegisterType"])==0 || Convert.ToInt32(parts["RegisterType"]) == 2)//Read only or a read only type
                             {
                                 throw new Exception("Device is set to be read only. Write commands disabled");
                             }
