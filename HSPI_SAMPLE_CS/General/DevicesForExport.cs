@@ -70,7 +70,7 @@ namespace HSPI_SIID
            public void GenericDeviceStuff(int DeviceID)
             {
 
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.Util.hs.GetDeviceByRef(DeviceID);
+                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.AllInstances[InstanceFriendlyName].host.GetDeviceByRef(DeviceID);
 
              Values["ID"]=DeviceID;
              Values["Name"]=Device.get_Name(Util.hs);
@@ -81,9 +81,9 @@ namespace HSPI_SIID
              Values["statusOnly"]=Device.get_Status_Support(Util.hs);
              Values["CanDim"]=Device.get_Can_Dim(Util.hs);
 
-             Values["doNotLog"]= Util.hs.DeviceNoLog(DeviceID);
-                //    voiceC=Util.hs.DeviceProperty_Boolean(DeviceID", HomeSeerAPI.Enums.eDeviceProperty.Prop;
-                //   includeInPower=Util.hs.;
+             Values["doNotLog"]= AllInstances[InstanceFriendlyName].host.DeviceNoLog(DeviceID);
+                //    voiceC=AllInstances[InstanceFriendlyName].host.DeviceProperty_Boolean(DeviceID", HomeSeerAPI.Enums.eDeviceProperty.Prop;
+                //   includeInPower=AllInstances[InstanceFriendlyName].host.;
                 // usePopUp=Device.use;
                 //doNotUp = HomeSeerAPI.Enums.eCapabilities;
              Values["userAccess"]=Device.get_UserAccess(Util.hs);
@@ -149,7 +149,7 @@ namespace HSPI_SIID
             public SIIDDevice(int DeviceID):base(DeviceID)
             {
               
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.Util.hs.GetDeviceByRef(DeviceID);
+                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.AllInstances[InstanceFriendlyName].host.GetDeviceByRef(DeviceID);
                 var EDO = Device.get_PlugExtraData_Get(Util.hs);
             System.Collections.Specialized.NameValueCollection parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //Need to grab the key order from somewhere 

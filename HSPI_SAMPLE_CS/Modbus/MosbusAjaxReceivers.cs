@@ -16,18 +16,18 @@ namespace HSPI_SIID_ModBusDemo.Modbus
 
         public static void loadModbusConfig()
         {
-            MosbusAjaxReceivers.modbusDefaultPoll = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "DefaultPoll", "300000", Util.IFACE_NAME+Util.Instance+".INI"));
-            MosbusAjaxReceivers.modbusLogLevel = Convert.ToInt32(Util.hs.GetINISetting("MODBUS_CONFIG", "LogLevel", "2", Util.IFACE_NAME+Util.Instance+".INI"));
-            MosbusAjaxReceivers.modbusLogToFile = bool.Parse(Util.hs.GetINISetting("MODBUS_CONFIG", "LogToFile", "false", Util.IFACE_NAME+Util.Instance+".INI"));
+            MosbusAjaxReceivers.modbusDefaultPoll = Convert.ToInt32(AllInstances[InstanceFriendlyName].host.GetINISetting("MODBUS_CONFIG", "DefaultPoll", "300000", Util.IFACE_NAME+Util.Instance+".INI"));
+            MosbusAjaxReceivers.modbusLogLevel = Convert.ToInt32(AllInstances[InstanceFriendlyName].host.GetINISetting("MODBUS_CONFIG", "LogLevel", "2", Util.IFACE_NAME+Util.Instance+".INI"));
+            MosbusAjaxReceivers.modbusLogToFile = bool.Parse(AllInstances[InstanceFriendlyName].host.GetINISetting("MODBUS_CONFIG", "LogToFile", "false", Util.IFACE_NAME+Util.Instance+".INI"));
 
         }
 
         public static void saveModbusConfig()
         {
             Console.WriteLine(Util.IFACE_NAME + Util.Instance);
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "DefaultPoll", MosbusAjaxReceivers.modbusDefaultPoll.ToString(), Util.IFACE_NAME + Util.Instance + ".INI");
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogLevel", MosbusAjaxReceivers.modbusLogLevel.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
-            Util.hs.SaveINISetting("MODBUS_CONFIG", "LogToFile", MosbusAjaxReceivers.modbusLogToFile.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
+            AllInstances[InstanceFriendlyName].host.SaveINISetting("MODBUS_CONFIG", "DefaultPoll", MosbusAjaxReceivers.modbusDefaultPoll.ToString(), Util.IFACE_NAME + Util.Instance + ".INI");
+            AllInstances[InstanceFriendlyName].host.SaveINISetting("MODBUS_CONFIG", "LogLevel", MosbusAjaxReceivers.modbusLogLevel.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
+            AllInstances[InstanceFriendlyName].host.SaveINISetting("MODBUS_CONFIG", "LogToFile", MosbusAjaxReceivers.modbusLogToFile.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
         }
 
         /*public static string addModbusDev(string page, string data, string user, int userRights)
@@ -97,7 +97,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
             }
             //So in the main plugin stuff
             //need to add
-            //Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance);
+            //AllInstances[InstanceFriendlyName].host.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance);
             //where ModBus is the name of our ajax callback 
 
             //then in PostBackProc in the main plugin stuff, the pagename that comes back will be our ajax call

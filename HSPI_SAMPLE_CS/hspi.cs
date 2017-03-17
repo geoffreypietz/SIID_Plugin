@@ -94,7 +94,7 @@ namespace HSPI_SIID_ModBusDemo
               //   The matches can be returned as a URL:
               RET = new SearchReturn();
               RET.RType = eSearchReturn.r_URL;
-              RET.RValue = Util.IFACE_NAME + Util.Instance;
+              RET.RValue = Util.IFACE_NAME + OurInstanceFriendlyName;
               // Could have put something such as /DeviceUtility?ref=12345&edit=1     to take them directly to the device properties of a device.
               colRET.Add(RET);
               //   The matches can be returned as an Object:
@@ -242,35 +242,35 @@ namespace HSPI_SIID_ModBusDemo
         string GetINISetting(string section, string key, string default_val, string FileName = ""); 
                  */
 
-                MainSiidPageName = "SIID_main_page" + Util.IFACE_NAME+ Util.Instance;
-                OurInstanceFriendlyName = MainSiidPageName;
+                MainSiidPageName = "SIID_main_page" + Util.IFACE_NAME+ OurInstanceFriendlyName;
+          
                 ourWorkingPage = new SIID_Page(MainSiidPageName);
                 ourWorkingPage.LoadINISettings();
 
 
                 //All may not be needed or used, is for ajax callbacks
                 //AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, "");
-                AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, Util.Instance); //Necessary to do the GetPagePlugin  Want also for postbackproc
+                AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, OurInstanceFriendlyName); //Necessary to do the GetPagePlugin  Want also for postbackproc
                 //Doesn't seem to work for multiple instances for postback
-                Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ Util.Instance);
+                Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ OurInstanceFriendlyName);
                 
 
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
-                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBus", Util.IFACE_NAME, OurInstanceFriendlyName); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
+                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusGate", Util.IFACE_NAME, OurInstanceFriendlyName);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusGateTab", Util.IFACE_NAME, OurInstanceFriendlyName);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusDevTab", Util.IFACE_NAME, OurInstanceFriendlyName);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusDevice", Util.IFACE_NAME, OurInstanceFriendlyName);
             
-               // AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Util.Instance); //Need unique pagenames for each instance?
+               // AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, OurInstanceFriendlyName); //Need unique pagenames for each instance?
            //     Console.WriteLine(MainSiidPageName + "SIIDConfPage");
           
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
                 wpd.link = MainSiidPageName;
               
-                if (!string.IsNullOrEmpty(Util.Instance))
+                if (!string.IsNullOrEmpty(OurInstanceFriendlyName))
                 {
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Util.Instance;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + OurInstanceFriendlyName;
                 }
                 else
                 {
@@ -278,17 +278,17 @@ namespace HSPI_SIID_ModBusDemo
                 }
                 wpd.page_title = Util.IFACE_NAME + "SIID main page";
                 wpd.plugInName = Util.IFACE_NAME;
-                wpd.plugInInstance = Util.Instance;
-                Util.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
+                wpd.plugInInstance = OurInstanceFriendlyName;
+                AllInstances[InstanceFriendlyName].callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
 
                 
           
                 wpd = new WebPageDesc();
         
-                if (!string.IsNullOrEmpty(Util.Instance))
+                if (!string.IsNullOrEmpty(OurInstanceFriendlyName))
                 {
-                    wpd.link = MainSiidPageName + "?instance=" + Util.Instance;
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Util.Instance;
+                    wpd.link = MainSiidPageName + "?instance=" + OurInstanceFriendlyName;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + OurInstanceFriendlyName;
                 }
                 else
                 {
@@ -297,9 +297,9 @@ namespace HSPI_SIID_ModBusDemo
                 }
                 wpd.page_title = Util.IFACE_NAME + "SIID main page";
                 wpd.plugInName = Util.IFACE_NAME;
-                wpd.plugInInstance = Util.Instance;
+                wpd.plugInInstance = OurInstanceFriendlyName;
            
-                Util.callback.RegisterConfigLink(wpd); //Looks like the plugin config link doesn't go to specific instances
+                AllInstances[InstanceFriendlyName].callback.RegisterConfigLink(wpd); //Looks like the plugin config link doesn't go to specific instances
 
 
          

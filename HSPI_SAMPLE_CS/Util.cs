@@ -29,9 +29,9 @@ namespace HSPI_SIID_ModBusDemo
 	public const  int ERR_SEND = 1;
 
 	public const  int ERR_INIT = 2;
-//	public static HomeSeerAPI.IHSApplication hs;  //Changing Util.hs (plugin specific plugin interface) to AllInstances[instanceName].hs
-	//public static HomeSeerAPI.IAppCallbackAPI callback;
-	public const string IFACE_NAME = "SIID Demo - Modbus";
+        //	public static HomeSeerAPI.IHSApplication hs;  //Changing Util.hs (plugin specific plugin interface) to AllInstances[instanceName].host
+        //public static HomeSeerAPI.IAppCallbackAPI callback;
+        public const string IFACE_NAME = "SIID Demo - Modbus";
 	//public const string IFACE_NAME = "Sample Plugin";
 		// set when SupportMultipleInstances is TRUE
 	//public static string Instance = "";  //Changing way this is done
@@ -657,7 +657,7 @@ namespace HSPI_SIID_ModBusDemo
 
 		try {
 			Scheduler.Classes.clsDeviceEnumeration EN = default(Scheduler.Classes.clsDeviceEnumeration);
-			EN = (Scheduler.Classes.clsDeviceEnumeration) Util.hs.GetDeviceEnumerator();
+			EN = (Scheduler.Classes.clsDeviceEnumeration) AllInstances[InstanceFriendlyName].host.GetDeviceEnumerator();
 			if (EN == null)
 				throw new Exception(IFACE_NAME + " failed to get a device enumerator from HomeSeer.");
 			do {
