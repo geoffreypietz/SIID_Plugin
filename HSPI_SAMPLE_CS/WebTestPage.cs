@@ -106,7 +106,7 @@ namespace HSPI_SIID_ModBusDemo
 
 			// page body starts here
 
-            this.AddHeader(Util.hs.GetPageHeader(pageName, Util.IFACE_NAME + " Controls Test", "", "", false, true));
+            this.AddHeader(AllInstances[InstanceFriendlyName].host.GetPageHeader(pageName, Util.IFACE_NAME + " Controls Test", "", "", false, true));
 
 			//Dim dv As DeviceClass = GetDeviceByRef(3576)
 			//Dim CS As CAPIStatus

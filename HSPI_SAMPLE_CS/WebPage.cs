@@ -68,7 +68,7 @@ namespace HSPI_SIID_ModBusDemo
 			//page.AddHeader(header_string)
 
 			// add the normal title
-			this.AddHeader(Util.hs.GetPageHeader(pageName, Util.IFACE_NAME + "", "", "", false, false));
+			this.AddHeader(AllInstances[InstanceFriendlyName].host.GetPageHeader(pageName, Util.IFACE_NAME + "", "", "", false, false));
 
 			stb.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("pluginpage", ""));
 
@@ -92,7 +92,7 @@ namespace HSPI_SIID_ModBusDemo
 			// add the body html to the page
 			this.AddBody(stb.ToString());
 
-            this.AddFooter(Util.hs.GetPageFooter());
+            this.AddFooter(AllInstances[InstanceFriendlyName].host.GetPageFooter());
 			this.suppressDefaultFooter = true;
 
 			// return the full page

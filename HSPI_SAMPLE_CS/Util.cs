@@ -22,18 +22,19 @@ namespace HSPI_SIID_ModBusDemo
 	static class Util
 	{
 
+
 	// interface status
 	// for InterfaceStatus function call
 	public const  int ERR_NONE = 0;
 	public const  int ERR_SEND = 1;
 
 	public const  int ERR_INIT = 2;
-	public static HomeSeerAPI.IHSApplication hs;
-	public static HomeSeerAPI.IAppCallbackAPI callback;
+//	public static HomeSeerAPI.IHSApplication hs;  //Changing Util.hs (plugin specific plugin interface) to AllInstances[instanceName].hs
+	//public static HomeSeerAPI.IAppCallbackAPI callback;
 	public const string IFACE_NAME = "SIID Demo - Modbus";
 	//public const string IFACE_NAME = "Sample Plugin";
 		// set when SupportMultipleInstances is TRUE
-	public static string Instance = "";
+	//public static string Instance = "";  //Changing way this is done
 	public static string gEXEPath = "";
 
 	public static bool gGlobalTempScaleF = true;
@@ -2595,6 +2596,10 @@ namespace HSPI_SIID_ModBusDemo
 		}
 
 	}
+
+    
+
+
 
 	public static bool DeSerializeObject(string HexIn, ref object ObjOut, System.Type OType)
 	{

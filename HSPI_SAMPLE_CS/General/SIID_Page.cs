@@ -18,6 +18,7 @@ namespace HSPI_SIID_ModBusDemo
 
     {
         public ModbusDevicePage ModPage { get; set; }
+        public string OurPageName {get;set;}
 
         public static Dictionary<int, System.Threading.Timer> PluginTimerDictionary = new Dictionary<int, Timer>(); //Indexed by device ID, value is timers, intended for modbus gateway polls. idea is one per gateway ID
        //Needs to instance this when the plugin initializes, needs to update when a new gateway is added or when the polling interval changes
@@ -26,6 +27,7 @@ namespace HSPI_SIID_ModBusDemo
         public SIID_Page(string pagename) : base(pagename)
         {
             ModPage = new ModbusDevicePage("SIID UTILITY PAGE");
+        OurPageName=pagename;
             ItializeModbusGatewayTimers();
         }
 
@@ -36,8 +38,8 @@ namespace HSPI_SIID_ModBusDemo
 
         public void LoadINISettings()
         {
-
-            selectedPlugin= Convert.ToInt32(Util.hs.GetINISetting("CONFIG", "Selected_Plugin", "1", Util.IFACE_NAME + Util.Instance + ".INI"));
+            Console.WriteLine("IN LOAD "+ OurPageName);
+            selectedPlugin = Convert.ToInt32(AllInstances[InstanceFriendlyName].host.GetINISetting("CONFIG", "Selected_Plugin", "1", OurPageName + ".INI"));
             MosbusAjaxReceivers.loadModbusConfig();
 
 
@@ -47,7 +49,7 @@ namespace HSPI_SIID_ModBusDemo
         public void SaveAllINISettings()
         {
             //general config
-            Util.hs.SaveINISetting("CONFIG", "Selected_Plugin", selectedPlugin.ToString(), Util.IFACE_NAME + Util.Instance + ".INI");
+            AllInstances[InstanceFriendlyName].host.SaveINISetting("CONFIG", "Selected_Plugin", selectedPlugin.ToString(), OurPageName + ".INI");
 
             MosbusAjaxReceivers.saveModbusConfig();
             //modbus specific config
@@ -59,7 +61,7 @@ namespace HSPI_SIID_ModBusDemo
 
         public void SaveSpecificINISetting(string section, string key, string value)
         {
-            Util.hs.SaveINISetting(section, key , value , Util.IFACE_NAME+Util.Instance+".INI");
+            AllInstances[InstanceFriendlyName].host.SaveINISetting(section, key , value , OurPageName + ".INI");
 
         }
 
@@ -89,7 +91,7 @@ namespace HSPI_SIID_ModBusDemo
                         int.TryParse(System.Text.RegularExpressions.Regex.Replace(row.Split(',')[0], "[^.0-9]", ""), out ID); //First cell is always ID or a header, If it parses as a number 
                         if (ID != 0 && HasHeader) //ID was a valid number
                         {
-                            var dv = Util.hs.NewDeviceRef("ImportingDevice");
+                            var dv = AllInstances[InstanceFriendlyName].host.NewDeviceRef("ImportingDevice");
                             //DevicesToImport.Add(new Tuple<int, int, string>(dv, Headers.Count - 1, row.Replace("\r", "")));
                             RowByHeaderID[Headers.Count - 1].Add(row + "\n");
                             OldToNew[ID] = dv;
@@ -153,7 +155,7 @@ namespace HSPI_SIID_ModBusDemo
                                 }
                                 try
                                 {
-                                    Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
+                                    Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
                                     newDevice.set_Name(Util.hs, FetchAttribute(CodeLookup, "Name"));
                                     newDevice.set_Location2(Util.hs, FetchAttribute(CodeLookup, "Floor"));
                                     newDevice.set_Location(Util.hs, FetchAttribute(CodeLookup, "Room"));
@@ -389,7 +391,7 @@ namespace HSPI_SIID_ModBusDemo
             string FileName = Util.IFACE_NAME + "_" + Util.Instance + "_" + "Export_Devices.CSV";
             StringBuilder FileContent = new StringBuilder();
   
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Util.hs.GetDeviceEnumerator();
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)AllInstances[InstanceFriendlyName].host.GetDeviceEnumerator();
             var Dev = DevNum.GetNext();
             List<int> ModGateways = new List<int>();
             List<int> ModDevices = new List<int>();
@@ -553,7 +555,7 @@ namespace HSPI_SIID_ModBusDemo
 
             foreach (int GID in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(GID));
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(GID));
                 var EDO = Dev.get_PlugExtraData_Get(Util.hs);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
@@ -583,7 +585,7 @@ namespace HSPI_SIID_ModBusDemo
 
             foreach (int GID in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(GID));
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(GID));
                  var EDO = Dev.get_PlugExtraData_Get(Util.hs);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 StringBuilder updatedList = new StringBuilder();
@@ -591,7 +593,7 @@ namespace HSPI_SIID_ModBusDemo
                 {
                     try
                     {
-                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(Convert.ToInt32(subId));
+                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(subId));
                         if (MDevice != null)
                         {
                             ModbusDevs.Add(MDevice);
@@ -615,7 +617,7 @@ namespace HSPI_SIID_ModBusDemo
             sb.Append("<br>");
             foreach (int GateRef in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(GateRef);
+                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GateRef);
                 ModbusConfHtml.addDevHeader("Gateway");
                 Gateway.get_Image(Util.hs);
                 Gateway.get_Name(Util.hs);
@@ -660,6 +662,7 @@ namespace HSPI_SIID_ModBusDemo
 
         public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
         {
+            Console.WriteLine("started the genpage");
             StringBuilder stb = new StringBuilder();
             SIID_Page page = this;
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBus");
@@ -668,9 +671,10 @@ namespace HSPI_SIID_ModBusDemo
             {
                 page.reset();
 
-                page.AddHeader(Util.hs.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
+                page.AddHeader(AllInstances[InstanceFriendlyName].host.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
 
-                htmlBuilder GeneralPageStuff = new htmlBuilder("SIIDConfPage");
+                htmlBuilder GeneralPageStuff = new htmlBuilder(OurPageName);
+                stb.Append("<h2>SIID Page "+ OurPageName + "</h2><br><br>");
                 stb.Append("<hr>SIID Options<br><br>");
                 stb.Append("<div>");
                 stb.Append(GeneralPageStuff.Uploadbutton("Import", "Import SIID Devices from CSV File").print());
@@ -684,7 +688,7 @@ namespace HSPI_SIID_ModBusDemo
 
 
                 stb.Append("<hr>Select plugin API<br><br>");
-               clsJQuery.jqRadioButton rb = new clsJQuery.jqRadioButton("pluginSelection", "SIIDConfPage", false);
+               clsJQuery.jqRadioButton rb = new clsJQuery.jqRadioButton("pluginSelection", OurPageName, false);
                
                 //rb.buttonset = False
                  rb.id = "SelectPlugin";
@@ -729,7 +733,7 @@ namespace HSPI_SIID_ModBusDemo
                 tab.tabDIVID = "modBusConfTab";
 
 
-                new HSPI_SIID_ModBusDemo.Modbus.ModbusClasses.ModbusGeneralConfigSettings();
+                new ModbusClasses.ModbusGeneralConfigSettings();
 
 
                     htmlTable ModbusConfHtml =  ModbusBuilder.htmlTable();

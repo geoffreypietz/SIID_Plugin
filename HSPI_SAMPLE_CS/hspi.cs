@@ -24,9 +24,10 @@ namespace HSPI_SIID_ModBusDemo
 
     public string OurInstanceFriendlyName = "";
 
-	
+        public  string MainSiidPageName = "";
         public ModbusDevicePage modPage;
 
+        public string Instance = "";
 
 
 
@@ -103,7 +104,7 @@ namespace HSPI_SIID_ModBusDemo
               RET = new SearchReturn();
               RET.RType = eSearchReturn.r_Object;
               RET.RDescription = "Found in a device.";
-              RET.RValue = Util.hs.DeviceName(OneOfMyDevices.get_Ref(Util.hs));
+              RET.RValue = AllInstances[InstanceFriendlyName].host.DeviceName(OneOfMyDevices.get_Ref(Util.hs));
               //Returning a string in the RValue is optional since this is an object type return
               RET.RObject = OneOfMyDevices;
               colRET.Add(RET);
@@ -169,7 +170,7 @@ namespace HSPI_SIID_ModBusDemo
 
 	public int Capabilities()
 	{
-            return 0;// (int)(HomeSeerAPI.Enums.eCapabilities.CA_IO | HomeSeerAPI.Enums.eCapabilities.CA_Thermostat);
+            return 4;// (int)(HomeSeerAPI.Enums.eCapabilities.CA_IO | HomeSeerAPI.Enums.eCapabilities.CA_Thermostat);
 	}
 
 	// return 1 for a free plugin
@@ -183,16 +184,19 @@ namespace HSPI_SIID_ModBusDemo
 			//We want HS to give us a com port number for accessing the hardware via a serial port
 		get { return false; }
 	}
-
-	public bool SupportsMultipleInstances()
+        //Clearly it is possible to add a button on the instance column of the manage plugins which when clicked adds a new instance.
+        //Don't know how to do that though
+        public bool SupportsMultipleInstances()  //If set to false, then the Uninstall this plugin button is active on the instance tab
 	{
-            return true;// false;
+            return  true;
 	}
 
 	public bool SupportsMultipleInstancesSingleEXE()
 	{
-            return true;// false;
+            return  true;
 	}
+
+
 
 	public string InstanceFriendlyName()
 	{
@@ -217,8 +221,8 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		Console.WriteLine("InitIO called with parameter port as " + port);
 
-        string[] plugins = Util.hs.GetPluginsList();
-		Util.gEXEPath = Util.hs.GetAppPath();
+        string[] plugins = AllInstances[InstanceFriendlyName].host.GetPluginsList();
+		Util.gEXEPath = AllInstances[InstanceFriendlyName].host.GetAppPath();
             modPage = new ModbusDevicePage("ModbusDevicePage");
             try {
 
@@ -228,8 +232,8 @@ namespace HSPI_SIID_ModBusDemo
                 //Load data file if it exists, or make new data classes if it doesn't
                 //The way MODBUS official plugin does it is that there exists a HSPI_MODBUS.INI file in the homeseer / config folder where the settings are stored in plaintext
 
-                //Util.hs.SaveINISetting("Settings", "test", null, "hspi_SSID.ini");
-                
+                //AllInstances[InstanceFriendlyName].host.SaveINISetting("Settings", "test", null, "hspi_SSID.ini");
+
 
                 /*
                May be useful:
@@ -238,24 +242,32 @@ namespace HSPI_SIID_ModBusDemo
         string GetINISetting(string section, string key, string default_val, string FileName = ""); 
                  */
 
-
-                ourWorkingPage = new SIID_Page("SIID main page");
+                MainSiidPageName = "SIID_main_page" + Util.IFACE_NAME+ Util.Instance;
+                OurInstanceFriendlyName = MainSiidPageName;
+                ourWorkingPage = new SIID_Page(MainSiidPageName);
                 ourWorkingPage.LoadINISettings();
 
 
                 //All may not be needed or used, is for ajax callbacks
-                Util.hs.RegisterPage("SIID main page", Util.IFACE_NAME, Util.Instance); 
-                Util.hs.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
-                Util.hs.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
-                Util.hs.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
-                Util.hs.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
-                Util.hs.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
-                Util.hs.RegisterPage("SIIDConfPage", Util.IFACE_NAME, Util.Instance);
+                //AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, "");
+                AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, Util.Instance); //Necessary to do the GetPagePlugin  Want also for postbackproc
+                //Doesn't seem to work for multiple instances for postback
+                Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ Util.Instance);
+                
 
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBus", Util.IFACE_NAME, Util.Instance); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
+                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusGate", Util.IFACE_NAME, Util.Instance);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusGateTab", Util.IFACE_NAME, Util.Instance);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusDevTab", Util.IFACE_NAME, Util.Instance);
+                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusDevice", Util.IFACE_NAME, Util.Instance);
+            
+               // AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Util.Instance); //Need unique pagenames for each instance?
+           //     Console.WriteLine(MainSiidPageName + "SIIDConfPage");
+          
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
-                wpd = new WebPageDesc();
-                wpd.link = "SIID main page" + Util.Instance;
+                wpd.link = MainSiidPageName;
+              
                 if (!string.IsNullOrEmpty(Util.Instance))
                 {
                     wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Util.Instance;
@@ -268,167 +280,33 @@ namespace HSPI_SIID_ModBusDemo
                 wpd.plugInName = Util.IFACE_NAME;
                 wpd.plugInInstance = Util.Instance;
                 Util.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
-                Util.callback.RegisterConfigLink(wpd);
+
+                
+          
+                wpd = new WebPageDesc();
+        
+                if (!string.IsNullOrEmpty(Util.Instance))
+                {
+                    wpd.link = MainSiidPageName + "?instance=" + Util.Instance;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Util.Instance;
+                }
+                else
+                {
+                   wpd.link = MainSiidPageName;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page";
+                }
+                wpd.page_title = Util.IFACE_NAME + "SIID main page";
+                wpd.plugInName = Util.IFACE_NAME;
+                wpd.plugInInstance = Util.Instance;
+           
+                Util.callback.RegisterConfigLink(wpd); //Looks like the plugin config link doesn't go to specific instances
 
 
+         
 
+			AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
 
-
-
-
-
-
-                //end of SIID stuff, keep -- Mark ***********************************************
-
-
-
-
-
-                //AccessPlugin()
-
-
-                // create our jquery web page
-                //    pluginpage = new WebPage(WebPageName);
-                // register the page with the HS web server, HS will post back to the WebPage class
-                // "pluginpage" is the URL to access this page
-                // comment this out if you are going to use the GenPage/PutPage API istead
-                /*	if (string.IsNullOrEmpty(Util.Instance)) {
-                        Util.hs.RegisterPage(Util.IFACE_NAME, Util.IFACE_NAME, Util.Instance);
-                    } else {
-                        Util.hs.RegisterPage(Util.IFACE_NAME + Util.Instance, Util.IFACE_NAME, Util.Instance);
-                    }*/
-
-
-
-                //Create our working page
-
-
-
-
-
-                // create test page
-                //          pluginTestPage = new WebTestPage("Test Page");
-                //	Util.hs.RegisterPage("Test Page", Util.IFACE_NAME, Util.Instance);
-
-
-                // register a configuration link that will appear on the interfaces page
-
-                /*      
-           wpd.link = Util.IFACE_NAME + Util.Instance;
-           // we add the instance so it goes to the proper plugin instance when selected
-           if (!string.IsNullOrEmpty(Util.Instance)) {
-               wpd.linktext = Util.IFACE_NAME + " Config instance " + Util.Instance;
-           } else {
-               wpd.linktext = Util.IFACE_NAME + " Config";
-           }
-
-           wpd.page_title = Util.IFACE_NAME + " Config";
-           wpd.plugInName = Util.IFACE_NAME;
-           wpd.plugInInstance = Util.Instance;
-           Util.callback.RegisterConfigLink(wpd);*/
-
-                // register a normal page to appear in the HomeSeer menu
-                /*	wpd = new WebPageDesc();
-                    wpd.link = Util.IFACE_NAME + Util.Instance;
-                    if (!string.IsNullOrEmpty(Util.Instance)) {
-                        wpd.linktext = Util.IFACE_NAME + " Page instance " + Util.Instance;
-                    } else {
-                        wpd.linktext = Util.IFACE_NAME + " Page";
-                    }
-                wpd.page_title = Util.IFACE_NAME + " Page";
-			wpd.plugInName = Util.IFACE_NAME;
-			wpd.plugInInstance = Util.Instance;
-			Util.callback.RegisterLink(wpd);*/
-
-
-
-
-                // register a normal page to appear in the HomeSeer menu
-                /*      wpd = new WebPageDesc();
-                      wpd.link = "Test Page" + Util.Instance;
-                      if (!string.IsNullOrEmpty(Util.Instance))
-                      {
-                          wpd.linktext = Util.IFACE_NAME + " Test Page instance " + Util.Instance;
-                      }
-                      else
-                      {
-                          wpd.linktext = Util.IFACE_NAME + " Test Page";
-                      }
-                      wpd.page_title = Util.IFACE_NAME + " Test Page";
-                      wpd.plugInName = Util.IFACE_NAME;
-                      wpd.plugInInstance = Util.Instance;
-                      Util.callback.RegisterLink(wpd);*/
-
-                // init a speak proxy
-                //Util.callback.RegisterProxySpeakPlug(Util.IFACE_NAME, "")
-
-                // register a generic Util.callback for other plugins to raise to use
-               // Util.callback.RegisterGenericEventCB("sample_type", Util.IFACE_NAME, ""); //Maybe look into this later, for other SIID plugins
-
-			Util.hs.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
-
-		/*	IPlugInAPI.strTrigActInfo[] Arr = null;
-			Util.strTrigger strTrig;
-			Classes.MyTrigger1Ton Trig1 = null;
-			Classes.MyTrigger2Shoe Trig2 = null;
-			try {
-				Arr = Util.callback.GetTriggers(Util.IFACE_NAME);
-			} catch (Exception) {
-				Arr = null;
-			}
-			if (Arr != null && Arr.Length > 0) {
-				foreach (IPlugInAPI.strTrigActInfo Info in Arr) {
-					//Util.hs.WriteLog(Util.IFACE_NAME & " Warning", "Got Trigger: EvRef=" & Info.evRef.ToString & ", Trig/SubTrig=" & Info.TANumber.ToString & "/" & Info.SubTANumber.ToString & ", UID=" & Info.UID.ToString)
-					if (ValidTrigInfo(Info)) {
-						strTrig = GetTrigs(Info, Info.DataIn);
-						if (strTrig.Result) {
-							if (strTrig.WhichTrigger != Util.eTriggerType.Unknown) {
-								if (strTrig.WhichTrigger == Util.eTriggerType.OneTon) {
-									try {
-										Trig1 = (Classes.MyTrigger1Ton)strTrig.TrigObj;
-									} catch (Exception) {
-										Trig1 = null;
-									}
-									if (Trig1 != null) {
-										Util.Add_Update_Trigger(Trig1);
-									}
-                                }
-                                else if (strTrig.WhichTrigger == Util.eTriggerType.TwoVolts)
-                                {
-									try {
-										Trig2 = (Classes.MyTrigger2Shoe)strTrig.TrigObj;
-									} catch (Exception) {
-										Trig2 = null;
-									}
-									if (Trig2 != null) {
-                                        Util.Add_Update_Trigger(Trig2);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-            */
-
-
-         /*   Util.hs.WriteLog(Util.IFACE_NAME, Util.colTrigs.Count.ToString() + " triggers were loaded from HomeSeer.");
-
-			Util.hs.WriteLog(Util.IFACE_NAME, "Checking for devices owned by " + Util.IFACE_NAME);
-            Util.Find_Create_Devices();
-
-			// register for events from homeseer if a device changes value
-			Util.callback.RegisterEventCB(Enums.HSEvent.VALUE_CHANGE, Util.IFACE_NAME, "");
-
-            Util.Demo_Start();
-
-            start_test_timer();
-
-			Util.hs.SaveINISetting("Settings", "test", null, "hspi_HSTouch.ini");*/
-
-		// example of how to save a file to the HS images folder, mainly for use by plugins that are running remotely, album art, etc.
-		//SaveImageFileToHS(gEXEPath & "\html\images\browser.png", "sample\browser.png")
-		//SaveFileToHS(gEXEPath & "\html\images\browser.png", "sample\browser.png")
+		
         }
         catch (Exception ex)
         {
@@ -449,7 +327,7 @@ namespace HSPI_SIID_ModBusDemo
             //OK, I think if we do a switch here based on Device Type String, this will work. For Modbus I'm setting the string to "Modbus". 
             //Of course the user can change this string and mess this up so we'll see
 
-            Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dvRef);
+            Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dvRef);
 
             var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
@@ -494,7 +372,7 @@ namespace HSPI_SIID_ModBusDemo
 	public Enums.ConfigDevicePostReturn ConfigDevicePost(int dvRef, string data, string user, int userRights) //this what we need to do?
 	{ //changes made to the special tab do ajax callbacks to here
 
-          /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Util.hs.GetDeviceByRef(dvRef);
+          /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dvRef);
             var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
@@ -530,7 +408,8 @@ namespace HSPI_SIID_ModBusDemo
 	// ================================================================================================
 	public string GenPage(string link)
 	{
-		return "Generated from GenPage in plugin " + Util.IFACE_NAME;
+            Console.WriteLine("ALSO AM HERE "+link); //for some reason, Ajax calls from other instances going here
+            return "Generated from GenPage in plugin " + Util.IFACE_NAME;
 	}
 	public string PagePut(string data)
 	{
@@ -543,29 +422,37 @@ namespace HSPI_SIID_ModBusDemo
 	public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
 	{
 		//If you have more than one web page, use pageName to route it to the proper GetPagePlugin
-		Console.WriteLine("GetPagePlugin pageName: " + pageName);
+		Console.WriteLine("GetPagePlugin pageName: " + pageName +" "+queryString);
 		// get the correct page
-		switch (pageName) {
-		//	case Util.IFACE_NAME :
-		//		return (pluginpage.GetPagePlugin(pageName, user, userRights, queryString));
-		//	case "Test Page":
-		//		return (pluginTestPage.GetPagePlugin(pageName, user, userRights, queryString));
-           case "SIID main page":
-                    return (ourWorkingPage.GetPagePlugin(pageName, user, userRights, queryString));
-            
-                case "AddModbusGate":
-                    {
-                       
-                        return modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
-                       // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
-                    }
-                case "AddModbusDevice":
-                    {
+        if(pageName == MainSiidPageName)
+            {
+                Console.WriteLine(MainSiidPageName);
+                return (ourWorkingPage.GetPagePlugin(pageName, user, userRights, queryString));
+            }
+        else
+            {
+                switch (pageName)
+                {
+                    //	case Util.IFACE_NAME :
+                    //		return (pluginpage.GetPagePlugin(pageName, user, userRights, queryString));
+                    //	case "Test Page":
+                    //		return (pluginTestPage.GetPagePlugin(pageName, user, userRights, queryString));
 
-                
-                        return modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
-                    }
-         
+                    case "AddModbusGate":
+                        {
+
+                            return modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
+                            // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
+                        }
+                    case "AddModbusDevice":
+                        {
+
+
+                            return modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
+                        }
+
+                }
+
 
 
             }
@@ -574,34 +461,42 @@ namespace HSPI_SIID_ModBusDemo
 
 	public string PostBackProc(string pageName, string data, string user, int userRights)
 	{
-		//If you have more than one web page, use pageName to route it to the proper postBackProc
-		switch (pageName) {
-		//	case Util.IFACE_NAME:
-		//		return pluginpage.postBackProc(pageName, data, user, userRights);
-		//	case "Test Page":
-		//		return pluginTestPage.postBackProc(pageName, data, user, userRights);
-            case "ModBus":
-                    return MosbusAjaxReceivers.postBackProcModBus(pageName, data, user, userRights);
-               
-                case "SIIDConfPage":
-                    return ourWorkingPage.postbackSSIDConfigPage(pageName, data, user, userRights);
-                case "ModBusGateTab":
-                    {
-                 
-
-                       return  modPage.parseModbusGatewayTab(data);
-                        
-                    }
-                case "ModBusDevTab":
-                    {
-                      
-                        modPage.parseModbusDeviceTab(data);
-                        return "";
-                    }
-
-         
-
+            //If you have more than one web page, use pageName to route it to the proper postBackProc
+            Console.WriteLine("PostBackProc pageName: " + pageName);
+            if (pageName == MainSiidPageName)
+            {
+                return ourWorkingPage.postbackSSIDConfigPage(pageName, data, user, userRights);
             }
+        else
+            {
+                switch (pageName)
+                {
+                    //	case Util.IFACE_NAME:
+                    //		return pluginpage.postBackProc(pageName, data, user, userRights);
+                    //	case "Test Page":
+                    //		return pluginTestPage.postBackProc(pageName, data, user, userRights);
+                    case "ModBus":
+                        return MosbusAjaxReceivers.postBackProcModBus(pageName, data, user, userRights);
+
+                    case "ModBusGateTab":
+                        {
+
+
+                            return modPage.parseModbusGatewayTab(data);
+
+                        }
+                    case "ModBusDevTab":
+                        {
+
+                            modPage.parseModbusDeviceTab(data);
+                            return "";
+                        }
+
+
+
+                }
+            }
+		
 
 
 		return "";
@@ -623,6 +518,7 @@ namespace HSPI_SIID_ModBusDemo
 	public HomeSeerAPI.IPlugInAPI.strInterfaceStatus InterfaceStatus()
 	{
 		IPlugInAPI.strInterfaceStatus es = new IPlugInAPI.strInterfaceStatus();
+          
 		es.intStatus = IPlugInAPI.enumInterfaceStatus.OK;
 		return es;
 	}
@@ -660,7 +556,7 @@ namespace HSPI_SIID_ModBusDemo
 
 		// set therm operating mode
 		// get the root device so we can find associated devices
-		Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) Util.hs.GetDeviceByRef(root_dv);
+		Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) AllInstances[InstanceFriendlyName].host.GetDeviceByRef(root_dv);
 		int[] list = null;
 		DeviceTypeInfo_m.DeviceTypeInfo DT = default(DeviceTypeInfo_m.DeviceTypeInfo);
 
@@ -669,7 +565,7 @@ namespace HSPI_SIID_ModBusDemo
             list = dv.get_AssociatedDevices(Util.hs);
 			for (int index = 0; index <= list.Length - 1; index++) {
 				int childref = list[index];
-                Scheduler.Classes.DeviceClass child_dv = (Scheduler.Classes.DeviceClass) Util.hs.GetDeviceByRef(childref);
+                Scheduler.Classes.DeviceClass child_dv = (Scheduler.Classes.DeviceClass) AllInstances[InstanceFriendlyName].host.GetDeviceByRef(childref);
 				if (child_dv != null) {
 					DT = child_dv.get_DeviceType_Get(null);
 					if (DT.Device_Type == (int) dev_type) {
@@ -711,7 +607,7 @@ namespace HSPI_SIID_ModBusDemo
 
 	public int ActionCount()
 	{
-		return 2;
+		return 0;
 	}
 
 	private bool mvarActionAdvanced;
@@ -897,13 +793,13 @@ namespace HSPI_SIID_ModBusDemo
 			//   GetTrigs will create a new Action object before the other changes are applied.
 			for (int i = 0; i <= PostData.Count - 1; i++) {
 				sKey = PostData.GetKey(i);
-				Util.hs.WriteLog(Util.IFACE_NAME + "Debug", sKey + "potatoes!");
+				AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME + "Debug", sKey + "potatoes!");
 				sValue = PostData[sKey].Trim();
 				if (sKey == null)
 					continue;
 				if (string.IsNullOrEmpty(sKey.Trim()))
 					continue;
-				//       Util.hs.WriteLog(Util.IFACE_NAME & " DEBUG", sKey & "=" & sValue)
+				//       AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME & " DEBUG", sKey & "=" & sValue)
 				if (sKey.Trim() == "id") {
 					e = U_Get_Control_Info(sValue.Trim());
 				} else {
@@ -1542,7 +1438,7 @@ namespace HSPI_SIID_ModBusDemo
 
 								break;
 							default:
-								Util.hs.WriteLog(Util.IFACE_NAME + " Warning", "MyPostData got unhandled key/value of " + e.Name_or_ID + "=" + sValue);
+								AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME + " Warning", "MyPostData got unhandled key/value of " + e.Name_or_ID + "=" + sValue);
 								break;
 						}
 					}
@@ -2262,7 +2158,7 @@ namespace HSPI_SIID_ModBusDemo
 		}
 		return false;
 	}
-	public HSPI() : base()
+	public HSPI() : base() //This is called by the main program
 	{
 
 		// Create a thread-safe collection by using the .Synchronized wrapper.
@@ -2279,7 +2175,7 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		Console.WriteLine("Speaking from HomeSeer, txt: " + txt);
 		// speak back
-		Util.hs.SpeakProxy(device, txt + " the plugin added this", w, host);
+		AllInstances[InstanceFriendlyName].host.SpeakProxy(device, txt + " the plugin added this", w, host);
 	}
 
 	// save an image file to HS, images can only be saved in a subdir of html\images so a subdir must be given
@@ -2287,7 +2183,7 @@ namespace HSPI_SIID_ModBusDemo
 	private void SaveImageFileToHS(string src_filename, string des_filename)
 	{
 		System.Drawing.Image im = System.Drawing.Image.FromFile(src_filename);
-		Util.hs.WriteHTMLImage(im, des_filename, true);
+		AllInstances[InstanceFriendlyName].host.WriteHTMLImage(im, des_filename, true);
 	}
 
 	// save a file as an array of bytes to HS
@@ -2295,7 +2191,7 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		byte[] bytes = System.IO.File.ReadAllBytes(src_filename);
 		if (bytes != null) {
-			Util.hs.WriteHTMLImageFile(bytes, des_filename, true);
+			AllInstances[InstanceFriendlyName].host.WriteHTMLImageFile(bytes, des_filename, true);
 		}
 	}
     }

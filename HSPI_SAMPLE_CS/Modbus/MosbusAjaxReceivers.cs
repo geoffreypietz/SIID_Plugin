@@ -24,7 +24,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
 
         public static void saveModbusConfig()
         {
-
+            Console.WriteLine(Util.IFACE_NAME + Util.Instance);
             Util.hs.SaveINISetting("MODBUS_CONFIG", "DefaultPoll", MosbusAjaxReceivers.modbusDefaultPoll.ToString(), Util.IFACE_NAME + Util.Instance + ".INI");
             Util.hs.SaveINISetting("MODBUS_CONFIG", "LogLevel", MosbusAjaxReceivers.modbusLogLevel.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
             Util.hs.SaveINISetting("MODBUS_CONFIG", "LogToFile", MosbusAjaxReceivers.modbusLogToFile.ToString(), Util.IFACE_NAME+Util.Instance+".INI");
