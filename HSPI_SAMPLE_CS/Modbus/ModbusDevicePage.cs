@@ -22,22 +22,29 @@ namespace HSPI_SIID_ModBusDemo.Modbus
     public class ModbusDevicePage : PageBuilderAndMenu.clsPageBuilder
 
     {
+        public InstanceHolder Instance { get; set; }
+       
 
         public static HashSet<string> WhoIsBeingPolled = new HashSet<string>();
 
-        public ModbusDevicePage(string pagename) : base(pagename)
+        public ModbusDevicePage(string pagename, InstanceHolder instance) : base(pagename)
         {
+         
+            Instance = instance;
+            ModbusBuilder = new htmlBuilder("ModBusGatewayPage" + Instance.ajaxName);
+
             UpdateGateList(getAllGateways());
+
         }
 
-        htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGatewayPage");
+        htmlBuilder ModbusBuilder { get; set; }
         public static List<KeyValuePair<int, string>> ModbusGates { get; set; }
 
 
-        public static int[] getAllGateways()
+        public  int[] getAllGateways()
         {
 
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)AllInstances[InstanceFriendlyName].host.GetDeviceEnumerator();
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
             List<int> ModbusGates = new List<int>();
 
             //Scheduler.Classes.DeviceClass
@@ -46,21 +53,21 @@ namespace HSPI_SIID_ModBusDemo.Modbus
             {
                 try
                 {
-                    var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
                     if (parts["Type"] == "Modbus Gateway")
                     {
-                        if (Dev.get_Interface(Util.hs).ToString() == Util.IFACE_NAME.ToString()) //Then it's one of ours
+                        if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString())&&(Dev.get_InterfaceInstance(Instance.host)==Instance.name)) //Then it's one of ours
                         {
-                            ModbusGates.Add(Dev.get_Ref(Util.hs));
+                            ModbusGates.Add(Dev.get_Ref(Instance.host));
                         }
 
 
                     }
                     //   if (parts["Type"] == "Modbus Device")
                     //     {
-                    //        ModbusDevs.Add(Dev.get_Ref(Util.hs));
+                    //        ModbusDevs.Add(Dev.get_Ref(Instance.host));
                     //    }
 
                 }
@@ -113,7 +120,7 @@ public string GetReg(string instring)
             parts["Type"] = "Modbus Gateway";
             parts["Gateway"] = "";
             parts["TCP"] = "502";
-            parts["Poll"] = MosbusAjaxReceivers.modbusDefaultPoll.ToString();
+            parts["Poll"] = Instance.modbusDefaultPoll.ToString();
             parts["Enabled"] = "false";
             parts["BigE"] = "false";
             parts["ZeroB"] = "true";
@@ -130,15 +137,15 @@ public string GetReg(string instring)
         public string makeNewModbusDevice(int GatewayID, int DeviceID)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
 
 
-            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
             var GParts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             parts["Type"] = "Modbus Device";
             parts["GateID"] = "" + GatewayID + "";
-            parts["Gateway"] = Gateway.get_Name(Util.hs);
+            parts["Gateway"] = Gateway.get_Name(Instance.host);
             parts["RegisterType"] = "0";//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
             parts["SlaveId"] = "1"; //get number of slaves from gateway?
             parts["ReturnType"] = "0";
@@ -164,19 +171,19 @@ public string GetReg(string instring)
         {
 
 
-            var EDO = Device.get_PlugExtraData_Get(Util.hs);
+            var EDO = Device.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             parts[Key] = value;
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
-            Device.set_PlugExtraData_Set(Util.hs, EDO);
+            Device.set_PlugExtraData_Set(Instance.host, EDO);
 
         }
 
         public void RemoveDeviceFromGateway(int DeviceId, int GatewayId)
         {
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GatewayId); //Should keep in gateway a list of devices
-            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayId); //Should keep in gateway a list of devices
+            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             String[] PLIST = parts["LinkedDevices"].Split(',');
             StringBuilder NL = new StringBuilder();
@@ -192,21 +199,21 @@ public string GetReg(string instring)
             parts["LinkedDevices"] = NL.ToString();
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
-            Gateway.set_PlugExtraData_Set(Util.hs, EDO);
-            Gateway.AssociatedDevice_Remove(Util.hs, DeviceId);
+            Gateway.set_PlugExtraData_Set(Instance.host, EDO);
+            Gateway.AssociatedDevice_Remove(Instance.host, DeviceId);
 
 
         }
         public void AddDeviceToGateway(int DeviceId, int GatewayId)
         {
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GatewayId); //Should keep in gateway a list of devices
-            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayId); //Should keep in gateway a list of devices
+            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             parts["LinkedDevices"] += DeviceId + ",";
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
-            Gateway.set_PlugExtraData_Set(Util.hs, EDO);
-            Gateway.AssociatedDevice_Add(Util.hs, DeviceId);
+            Gateway.set_PlugExtraData_Set(Instance.host, EDO);
+            Gateway.AssociatedDevice_Add(Instance.host, DeviceId);
 
             
 
@@ -214,13 +221,13 @@ public string GetReg(string instring)
         public void changeGateway(Scheduler.Classes.DeviceClass Device, string newGatewayId)
         {
 
-            var EDO = Device.get_PlugExtraData_Get(Util.hs);
+            var EDO = Device.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string OldGatewayID = parts["GateID"];
-            RemoveDeviceFromGateway(Device.get_Ref(Util.hs), Convert.ToInt32(OldGatewayID));
-            AddDeviceToGateway(Device.get_Ref(Util.hs), Convert.ToInt32(newGatewayId));
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(newGatewayId));
-            addSSIDExtraData(Device, "Gateway", Gateway.get_Name(Util.hs));
+            RemoveDeviceFromGateway(Device.get_Ref(Instance.host), Convert.ToInt32(OldGatewayID));
+            AddDeviceToGateway(Device.get_Ref(Instance.host), Convert.ToInt32(newGatewayId));
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(newGatewayId));
+            addSSIDExtraData(Device, "Gateway", Gateway.get_Name(Instance.host));
 
 
         }
@@ -232,38 +239,39 @@ public string GetReg(string instring)
             ModbusDevicePage page = this;
             GatewayID = GatewayID.Split("_".ToCharArray())[1];
 
-            var dv = AllInstances[InstanceFriendlyName].host.NewDeviceRef("Modbus Device");
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv);
-            newDevice.set_Name(Util.hs, "Modbus Device " + dv);
-            newDevice.set_Location2(Util.hs, "Modbus");
-            newDevice.set_Location(Util.hs, "System");
-            //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
-            newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+            var dv = Instance.host.NewDeviceRef("Modbus Device");
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+            newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+            newDevice.set_Name(Instance.host, "Modbus Device " + dv);
+            newDevice.set_Location2(Instance.host, "Modbus");
+            newDevice.set_Location(Instance.host, "System");
+            //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
+            newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
             //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
-            newDevice.set_Relationship(Util.hs, Enums.eRelationship.Child);
-            newDevice.set_Status_Support(Util.hs, true);
-            newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
-            newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+            newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
+            newDevice.set_Status_Support(Instance.host, true);
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG);
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
          
 
 
 
             HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
 
-            // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+            // EDO = newDevice.get_PlugExtraData_Get(Instance.host);
 
             EDO.AddNamed("SSIDKey", makeNewModbusDevice(Convert.ToInt32(GatewayID),dv));
-            newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+            newDevice.set_PlugExtraData_Set(Instance.host, EDO);
 
             AddDeviceToGateway(dv, Convert.ToInt32(GatewayID));
 
-            // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+            // newDevice.set_Device_Type_String(Instance.host, makeNewModbusGateway());
 
             var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
             DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
 
 
-            newDevice.set_DeviceType_Set(Util.hs, DevINFO);
+            newDevice.set_DeviceType_Set(Instance.host, DevINFO);
 
             MakeSubDeviceGraphicsAndStatus(dv);
 
@@ -280,25 +288,25 @@ public string GetReg(string instring)
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/MDevDisabled.png";
             Graphic.Set_Value = 0;
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/MDevSuccess.png";
             Graphic.Set_Value = 1;
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/MDevTimeout.png";
             Graphic.Set_Value = 2;
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/MDevFailed.png";
             Graphic.Set_Value = 3;
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
         }
 
         public void MakeGatewayGraphicsAndStatus(int dv)
@@ -312,7 +320,7 @@ public string GetReg(string instring)
 
 
 
-            AllInstances[InstanceFriendlyName].host.DeviceVSP_AddPair(dv, Unreachable);
+            Instance.host.DeviceVSP_AddPair(dv, Unreachable);
 
             Unreachable = new VSVGPairs.VSPair(ePairStatusControl.Status);
             Unreachable.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -322,9 +330,9 @@ public string GetReg(string instring)
         
           
 
-            AllInstances[InstanceFriendlyName].host.DeviceVSP_AddPair(dv, Unreachable);
+            Instance.host.DeviceVSP_AddPair(dv, Unreachable);
 
-            AllInstances[InstanceFriendlyName].host.DeviceVSP_AddPair(dv, Unreachable);
+            Instance.host.DeviceVSP_AddPair(dv, Unreachable);
 
             Unreachable = new VSVGPairs.VSPair(ePairStatusControl.Status);
             Unreachable.PairType = VSVGPairs.VSVGPairType.SingleValue;
@@ -334,14 +342,14 @@ public string GetReg(string instring)
 
 
 
-            AllInstances[InstanceFriendlyName].host.DeviceVSP_AddPair(dv, Unreachable);
+            Instance.host.DeviceVSP_AddPair(dv, Unreachable);
 
             var Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/SIID/SIIDDisabledPlaceholder.png";
             Graphic.Set_Value=0;
 
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
             
 
              Graphic = new VSVGPairs.VGPair();
@@ -349,7 +357,7 @@ public string GetReg(string instring)
             Graphic.Graphic = "/images/SIID/SIIDGoodPlaceholder.png";
             Graphic.Set_Value = 1;
 
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
        
 
              Graphic = new VSVGPairs.VGPair();
@@ -357,7 +365,7 @@ public string GetReg(string instring)
             Graphic.Graphic = "/images/SIID/SIIDMedPlaceholder.png";
             Graphic.Set_Value = 2;
 
-            AllInstances[InstanceFriendlyName].host.DeviceVGP_AddPair(dv, Graphic);
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
 
         }
@@ -368,34 +376,35 @@ public string GetReg(string instring)
             ModbusDevicePage page = this;
 
 
-            var dv = AllInstances[InstanceFriendlyName].host.NewDeviceRef("Modbus IP Gateway");
+            var dv = Instance.host.NewDeviceRef("Modbus IP Gateway");
+        
             MakeGatewayGraphicsAndStatus(dv);
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv);
-           
-            newDevice.set_Name(Util.hs, "Modbus IP Gateway " + dv);
-            newDevice.set_Location2(Util.hs, "Modbus");
-            newDevice.set_Location(Util.hs, "System");
-            //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
-           newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+            newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+            newDevice.set_Name(Instance.host, "Modbus IP Gateway " + dv);
+            newDevice.set_Location2(Instance.host, "Modbus");
+            newDevice.set_Location(Instance.host, "System");
+            //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
+           newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
   //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
-            newDevice.set_Relationship(Util.hs, Enums.eRelationship.Parent_Root);
+            newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
 
-            newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
-            newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG);
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
             HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
             
-           // EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+           // EDO = newDevice.get_PlugExtraData_Get(Instance.host);
 
             EDO.AddNamed("SSIDKey", makeNewModbusGateway());
-            newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+            newDevice.set_PlugExtraData_Set(Instance.host, EDO);
             pingGateway(dv);
 
-            // newDevice.set_Device_Type_String(Util.hs, makeNewModbusGateway());
+            // newDevice.set_Device_Type_String(Instance.host, makeNewModbusGateway());
           var DevINFO=  new DeviceTypeInfo_m.DeviceTypeInfo();
             DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
 
 
-            newDevice.set_DeviceType_Set(Util.hs, DevINFO);
+            newDevice.set_DeviceType_Set(Instance.host, DevINFO);
 
 
 
@@ -405,7 +414,7 @@ public string GetReg(string instring)
             DeviceValue.Value = 0;
             DeviceValue.Status = "Unknown";
             
-            AllInstances[InstanceFriendlyName].host.DeviceVSP_AddPair(dv, DeviceValue);*/
+            Instance.host.DeviceVSP_AddPair(dv, DeviceValue);*/
 
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
@@ -416,17 +425,17 @@ public string GetReg(string instring)
 
         public string BuildModbusGatewayTab(int dv1)
         {//Need to pull from device associated modbus information. Need to create when new device is made
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv1);
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
 
             
 
-            var EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+            var EDO = newDevice.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             string dv = "" + dv1 + "";
       
             StringBuilder stb = new StringBuilder();
-            htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGateTab");
+            htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGateTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             ModbusConfHtml.addT("Gateway Settings");
             ModbusConfHtml.add("Modbus Gateway hostname or IP address: ", ModbusBuilder.stringInput(dv+"_Gateway", parts["Gateway"]).print());
@@ -448,13 +457,13 @@ public string GetReg(string instring)
 
         }
 
-        public static void UpdateGateList(int[] ModGates)
+        public  void UpdateGateList(int[] ModGates)
         {
             ModbusGates = new List<KeyValuePair<int, string>>();
             foreach (int ModGateID in ModGates)
             {
-                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(ModGateID);
-                ModbusGates.Add(new KeyValuePair<int, string>(ModGateID, newDevice.get_Name(Util.hs)));
+                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(ModGateID);
+                ModbusGates.Add(new KeyValuePair<int, string>(ModGateID, newDevice.get_Name(Instance.host)));
 
             }
 
@@ -466,13 +475,13 @@ public string GetReg(string instring)
             getAllGateways();
             StringBuilder stb = new StringBuilder();
             ModbusDevicePage page = this;
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv1);
-            var EDO = newDevice.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
+            var EDO = newDevice.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             string dv = "" + dv1 + "";
 
-            htmlBuilder ModbusBuilder = new htmlBuilder("ModBusDevTab");
+            htmlBuilder ModbusBuilder = new htmlBuilder("ModBusDevTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             //ModbusConfHtml.addDevHeader("Gateway: " + parts["Gateway"]);
            string[] GatewayStringArray = (from kvp in ModbusGates select kvp.Value).ToArray();
@@ -485,7 +494,7 @@ public string GetReg(string instring)
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
             ModbusConfHtml.add("Register Address: ", "<div style:'display:inline;'><div style='float:left;'>"+ModbusBuilder.numberInput(dv + "_RegisterAddress", Convert.ToInt32(parts["RegisterAddress"])).print()+"</div><div style='float:left;' id='TrueAdd'>()</div></div>");
 
-            string ScratchpadHelpText = "";
+           
 
 
 
@@ -555,7 +564,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
 
             /*            parts["GateID"] = ""+GatewayID+"";
-            parts["Gateway"] = Gateway.get_Name(Util.hs) ;
+            parts["Gateway"] = Gateway.get_Name(Instance.host) ;
             parts["RegisterType"] = MosbusAjaxReceivers.modbusDefaultPoll.ToString();
             parts["SlaveId"] = "1"; //get number of slaves from gateway?
             parts["ReturnType"] = "Int16";
@@ -576,15 +585,15 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public string pingGateway(int deviceId)
         {
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(deviceId);
-            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(deviceId);
+            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string ip = parts["Gateway"];
             int port = Convert.ToInt32(parts["TCP"]);
             //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
             if (!Boolean.Parse(parts["Enabled"]))
             {
-                AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 2, true);
+                Instance.host.SetDeviceValueByRef(deviceId, 2, true);
                 return "Gateway is disabled";
             }
             else
@@ -599,27 +608,27 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     //  Socket.Connect(ip, port);
                     //  Socket.Close();
                     if (Rep.Status.ToString() == "Success") {
-                        AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 1, true);
+                        Instance.host.SetDeviceValueByRef(deviceId, 1, true);
                         return "Connection Successfull.";
                     }
                     else{
-                        AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 0, true);
+                        Instance.host.SetDeviceValueByRef(deviceId, 0, true);
                         return "Failed connectivty test: "+ Rep.Status.ToString();
                     }*/
                     if (Socket.Connected)
                     {
-                        AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 1, true);
+                        Instance.host.SetDeviceValueByRef(deviceId, 1, true);
                         return "Connection Successfull.";
                     }
                     else
                     {
-                        AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 0, true);
+                        Instance.host.SetDeviceValueByRef(deviceId, 0, true);
                         return "Failed connectivty test: ";
                     }
                 }
                 catch(Exception e)
                 {
-                    AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(deviceId, 0, true);
+                    Instance.host.SetDeviceValueByRef(deviceId, 0, true);
                     return "Failed connectivty test: " + e.Message;
 
                 }
@@ -644,7 +653,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             else
             {
-                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devId);
+                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devId);
                 addSSIDExtraData(newDevice, partID, changed["value"]);
             }
             if(partID== "Poll")
@@ -669,7 +678,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
         }
 
 
-        public void parseModbusDeviceTab(string data)
+        public string parseModbusDeviceTab(string data)
         {
 
 
@@ -681,7 +690,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             string partID = changed["id"].Split('_')[1];
             int devId = Int32.Parse(changed["id"].Split('_')[0]);
 
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devId);
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devId);
             //check for gateway change, do something special
             if(partID == "GateID")
             {
@@ -691,10 +700,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             
                 addSSIDExtraData(newDevice, partID, changed["value"]);
-            AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(devId, 0, false);
+            Instance.host.SetDeviceValueByRef(devId, 0, false);
             //  ModbusTcpMasterReadInputs();
 
-
+            return "True";
         }
       public static System.Threading.Mutex OneAtATime = new System.Threading.Mutex();
     public  void PollActiveFromGate(object RawID)
@@ -707,7 +716,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             Scheduler.Classes.DeviceClass Gateway = null;
             try
             {
-                Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GateID);
+                Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateID);
             }
             catch
             {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
@@ -720,7 +729,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
                 Console.WriteLine("Polling Gateway: " + GateID);
 
-                var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+                var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 if (bool.Parse(parts["Enabled"]))
                 {
@@ -735,10 +744,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             try
                             {
                                 WhoIsBeingPolled.Add(subId);
-                                Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(subId));
+                                Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
                                 if (MDevice != null)
                                 {
-                                    var EDO2 = MDevice.get_PlugExtraData_Get(Util.hs);
+                                    var EDO2 = MDevice.get_PlugExtraData_Get(Instance.host);
                                     var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
                                     if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
                                     {
@@ -754,14 +763,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                         catch (Exception e)
                                         {
                                             Console.WriteLine("Exception: " + e.StackTrace);
-                                            AllInstances[InstanceFriendlyName].host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
-                                            if (MDevice.get_devValue(Util.hs) == 2 || MDevice.get_devValue(Util.hs) == 1)
+                                            Instance.host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
+                                            if (MDevice.get_devValue(Instance.host) == 2 || MDevice.get_devValue(Instance.host) == 1)
                                             {
-                                                AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
+                                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
                                             }
                                             else
                                             {
-                                                AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+                                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
                                             }
 
 
@@ -777,7 +786,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                     }
                                     else
                                     {
-                                        AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(subId), 0, true);
+                                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 0, true);
                                     }
                                 }
                             }
@@ -817,8 +826,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             try
             {
                 var devID = ActionIn.Ref;
-                Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devID);
-                var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+                Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devID);
+                var EDO = ModDev.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 if (parts != null)
                 {
@@ -846,14 +855,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         catch (Exception e)
                         {
                             Console.WriteLine("Exception: " + e.StackTrace);
-                            AllInstances[InstanceFriendlyName].host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
-                            if (ModDev.get_devValue(Util.hs) == 2 || ModDev.get_devValue(Util.hs) == 1)
+                            Instance.host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
+                            if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
                             {
-                                AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
+                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
                             }
                             else
                             {
-                                AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
                             }
 
 
@@ -874,8 +883,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public void ProcessCalculator(int devID)
         {
-            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devID);
-            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string ScratchPadString = parts["ScratchpadString"];
 
@@ -919,8 +928,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             StringBuilder FinalString = new StringBuilder(ScratchPadString);
             foreach (int dv in Raws)
             {
-                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.get_PlugExtraData_Get(Util.hs);
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 string Rep = Tempparts["RawValue"];
                 FinalString.Replace("$(" + dv + ")", Rep);
@@ -928,8 +937,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             foreach (int dv in Processed)
             {
-                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.get_PlugExtraData_Get(Util.hs);
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 string Rep = Tempparts["ProcessedValue"];
                 FinalString.Replace("$(" + dv + ")", Rep);
@@ -959,19 +968,19 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
 
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
-            AllInstances[InstanceFriendlyName].host.SetDeviceString(devID,ValueString,true);
-            AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(devID, 1, true);
+            Instance.host.SetDeviceString(devID,ValueString,true);
+            Instance.host.SetDeviceValueByRef(devID, 1, true);
             Console.WriteLine(devID+ " : " + ValueString);
 
-            AllInstances[InstanceFriendlyName].host.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
+            Instance.host.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
 
         }
 
 
         public void WriteToModbusDevice(int devID, double InData)
         {//InData will be cast by whatever we're expecting from the return type, but is a double
-            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devID);
-            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5 = double64, 6=string2,7=string4,8=string6,9=string8
             ushort[] Data = null;
@@ -1090,8 +1099,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             public void ReadFromModbusDevice(int devID) //Takes device ID, does a read action on it and puts it in the RawValue component of the extra data
         {
-            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devID);
-            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5 = double64, 6=string2,7=string4,8=string6,9=string8
             bool Signed = bool.Parse(parts["SignedValue"]);
@@ -1242,12 +1251,12 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public ushort[] OpenModDeviceConnection(int devID, ushort[] Data=null) //General modbus read/write function.
         {
-            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(devID);
-            var EDO = ModDev.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass ModDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devID);
+            var EDO = ModDev.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             int GatewayID = Int32.Parse(parts["GateID"]);
-            Scheduler.Classes.DeviceClass Gatrway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GatewayID);
-            var EDOGate = Gatrway.get_PlugExtraData_Get(Util.hs);
+            Scheduler.Classes.DeviceClass Gatrway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayID);
+            var EDOGate = Gatrway.get_PlugExtraData_Get(Instance.host);
             var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
 
             bool flipbits = bool.Parse(partsGate["BigE"]);
@@ -1393,15 +1402,15 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
         public string makeNewModbusDevice(int GatewayID)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
+            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
 
 
-            var EDO = Gateway.get_PlugExtraData_Get(Util.hs);
+            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
             var GParts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
             parts["Type"] = "Modbus Device";
             parts["GateID"] = "" + GatewayID + "";
-            parts["Gateway"] = Gateway.get_Name(Util.hs);
+            parts["Gateway"] = Gateway.get_Name(Instance.host);
             parts["RegisterType"] = "0";//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
             parts["SlaveId"] = "1"; //get number of slaves from gateway?
             parts["ReturnType"] = "0";//0 = Int16, 1=Int32,2=Float32,3=Int64,4=Bool

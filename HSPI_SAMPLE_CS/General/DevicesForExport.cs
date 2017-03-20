@@ -12,7 +12,7 @@ namespace HSPI_SIID
         public class HomeSeerDevice
         {
             public Dictionary<string, object> Values = new Dictionary<string, object>();
-           
+
         /*    public int ID;
             public string Name;
             public string Floor;
@@ -35,8 +35,9 @@ namespace HSPI_SIID
             public string associatedDevicesList;
             public int[] associatedDevices;
             */
+        public InstanceHolder Instance { get; set; }
 
-            public  List<string> listOfAttributes = new List<string> {             "ID", 
+        public  List<string> listOfAttributes = new List<string> {             "ID", 
              "Name",
              "Floor",
              "Room",
@@ -59,8 +60,9 @@ namespace HSPI_SIID
             // "associatedDevices"
         };
 
-         public    HomeSeerDevice(int DeviceID)
+         public    HomeSeerDevice(int DeviceID, InstanceHolder instance)
             {
+            Instance = instance;
                 GenericDeviceStuff(DeviceID);
             }
         public HomeSeerDevice()//To get general information about length of attributes list
@@ -70,30 +72,30 @@ namespace HSPI_SIID
            public void GenericDeviceStuff(int DeviceID)
             {
 
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.AllInstances[InstanceFriendlyName].host.GetDeviceByRef(DeviceID);
+                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(DeviceID);
 
              Values["ID"]=DeviceID;
-             Values["Name"]=Device.get_Name(Util.hs);
-             Values["Floor"]=Device.get_Location2(Util.hs);
-             Values["Room"]=Device.get_Location(Util.hs);
-             Values["code"]=Device.get_Code(Util.hs);
-             Values["address"]=Device.get_Address(Util.hs);
-             Values["statusOnly"]=Device.get_Status_Support(Util.hs);
-             Values["CanDim"]=Device.get_Can_Dim(Util.hs);
+             Values["Name"]=Device.get_Name(Instance.host);
+             Values["Floor"]=Device.get_Location2(Instance.host);
+             Values["Room"]=Device.get_Location(Instance.host);
+             Values["code"]=Device.get_Code(Instance.host);
+             Values["address"]=Device.get_Address(Instance.host);
+             Values["statusOnly"]=Device.get_Status_Support(Instance.host);
+             Values["CanDim"]=Device.get_Can_Dim(Instance.host);
 
-             Values["doNotLog"]= AllInstances[InstanceFriendlyName].host.DeviceNoLog(DeviceID);
+             Values["doNotLog"]= Instance.host.DeviceNoLog(DeviceID);
                 //    voiceC=AllInstances[InstanceFriendlyName].host.DeviceProperty_Boolean(DeviceID", HomeSeerAPI.Enums.eDeviceProperty.Prop;
                 //   includeInPower=AllInstances[InstanceFriendlyName].host.;
                 // usePopUp=Device.use;
                 //doNotUp = HomeSeerAPI.Enums.eCapabilities;
-             Values["userAccess"]=Device.get_UserAccess(Util.hs);
-             Values["notes"]=Device.get_UserNote(Util.hs);
-            var DeviceType= Device.get_DeviceType_Get(Util.hs);
+             Values["userAccess"]=Device.get_UserAccess(Instance.host);
+             Values["notes"]=Device.get_UserNote(Instance.host);
+            var DeviceType= Device.get_DeviceType_Get(Instance.host);
             Values["DeviceType"] = DeviceType.Device_API.ToString()+"_"+DeviceType.Device_API_Description.ToString()+"_"+DeviceType.Device_SubType.ToString()+"_"+DeviceType.Device_SubType_Description.ToString()+"_"+DeviceType.Device_Type.ToString()+"_"+DeviceType.Device_Type_Description.ToString();
-             Values["deviceTypeString"]= Device.get_Device_Type_String(Util.hs);
-             Values["RelationshipStatus"]=Device.get_Relationship(Util.hs);
-             Values["associatedDevicesList"]= Device.get_AssociatedDevices_List(Util.hs);
-           //  Values["associatedDevices"]=Device.get_AssociatedDevices(Util.hs);
+             Values["deviceTypeString"]= Device.get_Device_Type_String(Instance.host);
+             Values["RelationshipStatus"]=Device.get_Relationship(Instance.host);
+             Values["associatedDevicesList"]= Device.get_AssociatedDevices_List(Instance.host);
+           //  Values["associatedDevices"]=Device.get_AssociatedDevices(Instance.host);
 
         }
 
@@ -146,11 +148,15 @@ namespace HSPI_SIID
         class SIIDDevice : HomeSeerDevice
         {
 
-            public SIIDDevice(int DeviceID):base(DeviceID)
+            public SIIDDevice(int DeviceID, InstanceHolder instance):base(DeviceID,instance)
             {
-              
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)HSPI_SIID_ModBusDemo.AllInstances[InstanceFriendlyName].host.GetDeviceByRef(DeviceID);
-                var EDO = Device.get_PlugExtraData_Get(Util.hs);
+            
+            
+                Instance = instance;
+
+
+                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(DeviceID);
+                var EDO = Device.get_PlugExtraData_Get(Instance.host);
             System.Collections.Specialized.NameValueCollection parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //Need to grab the key order from somewhere 
            string[] Orderlist = null;

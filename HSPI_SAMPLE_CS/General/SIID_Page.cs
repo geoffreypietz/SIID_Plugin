@@ -17,16 +17,26 @@ namespace HSPI_SIID_ModBusDemo
     public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 
     {
-        public ModbusDevicePage ModPage { get; set; }
+   
+        public InstanceHolder Instance { get; set; }
+
+
+
         public string OurPageName {get;set;}
+     //   public HSPI hspi { get; set; }
+    
+
 
         public static Dictionary<int, System.Threading.Timer> PluginTimerDictionary = new Dictionary<int, Timer>(); //Indexed by device ID, value is timers, intended for modbus gateway polls. idea is one per gateway ID
        //Needs to instance this when the plugin initializes, needs to update when a new gateway is added or when the polling interval changes
 
 
-        public SIID_Page(string pagename) : base(pagename)
+        public SIID_Page(string pagename, InstanceHolder instance) : base(pagename)
         {
-            ModPage = new ModbusDevicePage("SIID UTILITY PAGE");
+   
+            Instance = instance;
+        
+           
         OurPageName=pagename;
             ItializeModbusGatewayTimers();
         }
@@ -39,8 +49,8 @@ namespace HSPI_SIID_ModBusDemo
         public void LoadINISettings()
         {
             Console.WriteLine("IN LOAD "+ OurPageName);
-            selectedPlugin = Convert.ToInt32(AllInstances[InstanceFriendlyName].host.GetINISetting("CONFIG", "Selected_Plugin", "1", OurPageName + ".INI"));
-            MosbusAjaxReceivers.loadModbusConfig();
+            selectedPlugin = Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Selected_Plugin", "1", OurPageName.Replace(":", "") + ".INI"));
+            Instance.modAjax.loadModbusConfig();
 
 
             SaveAllINISettings();
@@ -48,10 +58,10 @@ namespace HSPI_SIID_ModBusDemo
 
         public void SaveAllINISettings()
         {
-            //general config
-            AllInstances[InstanceFriendlyName].host.SaveINISetting("CONFIG", "Selected_Plugin", selectedPlugin.ToString(), OurPageName + ".INI");
+            Console.WriteLine("IN SAVE " + OurPageName);
+            Instance.host.SaveINISetting("CONFIG", "Selected_Plugin", selectedPlugin.ToString(), OurPageName.Replace(":","") + ".INI");
 
-            MosbusAjaxReceivers.saveModbusConfig();
+            Instance.modAjax.saveModbusConfig();
             //modbus specific config
 
 
@@ -61,7 +71,7 @@ namespace HSPI_SIID_ModBusDemo
 
         public void SaveSpecificINISetting(string section, string key, string value)
         {
-            AllInstances[InstanceFriendlyName].host.SaveINISetting(section, key , value , OurPageName + ".INI");
+            Instance.host.SaveINISetting(section, key , value , OurPageName.Replace(":", "") + ".INI");
 
         }
 
@@ -91,7 +101,7 @@ namespace HSPI_SIID_ModBusDemo
                         int.TryParse(System.Text.RegularExpressions.Regex.Replace(row.Split(',')[0], "[^.0-9]", ""), out ID); //First cell is always ID or a header, If it parses as a number 
                         if (ID != 0 && HasHeader) //ID was a valid number
                         {
-                            var dv = AllInstances[InstanceFriendlyName].host.NewDeviceRef("ImportingDevice");
+                            var dv = Instance.host.NewDeviceRef("ImportingDevice");
                             //DevicesToImport.Add(new Tuple<int, int, string>(dv, Headers.Count - 1, row.Replace("\r", "")));
                             RowByHeaderID[Headers.Count - 1].Add(row + "\n");
                             OldToNew[ID] = dv;
@@ -155,48 +165,49 @@ namespace HSPI_SIID_ModBusDemo
                                 }
                                 try
                                 {
-                                    Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
-                                    newDevice.set_Name(Util.hs, FetchAttribute(CodeLookup, "Name"));
-                                    newDevice.set_Location2(Util.hs, FetchAttribute(CodeLookup, "Floor"));
-                                    newDevice.set_Location(Util.hs, FetchAttribute(CodeLookup, "Room"));
-                                    //newDevice.set_Interface(Util.hs, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
-                                    newDevice.set_Interface(Util.hs, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
-                                    newDevice.set_Address(Util.hs, FetchAttribute(CodeLookup, "address"));
-                                    newDevice.set_Code(Util.hs, FetchAttribute(CodeLookup, "code"));
+                                    Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
+                                    newDevice.set_Name(Instance.host, FetchAttribute(CodeLookup, "Name"));
+                                    newDevice.set_Location2(Instance.host, FetchAttribute(CodeLookup, "Floor"));
+                                    newDevice.set_Location(Instance.host, FetchAttribute(CodeLookup, "Room"));
+                                    //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
+                                    newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+                                    newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+                                    newDevice.set_Address(Instance.host, FetchAttribute(CodeLookup, "address"));
+                                    newDevice.set_Code(Instance.host, FetchAttribute(CodeLookup, "code"));
                                     //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
-                                    newDevice.set_Status_Support(Util.hs, bool.Parse(FetchAttribute(CodeLookup, "statusOnly")));
-                                    newDevice.set_Can_Dim(Util.hs, bool.Parse(FetchAttribute(CodeLookup, "CanDim")));
-                                    newDevice.set_UserAccess(Util.hs, FetchAttribute(CodeLookup, "useraccess"));
-                                    newDevice.set_UserNote(Util.hs, FetchAttribute(CodeLookup, "notes"));
-                                    newDevice.set_Device_Type_String(Util.hs, FetchAttribute(CodeLookup, "deviceTypeString"));
+                                    newDevice.set_Status_Support(Instance.host, bool.Parse(FetchAttribute(CodeLookup, "statusOnly")));
+                                    newDevice.set_Can_Dim(Instance.host, bool.Parse(FetchAttribute(CodeLookup, "CanDim")));
+                                    newDevice.set_UserAccess(Instance.host, FetchAttribute(CodeLookup, "useraccess"));
+                                    newDevice.set_UserNote(Instance.host, FetchAttribute(CodeLookup, "notes"));
+                                    newDevice.set_Device_Type_String(Instance.host, FetchAttribute(CodeLookup, "deviceTypeString"));
 
                                     
                                     switch(FetchAttribute(CodeLookup, "RelationshipStatus"))
                                     {
                                         case ("Not_Set"):
                                             {
-                                                newDevice.set_Relationship(Util.hs,Enums.eRelationship.Not_Set);
+                                                newDevice.set_Relationship(Instance.host,Enums.eRelationship.Not_Set);
                                                 break;
                                             }
                                         case ("Indeterminate"):
                                             {
-                                                newDevice.set_Relationship(Util.hs, Enums.eRelationship.Indeterminate);
+                                                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Indeterminate);
                                                 break;
                                             }
                                         case ("Child"):
                                             {
-                                                newDevice.set_Relationship(Util.hs, Enums.eRelationship.Child);
+                                                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
                                                 break;
                                             }
 
                                         case ("Parent_Root"):
                                             {
-                                                newDevice.set_Relationship(Util.hs, Enums.eRelationship.Parent_Root);
+                                                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
                                                 break;
                                             }
                                         case ("Standalone"):
                                             {
-                                                newDevice.set_Relationship(Util.hs, Enums.eRelationship.Standalone);
+                                                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone);
                                                 break;
                                             }
 
@@ -206,7 +217,7 @@ namespace HSPI_SIID_ModBusDemo
 
                                     if (bool.Parse(FetchAttribute(CodeLookup, "donotlog")))
                                     {
-                                        newDevice.MISC_Set(Util.hs, Enums.dvMISC.NO_LOG);
+                                        newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG);
 
                                     }
                                     try
@@ -220,7 +231,7 @@ namespace HSPI_SIID_ModBusDemo
                                             DevINFO.Device_SubType = int.Parse(DeviceTypes[2]);
                                             DevINFO.Device_SubType_Description = DeviceTypes[3];
                                             DevINFO.Device_Type = int.Parse(DeviceTypes[4]);
-                                            newDevice.set_DeviceType_Set(Util.hs, DevINFO);
+                                            newDevice.set_DeviceType_Set(Instance.host, DevINFO);
                                         }
                                     }
                                     catch
@@ -235,7 +246,7 @@ namespace HSPI_SIID_ModBusDemo
                                         int.TryParse(Old, out T);
                                         if (T != 0)
                                         {
-                                            newDevice.AssociatedDevice_Add(Util.hs, OldToNew[T]);
+                                            newDevice.AssociatedDevice_Add(Instance.host, OldToNew[T]);
                                         }
                                       
                                     }
@@ -249,8 +260,8 @@ namespace HSPI_SIID_ModBusDemo
                                             }
                                         case ("Modbus Gateway"):
                                             {
-                                                ModPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+                                                Instance.modPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
 
 
 
@@ -293,8 +304,8 @@ namespace HSPI_SIID_ModBusDemo
                                             }
                                         case ("Modbus Device"):
                                             {
-                                                ModPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                newDevice.MISC_Set(Util.hs, Enums.dvMISC.SHOW_VALUES);
+                                                Instance.modPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
                                                 var parts = HttpUtility.ParseQueryString(string.Empty);
                                                 parts["Type"] = FetchAttribute(CodeLookup, "type");
 
@@ -302,7 +313,7 @@ namespace HSPI_SIID_ModBusDemo
 
 
                                                 parts["Gateway"] = FetchAttribute(CodeLookup, "Gateway");
-                                                parts["RegisterType"] = FetchAttribute(CodeLookup, "RegisterType");//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
+                                                parts["RegisterType"] = FetchAttribute(CodeLookup, "RegisterType");//Instance.modAjax.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
                                                 parts["SlaveId"] = FetchAttribute(CodeLookup, "SlaveId"); //get number of slaves from gateway?
                                                 parts["ReturnType"] = FetchAttribute(CodeLookup, "ReturnType");
                                                 //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=string2,6=string4,7=string6,8=string8
@@ -334,7 +345,7 @@ namespace HSPI_SIID_ModBusDemo
                                             }
 
                                     }
-                                    newDevice.set_PlugExtraData_Set(Util.hs, EDO);
+                                    newDevice.set_PlugExtraData_Set(Instance.host, EDO);
 
 
 
@@ -388,10 +399,10 @@ namespace HSPI_SIID_ModBusDemo
 
         public string ReturnDevicesInExportForm()
         {
-            string FileName = Util.IFACE_NAME + "_" + Util.Instance + "_" + "Export_Devices.CSV";
+            string FileName = Instance.hspi.InstanceFriendlyName() + "_" + "Export_Devices.CSV";
             StringBuilder FileContent = new StringBuilder();
   
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)AllInstances[InstanceFriendlyName].host.GetDeviceEnumerator();
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
             var Dev = DevNum.GetNext();
             List<int> ModGateways = new List<int>();
             List<int> ModDevices = new List<int>();
@@ -405,25 +416,25 @@ namespace HSPI_SIID_ModBusDemo
                  
 
 
-                    var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString()); //So it is a SIID device
-                   if (Dev.get_Interface(Util.hs).ToString() == Util.IFACE_NAME.ToString()) //Then it's one of ours (Need maybe an extra chack for Instance
+                   if (Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString() && Dev.get_InterfaceInstance(Instance.host).ToString() == Instance.name) //Then it's one of ours (Need maybe an extra chack for Instance
                         {
                         switch (parts["Type"])
                         {
                             case ("BacNet???"):
                                 {
-                                    BackNetDevices.Add(Dev.get_Ref(Util.hs));
+                                    BackNetDevices.Add(Dev.get_Ref(Instance.host));
                                     break;
                                 }
                             case ("Modbus Gateway"):
                                 {
-                                    ModGateways.Add(Dev.get_Ref(Util.hs));
+                                    ModGateways.Add(Dev.get_Ref(Instance.host));
                                     break;
                                 }
                             case ("Modbus Device"):
                                 {
-                                    ModDevices.Add(Dev.get_Ref(Util.hs));
+                                    ModDevices.Add(Dev.get_Ref(Instance.host));
                                     break;
                                 }
 
@@ -440,13 +451,13 @@ namespace HSPI_SIID_ModBusDemo
                     
                     //   if (parts["Type"] == "Modbus Device")
                     //     {
-                    //        ModbusDevs.Add(Dev.get_Ref(Util.hs));
+                    //        ModbusDevs.Add(Dev.get_Ref(Instance.host));
                     //    }
 
                 }
                 catch(Exception e)
                 {
-                    int a = 1;
+                   
                 }
                 Dev = DevNum.GetNext();
 
@@ -456,28 +467,28 @@ namespace HSPI_SIID_ModBusDemo
             if (BackNetDevices.Count > 0)
             {
                 FileContent.Append("Backnet Devices\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(BackNetDevices[0]).ReturnCSVHead());
+                FileContent.Append(new HSPI_SIID.SIIDDevice(BackNetDevices[0],Instance).ReturnCSVHead());
                 foreach (int ID in BackNetDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
             if (ModGateways.Count > 0)
             {
                 FileContent.Append("Modbus Gateways\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(ModGateways[0]).ReturnCSVHead());
+                FileContent.Append(new HSPI_SIID.SIIDDevice(ModGateways[0],Instance).ReturnCSVHead());
                 foreach (int ID in ModGateways)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
             if (ModDevices.Count > 0)
             {
                 FileContent.Append("Modbus Devices\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(ModDevices[0]).ReturnCSVHead());
+                FileContent.Append(new HSPI_SIID.SIIDDevice(ModDevices[0],Instance).ReturnCSVHead());
                 foreach (int ID in ModDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID).ReturnCSVRow());
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
 
@@ -493,6 +504,7 @@ namespace HSPI_SIID_ModBusDemo
 
         public string postbackSSIDConfigPage(string page, string data, string user, int userRights)
         {
+            Console.WriteLine("AM in the SIID postbackConfig for some reason");
             System.Collections.Specialized.NameValueCollection parts = null;
             parts = HttpUtility.ParseQueryString(data);
             string ID = parts["id"].Split('_')[0];
@@ -502,12 +514,12 @@ namespace HSPI_SIID_ModBusDemo
                     {
                         ImportDevices(parts["value"]);
                         return ""; 
-                        break;
+                      
                     }
                 case "Export":
                     {
                         return ReturnDevicesInExportForm();   
-                        break;
+                     
                     }
                 case "Scratchpad":
                     {
@@ -515,12 +527,12 @@ namespace HSPI_SIID_ModBusDemo
 
                         break;
                     }
-                    case "Instance":
+                /*    case "Instance":
                     {
 
                       Util.Instance = new Random().Next().ToString();
                         break;
-                    }
+                    }*/
                     
                 case "SelectPlugin":
                     {
@@ -539,32 +551,30 @@ namespace HSPI_SIID_ModBusDemo
 
        
 
-        public  string postBackProc(string page, string data, string user, int userRights)
-        {
-            //So I guess AJAX calls come back here?
-            //need to register
-            
-
-            return base.postBackProc(page, data, user, userRights);
-        }
+   
 
         public void ItializeModbusGatewayTimers()
         {
-            List<int> ModbusGates = ModbusDevicePage.getAllGateways().ToList();
+            List<int> ModbusGates = Instance.modPage.getAllGateways().ToList();
             List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
 
             foreach (int GID in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(GID));
-                var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
+                var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
                 if (!PluginTimerDictionary.ContainsKey(Convert.ToInt32(GID)))
                 {
-                    System.Threading.Timer GateTimer = new System.Threading.Timer(ModPage.PollActiveFromGate, GID, 10000, Convert.ToInt32(parts["Poll"]));
 
-                    Console.WriteLine("Starting Polling timer for gateway: " + GID);
-                    PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
+                    if (Dev.get_InterfaceInstance(Instance.host) == Instance.name)
+                    {
+                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, GID, 10000, Convert.ToInt32(parts["Poll"]));
+
+                        Console.WriteLine("Starting Polling timer for gateway: " + GID);
+                        PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
+                    }
+                    
                 }
             }
 
@@ -578,22 +588,22 @@ namespace HSPI_SIID_ModBusDemo
          //build Gateway / Devices table with the appropriate links and the appropriate Add Device buttons
          //returns the built html string
             StringBuilder sb = new StringBuilder();
-            htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice");
+            htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
 
-          List<int>  ModbusGates=ModbusDevicePage.getAllGateways().ToList();
+          List<int>  ModbusGates= Instance.modPage.getAllGateways().ToList();
             List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
 
             foreach (int GID in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(GID));
-                 var EDO = Dev.get_PlugExtraData_Get(Util.hs);
+                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
+                 var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 StringBuilder updatedList = new StringBuilder();
                 foreach (var subId in parts["LinkedDevices"].Split(','))
                 {
                     try
                     {
-                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(Convert.ToInt32(subId));
+                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
                         if (MDevice != null)
                         {
                             ModbusDevs.Add(MDevice);
@@ -610,20 +620,20 @@ namespace HSPI_SIID_ModBusDemo
                 parts["LinkedDevices"] = updatedList.ToString();
                 EDO.RemoveNamed("SSIDKey");
                 EDO.AddNamed("SSIDKey", parts.ToString());
-                Dev.set_PlugExtraData_Set(Util.hs, EDO);
+                Dev.set_PlugExtraData_Set(Instance.host, EDO);
             }
 
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
             sb.Append("<br>");
             foreach (int GateRef in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(GateRef);
+                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
                 ModbusConfHtml.addDevHeader("Gateway");
-                Gateway.get_Image(Util.hs);
-                Gateway.get_Name(Util.hs);
-                ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16,16, Gateway.get_Image(Util.hs)).print()+
+                Gateway.get_Image(Instance.host);
+                Gateway.get_Name(Instance.host);
+                ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16,16, Gateway.get_Image(Instance.host)).print()+
                     ModbusBuilder.MakeLink("/deviceutility?ref="+GateRef
-                    +"&edit=1", Gateway.get_Name(Util.hs)).print(), ModbusBuilder.Qbutton("G_"+GateRef,"Add Device").print());
+                    +"&edit=1", Gateway.get_Name(Instance.host)).print(), ModbusBuilder.Qbutton("G_"+GateRef,"Add Device").print());
                 sb.Append(ModbusConfHtml.print());
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
                 ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
@@ -634,15 +644,15 @@ namespace HSPI_SIID_ModBusDemo
                  
                     if (MDevice != null)
                     {
-                        var EDO = MDevice.get_PlugExtraData_Get(Util.hs);
+                        var EDO = MDevice.get_PlugExtraData_Get(Instance.host);
                         var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                         if (Convert.ToInt32(parts["GateID"]) == GateRef)
                         {
-                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Util.hs)).print(),
-                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Util.hs) + "&edit=1", MDevice.get_Name(Util.hs)).print(),
+                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Instance.host) + "&edit=1", MDevice.get_Name(Instance.host)).print(),
                                parts["SlaveId"],
-                               ModPage.GetReg(parts["RegisterType"]),
-                               ModPage.GetRet(parts["ReturnType"]));
+                               Instance.modPage.GetReg(parts["RegisterType"]),
+                               Instance.modPage.GetRet(parts["ReturnType"]));
 
                         }
                     }
@@ -655,7 +665,7 @@ namespace HSPI_SIID_ModBusDemo
             }
 
             
-            ModbusDevicePage.UpdateGateList(ModbusGates.ToArray());
+            Instance.modPage.UpdateGateList(ModbusGates.ToArray());
             return sb.ToString();
         }
 
@@ -665,15 +675,15 @@ namespace HSPI_SIID_ModBusDemo
             Console.WriteLine("started the genpage");
             StringBuilder stb = new StringBuilder();
             SIID_Page page = this;
-            htmlBuilder ModbusBuilder = new htmlBuilder("ModBus");
+            htmlBuilder ModbusBuilder = new htmlBuilder("ModBus" + Instance.ajaxName);
             ItializeModbusGatewayTimers();
             try
             {
                 page.reset();
 
-                page.AddHeader(AllInstances[InstanceFriendlyName].host.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
+                page.AddHeader(Instance.host.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
 
-                htmlBuilder GeneralPageStuff = new htmlBuilder(OurPageName);
+                htmlBuilder GeneralPageStuff = new htmlBuilder(OurPageName + Instance.ajaxName);
                 stb.Append("<h2>SIID Page "+ OurPageName + "</h2><br><br>");
                 stb.Append("<hr>SIID Options<br><br>");
                 stb.Append("<div>");
@@ -710,14 +720,14 @@ namespace HSPI_SIID_ModBusDemo
                 }
                
 
-                clsJQuery.jqTabs jqtabs = new clsJQuery.jqTabs("tab1id", this.PageName);
+                clsJQuery.jqTabs jqtabs = new clsJQuery.jqTabs("tab1id", this.PageName+ Instance.ajaxName);
                 clsJQuery.Tab tab = new clsJQuery.Tab();
                 tab.tabTitle = "Devices";
                 tab.tabDIVID = "modBusDevTab";
 
                 //have the ModBus Add device button
                 //Also list all associated modbus devices
-                htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate");
+                htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate" + Instance.ajaxName);
                 StringBuilder ModbusDevPage = new StringBuilder();
                 ModbusDevPage.Append("<br><br><div style='display:block;'>");
                 ModbusDevPage.Append(AddModbusDevBuilder.Gobutton("addModGateway", "Add Modbus IP Gateway").print()); 
@@ -738,10 +748,10 @@ namespace HSPI_SIID_ModBusDemo
 
                     htmlTable ModbusConfHtml =  ModbusBuilder.htmlTable();
                 ModbusConfHtml.add(" Configuration:");
-                ModbusConfHtml.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", MosbusAjaxReceivers.modbusDefaultPoll).print());
-                selectorInput loglevel = ModbusBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" },"logL","Log Level", MosbusAjaxReceivers.modbusLogLevel);
+                ModbusConfHtml.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
+                selectorInput loglevel = ModbusBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" },"logL","Log Level", Instance.modbusLogLevel);
                 ModbusConfHtml.add(" Log Level:", loglevel.print());
-                checkBoxInput logTF = ModbusBuilder.checkBoxInput("modlog", MosbusAjaxReceivers.modbusLogToFile);
+                checkBoxInput logTF = ModbusBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
                 ModbusConfHtml.add(" Log To File:", logTF.print());
 
                  string ConfigTable = "<div id=confTab style='display:block;'>" + ModbusConfHtml.print() + "</div>";

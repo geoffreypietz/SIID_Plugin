@@ -104,8 +104,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="WebAddDevice.cs" />
-    <Compile Include="WebPage.cs" />
-    <Compile Include="WebTestPage.cs" />
     <Compile Include="Web_UI_Util.cs" />
   </ItemGroup>
   <ItemGroup>

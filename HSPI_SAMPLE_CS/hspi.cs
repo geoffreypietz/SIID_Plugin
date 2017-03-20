@@ -17,17 +17,31 @@ namespace HSPI_SIID_ModBusDemo
 {
     public class HSPI : IPlugInAPI
     {
-        // this API is required for ALL plugins
+
+        /*  public HSPI() : base() //This is called by the main program
+         {
+
+             // Create a thread-safe collection by using the .Synchronized wrapper.
+            Util.colTrigs_Sync = new System.Collections.SortedList();
+             Util.colTrigs = System.Collections.SortedList.Synchronized(Util.colTrigs_Sync);
+
+             Util.colActs_Sync = new System.Collections.SortedList();
+             Util.colActs = System.Collections.SortedList.Synchronized(Util.colActs_Sync);
+    }*/
 
 
-        public SIID_Page ourWorkingPage;
+    // this API is required for ALL plugins
 
-    public string OurInstanceFriendlyName = "";
+    public InstanceHolder Instance { get; set; }
+
+      public string OurInstanceFriendlyName { get; set; }
+
+
 
         public  string MainSiidPageName = "";
-        public ModbusDevicePage modPage;
+        
 
-        public string Instance = "";
+      //  public string Instance = "";
 
 
 
@@ -94,7 +108,7 @@ namespace HSPI_SIID_ModBusDemo
               //   The matches can be returned as a URL:
               RET = new SearchReturn();
               RET.RType = eSearchReturn.r_URL;
-              RET.RValue = Util.IFACE_NAME + OurInstanceFriendlyName;
+              RET.RValue = Util.IFACE_NAME + Instance.name;
               // Could have put something such as /DeviceUtility?ref=12345&edit=1     to take them directly to the device properties of a device.
               colRET.Add(RET);
               //   The matches can be returned as an Object:
@@ -104,7 +118,7 @@ namespace HSPI_SIID_ModBusDemo
               RET = new SearchReturn();
               RET.RType = eSearchReturn.r_Object;
               RET.RDescription = "Found in a device.";
-              RET.RValue = AllInstances[InstanceFriendlyName].host.DeviceName(OneOfMyDevices.get_Ref(Util.hs));
+              RET.RValue = Instance.host.DeviceName(OneOfMyDevices.get_Ref(Instance.host));
               //Returning a string in the RValue is optional since this is an object type return
               RET.RObject = OneOfMyDevices;
               colRET.Add(RET);
@@ -165,7 +179,7 @@ namespace HSPI_SIID_ModBusDemo
 
 
 	public string Name {
-		get { return Util.IFACE_NAME; }
+		get { return Util.IFACE_NAME; }// +Instance.name; }
 	}
 
 	public int Capabilities()
@@ -193,14 +207,14 @@ namespace HSPI_SIID_ModBusDemo
 
 	public bool SupportsMultipleInstancesSingleEXE()
 	{
-            return  true;
+            return false;// true;  //If true we cannot use the interfaces page
 	}
 
 
 
 	public string InstanceFriendlyName()
 	{
-		return OurInstanceFriendlyName;
+            return OurInstanceFriendlyName;
 	}
 
 
@@ -219,92 +233,87 @@ namespace HSPI_SIID_ModBusDemo
 
 	public string InitIO(string port)
 	{
-		Console.WriteLine("InitIO called with parameter port as " + port);
 
-        string[] plugins = AllInstances[InstanceFriendlyName].host.GetPluginsList();
-		Util.gEXEPath = AllInstances[InstanceFriendlyName].host.GetAppPath();
-            modPage = new ModbusDevicePage("ModbusDevicePage");
+		Console.WriteLine("InitIO called with parameter port as " + port);
+            Instance = Program.AllInstances[InstanceFriendlyName()];
+        string[] plugins = Instance.host.GetPluginsList();
+		Util.gEXEPath = Instance.host.GetAppPath();
+            
+
             try {
 
-
-                //start of SIID stuff, keep -- Mark ***********************************************
-
-                //Load data file if it exists, or make new data classes if it doesn't
-                //The way MODBUS official plugin does it is that there exists a HSPI_MODBUS.INI file in the homeseer / config folder where the settings are stored in plaintext
-
-                //AllInstances[InstanceFriendlyName].host.SaveINISetting("Settings", "test", null, "hspi_SSID.ini");
-
-
-                /*
-               May be useful:
-        string GetINISection(string section, string FileName);
-        string[] GetINISectionEx(string section, string FileName);
-        string GetINISetting(string section, string key, string default_val, string FileName = ""); 
-                 */
-
-                MainSiidPageName = "SIID_main_page" + Util.IFACE_NAME+ OurInstanceFriendlyName;
-          
-                ourWorkingPage = new SIID_Page(MainSiidPageName);
-                ourWorkingPage.LoadINISettings();
-
+                Instance.siidPage.LoadINISettings();
+                Console.WriteLine("Instance " + Instance.name);
 
                 //All may not be needed or used, is for ajax callbacks
-                //AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, "");
-                AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, OurInstanceFriendlyName); //Necessary to do the GetPagePlugin  Want also for postbackproc
-                //Doesn't seem to work for multiple instances for postback
-                Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ OurInstanceFriendlyName);
-                
+                //Instance.host.RegisterPage(MainSiidPageName, Util.IFACE_NAME, "");
+                //Instance.host.RegisterPage("SIIDPage" + Instance.name, Util.IFACE_NAME,"");
+                // Instance.host.RegisterPage("SIIDPage" + Instance.name, "", Instance.name);
 
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBus", Util.IFACE_NAME, OurInstanceFriendlyName); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
-                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusGate", Util.IFACE_NAME, OurInstanceFriendlyName);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusGateTab", Util.IFACE_NAME, OurInstanceFriendlyName);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("ModBusDevTab", Util.IFACE_NAME, OurInstanceFriendlyName);
-                AllInstances[InstanceFriendlyName].host.RegisterPage("AddModbusDevice", Util.IFACE_NAME, OurInstanceFriendlyName);
+                //Instance.host.RegisterPage("SIIDPage" + Instance.name, Util.IFACE_NAME, Instance.name); //Necessary to do the GetPagePlugin  Want also for postbackproc
+                                                                                                     //Doesn't seem to work for multiple instances for postback
+                   Instance.host.RegisterPage("SIIDPage", Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("ModBus", Util.IFACE_NAME, Instance.name);                                                                                                                                                                       //  Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ Instance.name);
+
+
+
+
+                Instance.host.RegisterPage("ModbusDevicePage" , Util.IFACE_NAME, Instance.name); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
+
+//FigureOut These ones
+                Instance.host.RegisterPage("AddModbusGate" , Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("ModBusGateTab" , Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("ModBusDevTab" , Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("AddModbusDevice" , Util.IFACE_NAME, Instance.name);
+                //Figure out these ones
             
-               // AllInstances[InstanceFriendlyName].host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, OurInstanceFriendlyName); //Need unique pagenames for each instance?
+               // Instance.host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Instance.name); //Need unique pagenames for each instance?
            //     Console.WriteLine(MainSiidPageName + "SIIDConfPage");
           
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
-                wpd.link = MainSiidPageName;
-              
-                if (!string.IsNullOrEmpty(OurInstanceFriendlyName))
+                wpd.link = "SIIDPage";
+
+
+
+                if (!string.IsNullOrEmpty(Instance.name))
                 {
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + OurInstanceFriendlyName;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Instance.name;
+              
                 }
                 else
                 {
                     wpd.linktext = Util.IFACE_NAME + " SIID main page";
                 }
-                wpd.page_title = Util.IFACE_NAME + "SIID main page";
+                wpd.page_title = "SIIDPage" + Instance.name;
                 wpd.plugInName = Util.IFACE_NAME;
-                wpd.plugInInstance = OurInstanceFriendlyName;
-                AllInstances[InstanceFriendlyName].callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
-
+                wpd.plugInInstance = Instance.name;
+                Instance.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
+                
                 
           
                 wpd = new WebPageDesc();
-        
-                if (!string.IsNullOrEmpty(OurInstanceFriendlyName))
-                {
-                    wpd.link = MainSiidPageName + "?instance=" + OurInstanceFriendlyName;
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + OurInstanceFriendlyName;
+
+                  if (!string.IsNullOrEmpty(Instance.name))
+                  {
+                wpd.link = "SIIDPage" + "?instance=" + Instance.name;
+                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Instance.name;
                 }
                 else
                 {
-                   wpd.link = MainSiidPageName;
+                    wpd.link = "SIIDPage";
                     wpd.linktext = Util.IFACE_NAME + " SIID main page";
                 }
-                wpd.page_title = Util.IFACE_NAME + "SIID main page";
+                wpd.page_title = "SIIDPage" + Instance.name;
                 wpd.plugInName = Util.IFACE_NAME;
-                wpd.plugInInstance = OurInstanceFriendlyName;
+                wpd.plugInInstance =  Instance.name;
            
-                AllInstances[InstanceFriendlyName].callback.RegisterConfigLink(wpd); //Looks like the plugin config link doesn't go to specific instances
+                Instance.callback.RegisterConfigLink(wpd); //Looks like the plugin config link doesn't go to specific instances
 
 
          
 
-			AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
+			Instance.host.WriteLog(Util.IFACE_NAME, "InitIO called, plug-in is being initialized...");
 
 		
         }
@@ -327,9 +336,9 @@ namespace HSPI_SIID_ModBusDemo
             //OK, I think if we do a switch here based on Device Type String, this will work. For Modbus I'm setting the string to "Modbus". 
             //Of course the user can change this string and mess this up so we'll see
 
-            Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dvRef);
+            Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dvRef);
 
-            var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
+            var EDO = ourDevice.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
 
@@ -338,12 +347,12 @@ namespace HSPI_SIID_ModBusDemo
                 case ("Modbus Gateway"):
                     {
                     
-                        return modPage.BuildModbusGatewayTab(dvRef);
+                        return Instance.modPage.BuildModbusGatewayTab(dvRef);
                     }
                 case ("Modbus Device"):
                     {
                        
-                        return modPage.BuildModbusDeviceTab(dvRef);
+                        return Instance.modPage.BuildModbusDeviceTab(dvRef);
                     }
                 case ("BacNet")://????
                     {
@@ -371,23 +380,23 @@ namespace HSPI_SIID_ModBusDemo
 
 	public Enums.ConfigDevicePostReturn ConfigDevicePost(int dvRef, string data, string user, int userRights) //this what we need to do?
 	{ //changes made to the special tab do ajax callbacks to here
-
-          /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)AllInstances[InstanceFriendlyName].host.GetDeviceByRef(dvRef);
-            var EDO = ourDevice.get_PlugExtraData_Get(Util.hs);
+            Console.WriteLine("In Configure Device Post");
+          /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dvRef);
+            var EDO = ourDevice.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
-            switch (ourDevice.get_Device_Type_String(Util.hs))
+            switch (ourDevice.get_Device_Type_String(Instance.host))
             {
                 case ("Modbus Gateway"):
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
-                         modPage.parseModbusGatewayTab(data);
+                        ModbusDevicePage Instance.modPage = new ModbusDevicePage("ModbusDevicePage");
+                         Instance.modPage.parseModbusGatewayTab(data);
                         break;
                     }
                 case ("Modbus Device"):
                     {
-                        ModbusDevicePage modPage = new ModbusDevicePage("ModbusDevicePage");
-                         modPage.parseModbusDeviceTab( data);
+                        ModbusDevicePage Instance.modPage = new ModbusDevicePage("ModbusDevicePage");
+                         Instance.modPage.parseModbusDeviceTab( data);
                         break;
                     }
                 case ("BacNet")://????
@@ -413,6 +422,7 @@ namespace HSPI_SIID_ModBusDemo
 	}
 	public string PagePut(string data)
 	{
+            Console.WriteLine("In Page Put");
 		return "";
 	}
 	// ================================================================================================
@@ -423,39 +433,22 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		//If you have more than one web page, use pageName to route it to the proper GetPagePlugin
 		Console.WriteLine("GetPagePlugin pageName: " + pageName +" "+queryString);
-		// get the correct page
-        if(pageName == MainSiidPageName)
+            // get the correct page
+            if (pageName == "SIIDPage")
             {
-                Console.WriteLine(MainSiidPageName);
-                return (ourWorkingPage.GetPagePlugin(pageName, user, userRights, queryString));
+                Console.WriteLine("IN SIID PAGE");
+                return (Instance.siidPage.GetPagePlugin(pageName, user, userRights, queryString));
             }
-        else
-            {
-                switch (pageName)
-                {
-                    //	case Util.IFACE_NAME :
-                    //		return (pluginpage.GetPagePlugin(pageName, user, userRights, queryString));
-                    //	case "Test Page":
-                    //		return (pluginTestPage.GetPagePlugin(pageName, user, userRights, queryString));
-
-                    case "AddModbusGate":
-                        {
-
-                            return modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
-                            // return (modPage.GetPagePlugin(pageName, user, userRights, queryString));
-                        }
-                    case "AddModbusDevice":
-                        {
-
-
-                            return modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
-                        }
-
-                }
-
-
+            else if (pageName == "AddModbusGate" ) {
+                return Instance.modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
 
             }
+            else if (pageName == "AddModbusDevice" )
+            {
+                return Instance.modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
+
+            }
+ 
             return "page not registered";
 	}
 
@@ -463,39 +456,28 @@ namespace HSPI_SIID_ModBusDemo
 	{
             //If you have more than one web page, use pageName to route it to the proper postBackProc
             Console.WriteLine("PostBackProc pageName: " + pageName);
-            if (pageName == MainSiidPageName)
+            if (pageName == "SIIDPage"+Instance.ajaxName)
             {
-                return ourWorkingPage.postbackSSIDConfigPage(pageName, data, user, userRights);
+                return Instance.siidPage.postbackSSIDConfigPage(pageName, data, user, userRights);
             }
-        else
+            else if (pageName == "ModBus" + Instance.ajaxName)
             {
-                switch (pageName)
-                {
-                    //	case Util.IFACE_NAME:
-                    //		return pluginpage.postBackProc(pageName, data, user, userRights);
-                    //	case "Test Page":
-                    //		return pluginTestPage.postBackProc(pageName, data, user, userRights);
-                    case "ModBus":
-                        return MosbusAjaxReceivers.postBackProcModBus(pageName, data, user, userRights);
+                return Instance.modAjax.postBackProcModBus(pageName, data, user, userRights);
 
-                    case "ModBusGateTab":
-                        {
-
-
-                            return modPage.parseModbusGatewayTab(data);
-
-                        }
-                    case "ModBusDevTab":
-                        {
-
-                            modPage.parseModbusDeviceTab(data);
-                            return "";
-                        }
-
-
-
-                }
             }
+            else if (pageName == "ModBusGateTab" + Instance.ajaxName)
+            {
+
+                return Instance.modPage.parseModbusGatewayTab(data);
+
+            }
+            else if (pageName == "ModBusDevTab" + Instance.ajaxName)
+            {
+
+                return Instance.modPage.parseModbusDeviceTab(data);
+
+            }
+           
 		
 
 
@@ -533,7 +515,7 @@ namespace HSPI_SIID_ModBusDemo
 
 	public bool RaisesGenericCallbacks()
 	{
-		return true;
+		return false;
 	}
 
         public void SetIOMulti(System.Collections.Generic.List<HomeSeerAPI.CAPI.CAPIControl> colSend)
@@ -544,7 +526,7 @@ namespace HSPI_SIID_ModBusDemo
             //OK, we will take this function over for modbus actions.
             foreach (CAPI.CAPIControl CC in colSend)
             {
-                modPage.ReadWriteIfMod(CC);
+                Instance.modPage.ReadWriteIfMod(CC);
 
 
             }
@@ -556,16 +538,16 @@ namespace HSPI_SIID_ModBusDemo
 
 		// set therm operating mode
 		// get the root device so we can find associated devices
-		Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) AllInstances[InstanceFriendlyName].host.GetDeviceByRef(root_dv);
+		Scheduler.Classes.DeviceClass dv = (Scheduler.Classes.DeviceClass) Instance.host.GetDeviceByRef(root_dv);
 		int[] list = null;
 		DeviceTypeInfo_m.DeviceTypeInfo DT = default(DeviceTypeInfo_m.DeviceTypeInfo);
 
 		if (dv != null) {
 			// have the root device, get all associated devices
-            list = dv.get_AssociatedDevices(Util.hs);
+            list = dv.get_AssociatedDevices(Instance.host);
 			for (int index = 0; index <= list.Length - 1; index++) {
 				int childref = list[index];
-                Scheduler.Classes.DeviceClass child_dv = (Scheduler.Classes.DeviceClass) AllInstances[InstanceFriendlyName].host.GetDeviceByRef(childref);
+                Scheduler.Classes.DeviceClass child_dv = (Scheduler.Classes.DeviceClass) Instance.host.GetDeviceByRef(childref);
 				if (child_dv != null) {
 					DT = child_dv.get_DeviceType_Get(null);
 					if (DT.Device_Type == (int) dev_type) {
@@ -579,9 +561,9 @@ namespace HSPI_SIID_ModBusDemo
 
 	public void ShutdownIO()
 	{
-		// do your shutdown stuff here
-
-		bShutDown = true;
+            // do your shutdown stuff here
+            Program.RemoveInstance(Instance.name);
+            bShutDown = true;
 		// setting this flag will cause the plugin to disconnect immediately from HomeSeer
 	}
 
@@ -793,13 +775,13 @@ namespace HSPI_SIID_ModBusDemo
 			//   GetTrigs will create a new Action object before the other changes are applied.
 			for (int i = 0; i <= PostData.Count - 1; i++) {
 				sKey = PostData.GetKey(i);
-				AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME + "Debug", sKey + "potatoes!");
+				Instance.host.WriteLog(Util.IFACE_NAME + "Debug", sKey + "potatoes!");
 				sValue = PostData[sKey].Trim();
 				if (sKey == null)
 					continue;
 				if (string.IsNullOrEmpty(sKey.Trim()))
 					continue;
-				//       AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME & " DEBUG", sKey & "=" & sValue)
+				//       Instance.host.WriteLog(Util.IFACE_NAME & " DEBUG", sKey & "=" & sValue)
 				if (sKey.Trim() == "id") {
 					e = U_Get_Control_Info(sValue.Trim());
 				} else {
@@ -914,145 +896,7 @@ namespace HSPI_SIID_ModBusDemo
 
 	public bool HandleAction(IPlugInAPI.strTrigActInfo ActInfo)
 	{
-
-
-		Util.strAction strAction;
-            Console.WriteLine(ActInfo.ToString());
-
-		if (ValidAct(ActInfo.TANumber)) {
-			if (ActInfo.TANumber == 1) {
-				strAction = GetActs(ActInfo, ref ActInfo.DataIn);
-				if (strAction.Result && strAction.WhichAction == Util.eActionType.Weight && strAction.ActObj != null) {
-                    Classes.MyAction1EvenTon Act1 = null;
-                    Act1 = (Classes.MyAction1EvenTon)strAction.ActObj;
-                    if (Act1.SetTo == Classes.MyAction1EvenTon.eSetTo.Not_Set)
-                    {
-						Util.Log("Error, Handle Action for Type 1: The Weight Options Action has not been configured yet.", Util.LogType.LOG_TYPE_ERROR);
-						return false;
-					} else {
-						object obj = null;
-						Classes.MyTrigger1Ton Trig1 = null;
-						if (Util.colTrigs != null && Util.colTrigs.Count > 0) {
-							bool Found = false;
-                            for (int i = 0; i <= Util.colTrigs.Count - 1; i++)
-                            {
-								obj = Util.colTrigs.GetByIndex(i);
-								if (obj == null)
-									continue;
-								try {
-									if (obj is Classes.MyTrigger1Ton) {
-										Trig1 = null;
-										try {
-											Trig1 = (Classes.MyTrigger1Ton)obj;
-										} catch (Exception) {
-											Trig1 = null;
-										}
-										if (Trig1 != null) {
-											Found = true;
-											if (Act1.SetTo == Classes.MyAction1EvenTon.eSetTo.Rounded) {
-												Trig1.EvenTon = true;
-											} else {
-												Trig1.EvenTon = false;
-											}
-										}
-									}
-								} catch (Exception) {
-								}
-							}
-							if (Found) {
-								return true;
-							} else {
-								Util.Log("Warning - No triggers for type 1 action (weight options) were found or were valid - action cannot be carried out.", Util.LogType.LOG_TYPE_WARNING);
-								return true;
-							}
-						} else {
-							Util.Log("Warning - No triggers for type 1 action (weight options) were found - action cannot be carried out.", Util.LogType.LOG_TYPE_WARNING);
-							return true;
-						}
-					}
-				} else {
-                    Util.Log("Error, action type 1 (weight options) provided to Handle Action, but Action ID " + ActInfo.UID.ToString() + " could not be recovered.", Util.LogType.LOG_TYPE_ERROR);
-					return false;
-				}
-			}
-
-			if (ActInfo.TANumber == 2) {
-				strAction = GetActs(ActInfo, ref ActInfo.DataIn);
-				if (strAction.Result && strAction.WhichAction == Util.eActionType.Voltage && strAction.ActObj != null) {
-					Classes.MyAction2Euro Act2 = null;
-					Act2 = (Classes.MyAction2Euro)strAction.ActObj;
-					if (!ValidSubAct(ActInfo.TANumber, ActInfo.SubTANumber)) {
-						Util.Log("Error, Handle Action for Type 2: The Voltage Options Action has not been configured yet.", Util.LogType.LOG_TYPE_ERROR);
-						return false;
-					} else {
-						object obj = null;
-						Classes.MyTrigger2Shoe Trig2 = null;
-                        if (Util.colTrigs != null && Util.colTrigs.Count > 0)
-                        {
-							bool Found = false;
-                            for (int i = 0; i <= Util.colTrigs.Count - 1; i++)
-                            {
-								obj = Util.colTrigs.GetByIndex(i);
-								if (obj == null)
-									continue;
-								try {
-									if (obj is Classes.MyTrigger2Shoe) {
-										Trig2 = null;
-										try {
-											Trig2 = (Classes.MyTrigger2Shoe)obj;
-										} catch (Exception) {
-											Trig2 = null;
-										}
-										if (Trig2 != null) {
-											switch (Act2.ThisAction) {
-												case Classes.MyAction2Euro.eVAction.SetEuro:
-													Found = true;
-													Trig2.EuroVoltage = true;
-													break;
-												case Classes.MyAction2Euro.eVAction.SetNorthAmerica:
-													Found = true;
-													Trig2.NorthAMVoltage = true;
-													break;
-												case Classes.MyAction2Euro.eVAction.ResetAverage:
-													Found = true;
-													if (Util.Volt == null)
-														Util.Volt = new Util.Volt_Demo(false);
-													if (Util.VoltEuro == null)
-														Util.VoltEuro = new Util.Volt_Demo(true);
-													Util.Volt.ResetAverage();
-													Util.VoltEuro.ResetAverage();
-
-													break;
-											}
-										}
-									}
-								} catch (Exception) {
-								}
-							}
-							if (Found) {
-								return true;
-							} else {
-								Util.Log("Warning - No triggers for type 2 action (voltage options) were found or were valid - action cannot be carried out.", Util.LogType.LOG_TYPE_WARNING);
-								return true;
-							}
-						} else {
-							Util.Log("Warning - No triggers for type 2 action (voltage options) were found - action cannot be carried out.", Util.LogType.LOG_TYPE_WARNING);
-							return true;
-						}
-					}
-				} else {
-					Util.Log("Error, action type 2 (voltage options) provided to Handle Action, but Action ID " + ActInfo.UID.ToString() + " could not be recovered.", Util.LogType.LOG_TYPE_ERROR);
-					return false;
-				}
-			}
-
-			Util.Log("Error, Handle Action was provided an invalid action type.", Util.LogType.LOG_TYPE_ERROR);
-			return false;
-
-		} else {
-			Util.Log("Error, Handle Action was provided an invalid action type.", Util.LogType.LOG_TYPE_ERROR);
-			return false;
-		}
+            return false;
 
 	}
 
@@ -1438,7 +1282,7 @@ namespace HSPI_SIID_ModBusDemo
 
 								break;
 							default:
-								AllInstances[InstanceFriendlyName].host.WriteLog(Util.IFACE_NAME + " Warning", "MyPostData got unhandled key/value of " + e.Name_or_ID + "=" + sValue);
+								Instance.host.WriteLog(Util.IFACE_NAME + " Warning", "MyPostData got unhandled key/value of " + e.Name_or_ID + "=" + sValue);
 								break;
 						}
 					}
@@ -1495,138 +1339,7 @@ namespace HSPI_SIID_ModBusDemo
 
 	public bool TriggerTrue(HomeSeerAPI.IPlugInAPI.strTrigActInfo TrigInfo)
 	{
-		// 
-		// Since plug-ins tell HomeSeer when a trigger is true via TriggerFire, this procedure is called just to check
-		//   conditions.
-		//
-		Util.strTrigger strRET = default(Util.strTrigger);
-		Classes.MyTrigger2Shoe Trig2 = null;
-		bool GotIt = false;
-		Util.eTriggerType WhichOne = Util.eTriggerType.Unknown;
-
-
-		double Cur = 0;
-		double TV = 0;
-
-		if (ValidTrigInfo(TrigInfo)) {
-			strRET = Util.TriggerFromInfo(TrigInfo);
-			if (strRET.WhichTrigger != Util.eTriggerType.Unknown && strRET.Result == true) {
-				if (strRET.WhichTrigger == Util.eTriggerType.OneTon) {
-					// Trigger type 1 does not support any conditions, so this
-					//   should not even be here and can never be true.
-					return false;
-				} else if (strRET.WhichTrigger == Util.eTriggerType.TwoVolts) {
-                    Trig2 = (Classes.MyTrigger2Shoe)strRET.TrigObj;
-					if (Trig2 != null) {
-						if (Trig2.Condition) {
-							if (Trig2.SubTrigger2) {
-								//Average voltage +/- 10
-								if (Trig2.EuroVoltage) {
-									Cur = Util.VoltEuro.AverageVoltage;
-									TV = Trig2.TriggerValue;
-									if ((Cur >= (TV - 10)) & (Cur <= (TV + 10))) {
-										return true;
-									} else {
-										return false;
-									}
-								} else {
-									Cur = Util.Volt.AverageVoltage;
-									TV = Trig2.TriggerValue;
-									if ((Cur >= (TV - 10)) & (Cur <= (TV + 10))) {
-										return true;
-									} else {
-										return false;
-									}
-								}
-							} else {
-								// Voltage +/- 5
-								if (Trig2.EuroVoltage) {
-									Cur = Util.VoltEuro.Voltage;
-									TV = Trig2.TriggerValue;
-									if ((Cur >= (TV - 5)) & (Cur <= (TV + 5))) {
-										return true;
-									} else {
-										return false;
-									}
-								} else {
-									Cur = Util.Volt.Voltage;
-									TV = Trig2.TriggerValue;
-									if ((Cur >= (TV - 5)) & (Cur <= (TV + 5))) {
-										return true;
-									} else {
-										return false;
-									}
-								}
-							}
-						} else {
-							return false;
-						}
-					}
-				}
-			}
-		}
-
-		if (((!GotIt) | (WhichOne == Util.eTriggerType.Unknown))) {
-			if (TrigInfo.DataIn != null && TrigInfo.DataIn.Length > 20) {
-				// Try from the data.
-				strRET = Util.TriggerFromData(TrigInfo.DataIn);
-				if (strRET.WhichTrigger != Util.eTriggerType.Unknown && strRET.Result == true) {
-					if (strRET.WhichTrigger == Util.eTriggerType.OneTon) {
-						// Trigger type 1 does not support any conditions, so this
-						//   should not even be here and can never be true.
-						return false;
-					} else if (strRET.WhichTrigger == Util.eTriggerType.TwoVolts) {
-                        Trig2 = (Classes.MyTrigger2Shoe) strRET.TrigObj;
-						if (Trig2 != null) {
-							if (Trig2.Condition) {
-								if (Trig2.SubTrigger2) {
-									//Average voltage +/- 10
-									if (Trig2.EuroVoltage) {
-										Cur = Util.VoltEuro.AverageVoltage;
-										TV = Trig2.TriggerValue;
-										if ((Cur >= (TV - 10)) & (Cur <= (TV + 10))) {
-											return true;
-										} else {
-											return false;
-										}
-									} else {
-										Cur = Util.Volt.AverageVoltage;
-										TV = Trig2.TriggerValue;
-										if ((Cur >= (TV - 10)) & (Cur <= (TV + 10))) {
-											return true;
-										} else {
-											return false;
-										}
-									}
-								} else {
-									// Voltage +/- 5
-									if (Trig2.EuroVoltage) {
-										Cur = Util.VoltEuro.Voltage;
-										TV = Trig2.TriggerValue;
-										if ((Cur >= (TV - 5)) & (Cur <= (TV + 5))) {
-											return true;
-										} else {
-											return false;
-										}
-									} else {
-										Cur = Util.Volt.Voltage;
-										TV = Trig2.TriggerValue;
-										if ((Cur >= (TV - 5)) & (Cur <= (TV + 5))) {
-											return true;
-										} else {
-											return false;
-										}
-									}
-								}
-							} else {
-								return false;
-							}
-						}
-					}
-				}
-			}
-		}
-
+	
 		return false;
 
 	}
@@ -1635,177 +1348,8 @@ namespace HSPI_SIID_ModBusDemo
 
 	private Util.strTrigger GetTrigs(HomeSeerAPI.IPlugInAPI.strTrigActInfo TrigInfo, byte[] DataIn)
 	{
-		Util.strTrigger strRET = default(Util.strTrigger);
-		Classes.MyTrigger1Ton Trig1 = null;
-		Classes.MyTrigger2Shoe Trig2 = null;
-
-		bool GotIt = false;
-		Util.eTriggerType WhichOne = Util.eTriggerType.Unknown;
-
-		// ------------------------------------------------------------------------------------------------------------------
-		// ------------------------------------------------------------------------------------------------------------------
-		//
-		//  This procedure recovers or creates a trigger object.  It will first try to find the trigger existing in our
-		//   own collection of trigger objects (colTrig) using the trigger info provided by HomeSeer.  If it cannot find
-		//   the trigger object, then it may just be that since HomeSeer started, that trigger object has not been 
-		//   referenced so that we could add it to our collection; in this case we will create the object from the data
-		//   passed to us from HomeSeer.   If that fails, and we at least have a valid Trigger number, then we will create
-		//   a new trigger object and return it.
-		//
-		// ------------------------------------------------------------------------------------------------------------------
-		// ------------------------------------------------------------------------------------------------------------------
-
-
-		if (ValidTrigInfo(TrigInfo)) {
-			strRET = Util.TriggerFromInfo(TrigInfo);
-			if (strRET.WhichTrigger != Util.eTriggerType.Unknown && strRET.Result == true) {
-				if (strRET.WhichTrigger == Util.eTriggerType.OneTon) {
-					Trig1 = (Classes.MyTrigger1Ton) strRET.TrigObj;
-					if (Trig1 != null) {
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig1;
-						strRET.WhichTrigger = Util.eTriggerType.OneTon;
-						strRET.Result = true;
-						return strRET;
-					}
-				} else if (strRET.WhichTrigger == Util.eTriggerType.TwoVolts) {
-					Trig2 = (Classes.MyTrigger2Shoe) strRET.TrigObj;
-					if (Trig2 != null) {
-						Trig2.SubTrigger2 = (TrigInfo.SubTANumber == 2 ? true : false);
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig2;
-						strRET.WhichTrigger = Util.eTriggerType.TwoVolts;
-						strRET.Result = true;
-						return strRET;
-					}
-				}
-			}
-		}
-
-		if (((!GotIt) | (WhichOne == Util.eTriggerType.Unknown))) {
-			if (DataIn != null && DataIn.Length > 20) {
-				// Try from the data.
-				strRET = Util.TriggerFromData(DataIn);
-				if (strRET.WhichTrigger != Util.eTriggerType.Unknown && strRET.Result == true) {
-					if (strRET.WhichTrigger == Util.eTriggerType.OneTon) {
-						Trig1 = (Classes.MyTrigger1Ton) strRET.TrigObj;
-						if (Trig1 != null) {
-							if (Trig1 != null) {
-								strRET = new Util.strTrigger();
-								strRET.TrigObj = Trig1;
-								strRET.WhichTrigger = Util.eTriggerType.OneTon;
-								strRET.Result = true;
-								return strRET;
-							}
-						}
-					} else if (strRET.WhichTrigger == Util.eTriggerType.TwoVolts) {
-						Trig2 = (Classes.MyTrigger2Shoe) strRET.TrigObj;
-						if (Trig2 != null) {
-							Trig2.SubTrigger2 = (TrigInfo.SubTANumber == 2 ? true : false);
-							strRET = new Util.strTrigger();
-							strRET.TrigObj = Trig2;
-							strRET.WhichTrigger = Util.eTriggerType.TwoVolts;
-							strRET.Result = true;
-							return strRET;
-						}
-					}
-				}
-			}
-		}
-
-		if (((!GotIt) | (WhichOne == Util.eTriggerType.Unknown))) {
-			if (ValidTrigInfo(TrigInfo)) {
-				string PlugKey = "";
-				PlugKey = "K" + TrigInfo.UID.ToString();
-				switch (TrigInfo.TANumber) {
-					case 1:
-						Trig1 = new Classes.MyTrigger1Ton();
-						Trig1.TriggerUID = TrigInfo.UID;
-						try {
-							Util.Add_Update_Trigger(Trig1);
-						} catch (Exception) {
-							strRET = new Util.strTrigger();
-							strRET.TrigObj = Trig1;
-							strRET.WhichTrigger = Util.eTriggerType.OneTon;
-							strRET.Result = false;
-							return strRET;
-						}
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig1;
-						strRET.WhichTrigger = Util.eTriggerType.OneTon;
-						strRET.Result = true;
-						return strRET;
-					case 2:
-						Trig2 = new Classes.MyTrigger2Shoe();
-						Trig2.TriggerUID = TrigInfo.UID;
-						if (TrigInfo.SubTANumber == 2) {
-							Trig2.SubTrigger2 = true;
-						} else {
-							Trig2.SubTrigger2 = false;
-						}
-						try {
-							Util.Add_Update_Trigger(Trig2);
-						} catch (Exception) {
-							strRET = new Util.strTrigger();
-							strRET.TrigObj = Trig2;
-							strRET.WhichTrigger = Util.eTriggerType.TwoVolts;
-							strRET.Result = false;
-							return strRET;
-						}
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig2;
-						strRET.WhichTrigger = Util.eTriggerType.TwoVolts;
-						strRET.Result = true;
-						return strRET;
-				}
-				strRET = new Util.strTrigger();
-				strRET.TrigObj = null;
-				strRET.WhichTrigger = Util.eTriggerType.Unknown;
-				strRET.Result = false;
-				return strRET;
-			} else if (ValidTrig(TrigInfo.TANumber)) {
-				switch (TrigInfo.TANumber) {
-					case 1:
-						Trig1 = new Classes.MyTrigger1Ton();
-						Trig1.TriggerUID = TrigInfo.UID;
-						try {
-							Util.Add_Update_Trigger(Trig1);
-						} catch (Exception) {
-						}
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig1;
-						strRET.WhichTrigger = Util.eTriggerType.OneTon;
-						strRET.Result = true;
-						return strRET;
-					case 2:
-						Trig2 = new Classes.MyTrigger2Shoe();
-						Trig2.TriggerUID = TrigInfo.UID;
-						try {
-							Util.Add_Update_Trigger(Trig2);
-						} catch (Exception) {
-						}
-						if (TrigInfo.SubTANumber == 2) {
-							Trig2.SubTrigger2 = true;
-						} else {
-							Trig2.SubTrigger2 = false;
-						}
-						strRET = new Util.strTrigger();
-						strRET.TrigObj = Trig2;
-						strRET.WhichTrigger = Util.eTriggerType.TwoVolts;
-						strRET.Result = true;
-						return strRET;
-				}
-				strRET = new Util.strTrigger();
-				strRET.TrigObj = null;
-				strRET.WhichTrigger = Util.eTriggerType.Unknown;
-				strRET.Result = false;
-				return strRET;
-			}
-		}
-
-
-		strRET = new Util.strTrigger();
-		strRET.TrigObj = null;
+            var strRET = new Util.strTrigger();
+            strRET.TrigObj = null;
 		strRET.WhichTrigger = Util.eTriggerType.Unknown;
 		strRET.Result = false;
 		return strRET;
@@ -1814,178 +1358,10 @@ namespace HSPI_SIID_ModBusDemo
 
 	private Util.strAction GetActs(HomeSeerAPI.IPlugInAPI.strTrigActInfo ActInfo, ref byte[] DataIn)
 	{
-		Util.strAction strRET = default(Util.strAction);
-		Classes.MyAction1EvenTon Act1 = null;
-		Classes.MyAction2Euro Act2 = null;
-
-		bool GotIt = false;
-		Util.eActionType WhichOne = Util.eActionType.Unknown;
-
-		// ------------------------------------------------------------------------------------------------------------------
-		// ------------------------------------------------------------------------------------------------------------------
-		//
-		//  This procedure recovers or creates an action object.  It will first try to find the action existing in our
-		//   own collection of action objects (colAct) using the action info provided by HomeSeer.  If it cannot find
-		//   the action object, then it may just be that since HomeSeer started, that action object has not been 
-		//   referenced so that we could add it to our collection; in this case we will create the object from the data
-		//   passed to us from HomeSeer.   If that fails, and we at least have a valid Action number, then we will create
-		//   a new action object and return it.
-		//
-		// ------------------------------------------------------------------------------------------------------------------
-		// ------------------------------------------------------------------------------------------------------------------
+		
 
 
-		if (ValidActInfo(ActInfo)) {
-			strRET = Util.ActionFromInfo(ActInfo);
-			if (strRET.WhichAction != Util.eActionType.Unknown && strRET.Result == true) {
-				if (strRET.WhichAction == Util.eActionType.Weight) {
-					Act1 = (Classes.MyAction1EvenTon) strRET.ActObj;
-					if (Act1 != null) {
-						strRET = new Util.strAction();
-						strRET.ActObj = Act1;
-						strRET.WhichAction = Util.eActionType.Weight;
-						strRET.Result = true;
-						return strRET;
-					}
-				} else if (strRET.WhichAction == Util.eActionType.Voltage) {
-					Act2 = (Classes.MyAction2Euro) strRET.ActObj;
-					if (Act2 != null) {
-						strRET = new Util.strAction();
-						strRET.ActObj = Act2;
-						strRET.WhichAction = Util.eActionType.Voltage;
-						strRET.Result = true;
-						return strRET;
-					}
-				}
-			}
-		}
-
-		if (((!GotIt) | (WhichOne == Util.eActionType.Unknown))) {
-			if (DataIn != null && DataIn.Length > 20) {
-				// Try from the data.
-				strRET = Util.ActionFromData(DataIn);
-				if (strRET.WhichAction != Util.eActionType.Unknown && strRET.Result == true) {
-					if (strRET.WhichAction == Util.eActionType.Weight) {
-                        Act1 = (Classes.MyAction1EvenTon) strRET.ActObj;
-						if (Act1 != null) {
-							if (Act1 != null) {
-								strRET = new Util.strAction();
-								strRET.ActObj = Act1;
-								strRET.WhichAction = Util.eActionType.Weight;
-								strRET.Result = true;
-								return strRET;
-							}
-						}
-					} else if (strRET.WhichAction == Util.eActionType.Voltage) {
-                        Act2 = (Classes.MyAction2Euro) strRET.ActObj;
-						if (Act2 != null) {
-							strRET = new Util.strAction();
-							strRET.ActObj = Act2;
-							strRET.WhichAction = Util.eActionType.Voltage;
-							strRET.Result = true;
-							return strRET;
-						}
-					}
-				}
-			}
-		}
-
-		if (((!GotIt) | (WhichOne == Util.eActionType.Unknown))) {
-			if (ValidActInfo(ActInfo)) {
-				string PlugKey = "";
-				PlugKey = "K" + ActInfo.UID.ToString();
-				switch (ActInfo.TANumber) {
-					case 1:
-						Act1 = new Classes.MyAction1EvenTon();
-						Act1.ActionUID = ActInfo.UID;
-						try {
-							Util.Add_Update_Action(Act1);
-						} catch (Exception) {
-							strRET = new Util.strAction();
-							strRET.ActObj = Act1;
-							strRET.WhichAction = Util.eActionType.Weight;
-							strRET.Result = false;
-							return strRET;
-						}
-						strRET = new Util.strAction();
-						strRET.ActObj = Act1;
-						strRET.WhichAction = Util.eActionType.Weight;
-						strRET.Result = true;
-						return strRET;
-					case 2:
-						Act2 = new Classes.MyAction2Euro();
-						Act2.ActionUID = ActInfo.UID;
-						if (ActInfo.SubTANumber == 1) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.SetEuro;
-						} else if (ActInfo.SubTANumber == 2) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.SetNorthAmerica;
-						} else if (ActInfo.SubTANumber == 3) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.ResetAverage;
-						}
-						try {
-							Util.Add_Update_Action(Act2);
-						} catch (Exception) {
-							strRET = new Util.strAction();
-							strRET.ActObj = Act2;
-							strRET.WhichAction = Util.eActionType.Voltage;
-							strRET.Result = false;
-							return strRET;
-						}
-						strRET = new Util.strAction();
-						strRET.ActObj = Act2;
-						strRET.WhichAction = Util.eActionType.Voltage;
-						strRET.Result = true;
-						return strRET;
-				}
-				strRET = new Util.strAction();
-				strRET.ActObj = null;
-				strRET.WhichAction = Util.eActionType.Unknown;
-				strRET.Result = false;
-				return strRET;
-			} else if (ValidAct(ActInfo.TANumber)) {
-				switch (ActInfo.TANumber) {
-					case 1:
-						Act1 = new Classes.MyAction1EvenTon();
-						Act1.ActionUID = ActInfo.UID;
-						try {
-							Util.Add_Update_Action(Act1);
-						} catch (Exception) {
-						}
-						strRET = new Util.strAction();
-						strRET.ActObj = Act1;
-						strRET.WhichAction = Util.eActionType.Weight;
-						strRET.Result = true;
-						return strRET;
-					case 2:
-						Act2 = new Classes.MyAction2Euro();
-						Act2.ActionUID = ActInfo.UID;
-						try {
-							Util.Add_Update_Action(Act2);
-						} catch (Exception) {
-						}
-						if (ActInfo.SubTANumber == 1) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.SetEuro;
-						} else if (ActInfo.SubTANumber == 2) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.SetNorthAmerica;
-						} else if (ActInfo.SubTANumber == 3) {
-							Act2.ThisAction = Classes.MyAction2Euro.eVAction.ResetAverage;
-						}
-						strRET = new Util.strAction();
-						strRET.ActObj = Act2;
-						strRET.WhichAction = Util.eActionType.Voltage;
-						strRET.Result = true;
-						return strRET;
-				}
-				strRET = new Util.strAction();
-				strRET.ActObj = null;
-				strRET.WhichAction = Util.eActionType.Unknown;
-				strRET.Result = false;
-				return strRET;
-			}
-		}
-
-
-		strRET = new Util.strAction();
+		var strRET = new Util.strAction();
 		strRET.ActObj = null;
 		strRET.WhichAction = Util.eActionType.Unknown;
 		strRET.Result = false;
@@ -2158,16 +1534,7 @@ namespace HSPI_SIID_ModBusDemo
 		}
 		return false;
 	}
-	public HSPI() : base() //This is called by the main program
-	{
 
-		// Create a thread-safe collection by using the .Synchronized wrapper.
-		Util.colTrigs_Sync = new System.Collections.SortedList();
-		Util.colTrigs = System.Collections.SortedList.Synchronized(Util.colTrigs_Sync);
-
-        Util.colActs_Sync = new System.Collections.SortedList();
-        Util.colActs = System.Collections.SortedList.Synchronized(Util.colActs_Sync);
-	}
 
 
 	// called if speak proxy is installed
@@ -2175,7 +1542,7 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		Console.WriteLine("Speaking from HomeSeer, txt: " + txt);
 		// speak back
-		AllInstances[InstanceFriendlyName].host.SpeakProxy(device, txt + " the plugin added this", w, host);
+		Instance.host.SpeakProxy(device, txt + " the plugin added this", w, host);
 	}
 
 	// save an image file to HS, images can only be saved in a subdir of html\images so a subdir must be given
@@ -2183,7 +1550,7 @@ namespace HSPI_SIID_ModBusDemo
 	private void SaveImageFileToHS(string src_filename, string des_filename)
 	{
 		System.Drawing.Image im = System.Drawing.Image.FromFile(src_filename);
-		AllInstances[InstanceFriendlyName].host.WriteHTMLImage(im, des_filename, true);
+		Instance.host.WriteHTMLImage(im, des_filename, true);
 	}
 
 	// save a file as an array of bytes to HS
@@ -2191,7 +1558,7 @@ namespace HSPI_SIID_ModBusDemo
 	{
 		byte[] bytes = System.IO.File.ReadAllBytes(src_filename);
 		if (bytes != null) {
-			AllInstances[InstanceFriendlyName].host.WriteHTMLImageFile(bytes, des_filename, true);
+			Instance.host.WriteHTMLImageFile(bytes, des_filename, true);
 		}
 	}
     }
