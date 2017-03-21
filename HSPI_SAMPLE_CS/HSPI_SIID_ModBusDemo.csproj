@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BACnet\BACnetDevice.cs" />
     <Compile Include="BACnet\BACnetDevicePage.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
@@ -96,7 +97,6 @@
     <Compile Include="General\javascriptBuilders.cs" />
     <Compile Include="General\SIID_Page.cs" />
     <Compile Include="hspi.cs" />
-    <Compile Include="Modbus\ModbusClasses.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
     <Compile Include="Modbus\ModbusDevicePage.cs" />
     <Compile Include="Modbus\ModbusMaster.cs" />

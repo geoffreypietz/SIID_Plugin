@@ -1,4 +1,5 @@
-﻿using HSPI_SIID_ModBusDemo;
+﻿using HSPI_SIID.BACnet;
+using HSPI_SIID_ModBusDemo;
 using HSPI_SIID_ModBusDemo.Modbus;
 using System;
 using System.Collections.Generic;
@@ -170,9 +171,9 @@ namespace HSPI_SIID
                         Orderlist = ModbusDevice.Attributes;
                         break;
                     }
-                case ("Bacnet Device"):
+                case ("BACnet Device"):
                     {
-
+                        Orderlist = BACnetDevice.Attributes;
                         break;
                     }
 

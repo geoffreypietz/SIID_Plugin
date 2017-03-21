@@ -776,7 +776,7 @@ namespace HSPI_SIID_ModBusDemo
                 tab.tabDIVID = "modBusConfTab";
 
 
-                new ModbusClasses.ModbusGeneralConfigSettings();
+          
 
 
                     htmlTable ModbusConfHtml =  ModbusBuilder.htmlTable();
@@ -874,9 +874,9 @@ namespace HSPI_SIID_ModBusDemo
                 tab.tabDIVID = "BACnetConfTab";
 
                 htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
-                BACnetTable.add(" Configuration:");
-                BACnetTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
-                ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetTable.print() + "</div>");
+                BACnetConfigTable.add(" Configuration:");
+                BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
+                ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
 
 
                 // string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
@@ -908,6 +908,13 @@ namespace HSPI_SIID_ModBusDemo
                     }
                     else{
                         modbus.style.display = 'none';
+                    }
+
+ if (this.checked && this.value == 3) {
+                        bacnet.style.display = '';
+                    }
+                    else{
+                        bacnet.style.display = 'none';
                     }
                     });";
 

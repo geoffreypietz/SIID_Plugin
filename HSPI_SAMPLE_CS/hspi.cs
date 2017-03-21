@@ -580,7 +580,7 @@ namespace HSPI_SIID_ModBusDemo
 	public void ShutdownIO()
 	{
             // do your shutdown stuff here
-            Program.RemoveInstance(Instance.name);
+           // Program.RemoveInstance(Instance.name);
             bShutDown = true;
 		// setting this flag will cause the plugin to disconnect immediately from HomeSeer
 	}
