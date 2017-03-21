@@ -867,7 +867,7 @@ namespace HSPI_SIID_ModBusDemo
                jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
 
-
+                StringBuilder ConfigTab = new StringBuilder();
 
                 tab = new clsJQuery.Tab();
                 tab.tabTitle = "Configuration";
@@ -876,13 +876,13 @@ namespace HSPI_SIID_ModBusDemo
                 htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
                 BACnetTable.add(" Configuration:");
                 BACnetTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
-                ConfigTable = "<div id=confTab style='display:block;'>" + BACnetTable.print() + "</div>";
+                ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetTable.print() + "</div>");
 
 
                 // string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
                 // tab.tabContent = TestStuff;
 
-                tab.tabContent = ConfigTable;
+                tab.tabContent = ConfigTab.ToString();
                 jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
 
