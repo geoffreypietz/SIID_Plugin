@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BACnet\BACnetDevicePage.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />

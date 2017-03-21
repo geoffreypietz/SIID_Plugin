@@ -12,7 +12,7 @@ using Modbus.Utility;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
-using System.Data;
+//using System.Data;
 using HSPI_SIID.General;
 
 namespace HSPI_SIID_ModBusDemo.Modbus
@@ -332,7 +332,7 @@ public string GetReg(string instring)
 
             Instance.host.DeviceVSP_AddPair(dv, Unreachable);
 
-            Instance.host.DeviceVSP_AddPair(dv, Unreachable);
+      
 
             Unreachable = new VSVGPairs.VSPair(ePairStatusControl.Status);
             Unreachable.PairType = VSVGPairs.VSVGPairType.SingleValue;

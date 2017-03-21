@@ -265,11 +265,17 @@ namespace HSPI_SIID_ModBusDemo
                 Instance.host.RegisterPage("ModBusGateTab" , Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage("ModBusDevTab" , Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage("AddModbusDevice" , Util.IFACE_NAME, Instance.name);
+
+
+                Instance.host.RegisterPage("BACnet", Util.IFACE_NAME, Instance.name); //Ajax calls from BACnet builder
+                Instance.host.RegisterPage("discoverBACnetDevices", Util.IFACE_NAME, Instance.name);//Redirect from the Gobutton for discoverBACnetDevices
+                Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
+
                 //Figure out these ones
-            
-               // Instance.host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Instance.name); //Need unique pagenames for each instance?
-           //     Console.WriteLine(MainSiidPageName + "SIIDConfPage");
-          
+
+                // Instance.host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Instance.name); //Need unique pagenames for each instance?
+                //     Console.WriteLine(MainSiidPageName + "SIIDConfPage");
+
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
                 wpd.link = "SIIDPage";
@@ -354,9 +360,9 @@ namespace HSPI_SIID_ModBusDemo
                        
                         return Instance.modPage.BuildModbusDeviceTab(dvRef);
                     }
-                case ("BacNet")://????
+                case ("BACnet Device")://????
                     {
-                        //?????
+                        return Instance.bacPage.BuildBACnetDeviceTab(dvRef);
                     }
 
                     return "Device type not regonized. Please change device type to \"Modbus Gateway\" \"Modbus Device\" or Bacnet under the advanced tab";
@@ -439,16 +445,28 @@ namespace HSPI_SIID_ModBusDemo
                 Console.WriteLine("IN SIID PAGE");
                 return (Instance.siidPage.GetPagePlugin(pageName, user, userRights, queryString));
             }
-            else if (pageName == "AddModbusGate" ) {
+            else if (pageName == "AddModbusGate")
+            {
                 return Instance.modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
 
             }
-            else if (pageName == "AddModbusDevice" )
+            else if (pageName == "AddModbusDevice")
             {
                 return Instance.modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
 
             }
- 
+            else if (pageName == "discoverBACnetDevices")
+            {
+                return Instance.bacPage.DiscoverDevicesRedirect(pageName, user, userRights, queryString);
+
+            }
+            else if (pageName == "addBACnetDevice")
+            {
+                return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
+
+            }
+       
+
             return "page not registered";
 	}
 
