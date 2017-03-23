@@ -367,7 +367,7 @@ var link=document.createElement('a');
  $.ajax({
   type: 'POST',
   async: true,
-  url: '/' + '"+AjaxPostDestination+@"',
+  url: '/' + '"+AjaxPostDestination+ @"',
   data: theData,
   error: function() {
       $('div#errormessage').html('Page is refreshing...');
@@ -375,7 +375,10 @@ var link=document.createElement('a');
             },
   beforeSend: function() {
             },
-  success: function(response) { console.log(response);}
+  success: function(response) { console.log(response);
+if(response=='refresh'){
+location.reload();
+}}
         });
 });
 });
@@ -555,7 +558,7 @@ console.log(theData);
 
             string prescript = @"<script>  $(function()
         {
-     $('#" + id + @"').bind('input', function() {
+     $('#" + id + @"').bind('change', function() {
 
                 var value = $(this).val();
                 value = encodeURIComponent(value);
@@ -563,20 +566,24 @@ console.log(theData);
 console.log(theData);
                 commonAjaxPost(theData, '" + AjaxPostDestination + @"');
             });
-        })</script>";
-            var tp = new clsJQuery.jqTimePicker("mytm", "Time:", "test", true);
+        })
+
+</script>";
+            var tp = new clsJQuery.jqTimePicker("mytm", "Time:", "test", false);
             tp.toolTip = "Pick a time of day";
             tp.ampm = true;
             tp.showSeconds = true;
             tp.minutesSeconds = false;
-            tp.editable = true ;
-            while (def.Count() < 6)
-            {
-                def = def + "0";
-            }
-            tp.defaultValue = new char[] { def[0], def[1], ':', def[2], def[3], ':', def[4], def[5] }.ToString();
+            tp.editable = false ;
+            /* while (def.Count() < 6)
+             {
+                 def = def + "0";
+             }
+             tp.defaultValue = new string(new char[] { def[0], def[1], ':', def[2], def[3], ':', def[4], def[5] });*/
+            tp.defaultValue = def;
             tp.id = id;
-
+
+
 
             html = prescript + tp.Build();
 

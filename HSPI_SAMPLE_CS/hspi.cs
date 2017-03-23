@@ -364,8 +364,11 @@ namespace HSPI_SIID_ModBusDemo
                     {
                         return Instance.bacPage.BuildBACnetDeviceTab(dvRef);
                     }
+                case ("Scratchpad")://????
+                    {
+                        return "Scratchpad options are available on the SIID plugin configuration page";
+                    }
 
-                    return "Device type not regonized. Please change device type to \"Modbus Gateway\" \"Modbus Device\" or Bacnet under the advanced tab";
 
             }
 

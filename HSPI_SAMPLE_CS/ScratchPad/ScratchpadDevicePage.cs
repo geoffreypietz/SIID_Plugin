@@ -1,10 +1,12 @@
 ﻿using HomeSeerAPI;
+using HSPI_SIID.General;
 using HSPI_SIID_ModBusDemo;
 using Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace HSPI_SIID.ScratchPad
@@ -22,18 +24,194 @@ namespace HSPI_SIID.ScratchPad
         }
 
 
-        public string parseInstances(string data)
+
+        private string GetValues(string ScratchPadString)
         {
-            System.Collections.Specialized.NameValueCollection changed = null;
-            changed = System.Web.HttpUtility.ParseQueryString(data);
-            string partID = changed["id"].Split('_')[0];
-            int devId = Int32.Parse(changed["id"].Split('_')[1]);
+            List<int> Raws = new List<int>();
+            List<int> Processed = new List<int>();
+            Match m = Regex.Match(ScratchPadString, @"(\$\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Raws.Contains(int.Parse(m.Groups[2].ToString())))
+                {
 
-            //Make changes to existing device's attributes here
-            //Check for if time input messes anything up.
+                    Raws.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+            m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Processed.Contains(int.Parse(m.Groups[2].ToString())))
+                {
+                    Processed.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+            StringBuilder FinalString = new StringBuilder(ScratchPadString);
+            foreach (int dv in Raws)
+            {
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
+                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
+                string Rep = Tempparts["RawValue"];
+                FinalString.Replace("$(" + dv + ")", Rep);
+
+            }
+            foreach (int dv in Processed)
+            {
+                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
+                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
+                string Rep = Tempparts["ProcessedValue"];
+                FinalString.Replace("$(" + dv + ")", Rep);
+            }
+
+            return FinalString.ToString();
+
+        }
+        private double CalculateString(string FinalString)
+        {
+            double OutValue = 0;
+            try
+            {
+               
+
+                    OutValue = GeneralHelperFunctions.Evaluate(FinalString.ToString());
 
 
-            return "True";
+
+            }
+            catch (Exception e)
+            {
+                OutValue = 0;
+            }
+            return OutValue;
+        }
+
+        public void UpdateDisplay(Scheduler.Classes.DeviceClass Rule)
+        {
+            try
+            {
+                var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                //Do the calculator string parse to get the new value
+                string RawNumberString = GetValues(parts["ScratchPadString"]);
+                double CalculatedString = CalculateString(RawNumberString);
+                parts["NewValue"] = CalculatedString.ToString();
+                if (bool.Parse(parts["IsAccumulator"]))
+                {
+                    CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
+
+                }
+                
+             string ValueString = String.Format(parts["DisplayString"], CalculatedString);
+
+                Instance.host.SetDeviceString(Rule.get_Ref(Instance.host), ValueString, true);
+                Instance.host.SetDeviceValueByRef(Rule.get_Ref(Instance.host), CalculatedString, true);
+                parts["DisplayedValue"] = ValueString;
+
+                EDO.RemoveNamed("SSIDKey");
+                EDO.AddNamed("SSIDKey", parts.ToString());
+                Rule.set_PlugExtraData_Set(Instance.host, EDO);
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            //Check if rule is an accumulator, if so do NewValue - OldValue
+
+                //String Format the value, put results in display
+
+        }
+        public void Reset(Scheduler.Classes.DeviceClass Rule)
+        {
+            var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            parts["OldValue"] = parts["NewValue"];
+            parts["DateOfLastReset"] = DateTime.Now.ToString();
+            EDO.RemoveNamed("SSIDKey");
+            EDO.AddNamed("SSIDKey", parts.ToString());
+            Rule.set_PlugExtraData_Set(Instance.host, EDO);
+        }
+        public void CheckForReset(Scheduler.Classes.DeviceClass Rule)
+        {
+            var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            if (bool.Parse(parts["IsAccumulator"]))
+            {           //Check if accumulator
+                DateTime OldDate = DateTime.Parse(parts["DateOfLastReset"]);
+                switch (parts["ResetType"]) {
+                    case "0": //interval in minutes
+                        {
+                            if ((DateTime.Now - OldDate).Minutes > Convert.ToInt64(parts["ResetInterval"]))
+                            {
+                                Reset(Rule);
+                            }
+                            break;
+                        }
+                    case "1"://time of day
+                        {
+                            DateTime Saved = Convert.ToDateTime(parts["ResetTime"]);
+                            int hour = Saved.Hour;
+                            int min = Saved.Minute;
+                          
+                           if (((DateTime.Now - OldDate).Days > 0) && (DateTime.Now.Hour>=hour)&&(DateTime.Now.Minute >= min)) 
+                            {
+                                Reset(Rule);
+                            }
+                            break;
+                        }
+                    case "2"://day of week
+                        {
+                            if (((DateTime.Now - OldDate).Days > 0) && ((int)DateTime.Now.DayOfWeek == Convert.ToInt32(parts["DayOfWeek"])))
+                            {
+                                Reset(Rule);
+                            }
+                            break;
+                        }
+                    case "3": //day of month
+                        {
+                            if (((DateTime.Now - OldDate).Days > 0) && ((int)DateTime.Now.Day == Convert.ToInt32(parts["DayOfMonth"])))
+                            {
+                                Reset(Rule);
+                            }
+                            break;
+                        }
+
+                }
+
+            }
+ 
+            //Check if reset conditions were met between now and last update (Make sure we dont keep resetting until we leave the reset behind for instance only reset once on the day where reset is defined)
+            //set the date of last reset to DateTime.Now
+
+        }
+
+        public void DoScratchRules(object stuff)
+        {
+       
+            var Rules = getAllRules();
+            foreach (Scheduler.Classes.DeviceClass Rule in Rules)
+            {
+                try
+                {
+                    var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    if (bool.Parse(parts["IsEnabled"]))
+                    {
+                        UpdateDisplay(Rule);
+                        CheckForReset(Rule);
+                    }
+                }
+                catch
+                {
+                }
+
+            }
+            //Make sure all modbus gateway's have timer. Had problem where gateways would be added but somehow not appear in the timer.
+           Instance.siidPage.InitializeModbusGatewayTimers();
         }
 
 
@@ -45,14 +223,22 @@ namespace HSPI_SIID.ScratchPad
             parts["Type"] = "Scratchpad";
             parts["IsEnabled"] = "false";
             parts["IsAccumulator"] = "false";
-            parts["UpdateInterval"] = "30000";
+        //    parts["UpdateInterval"] = "30000"; //Global every 30 seconds for all rules
             parts["ResetType"] = "0";
             parts["ResetInterval"] = "0";
+        
+               parts["ResetTime"] = "12:00:00 AM";
+            parts["DayOfWeek"] = "0";
+            parts["DayOfMonth"] = "0"; 
+  
             parts["ScratchPadString"] = "";
+            parts["DisplayString"] = "{0}";
             parts["OldValue"] = "0";
             parts["NewValue"] = "0";
             parts["DisplayedValue"] = "0";
-   
+            parts["DateOfLastReset"] = DateTime.Now.ToString() ;
+
+
             return parts.ToString();
         }
         public string MakeNewRule() {
@@ -89,7 +275,7 @@ namespace HSPI_SIID.ScratchPad
 
 
 
-            return "TRUE";
+            return "refresh";
 
         }
 
@@ -129,6 +315,45 @@ namespace HSPI_SIID.ScratchPad
             return listOfDevices;
 
         }
+
+        public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
+        {
+
+
+            var EDO = Device.get_PlugExtraData_Get(Instance.host);
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            parts[Key] = value;
+            EDO.RemoveNamed("SSIDKey");
+            EDO.AddNamed("SSIDKey", parts.ToString());
+            Device.set_PlugExtraData_Set(Instance.host, EDO);
+
+        }
+
+        public string parseInstances(string data)
+        {
+
+
+            Console.WriteLine("ConfigDevicePost: " + data);
+
+
+            System.Collections.Specialized.NameValueCollection changed = null;
+            changed = System.Web.HttpUtility.ParseQueryString(data);
+            string partID = changed["id"].Split('_')[0];
+            int devId = Int32.Parse(changed["id"].Split('_')[1]);
+
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devId);
+            //check for gateway change, do something special
+            if (partID == "Name")
+            {
+                newDevice.set_Name(Instance.host, changed["value"]);
+            }
+            else
+            {
+                addSSIDExtraData(newDevice, partID, changed["value"]);
+            }
+            return "True";
+        }
+
 
     }
 }

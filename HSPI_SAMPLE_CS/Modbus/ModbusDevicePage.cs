@@ -54,6 +54,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
                 try
                 {
                     var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                   
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
                     if (parts["Type"] == "Modbus Gateway")
@@ -72,7 +73,7 @@ namespace HSPI_SIID_ModBusDemo.Modbus
 
                 }
                 catch
-                {
+                { //Going to throw tons of null ref errors. But thats expected. and bad programming I guess.
 
                 }
                 Dev = DevNum.GetNext();

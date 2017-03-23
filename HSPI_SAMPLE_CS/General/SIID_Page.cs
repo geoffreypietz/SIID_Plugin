@@ -30,8 +30,8 @@ namespace HSPI_SIID_ModBusDemo
 
 
         public static Dictionary<int, System.Threading.Timer> PluginTimerDictionary = new Dictionary<int, Timer>(); //Indexed by device ID, value is timers, intended for modbus gateway polls. idea is one per gateway ID
-       //Needs to instance this when the plugin initializes, needs to update when a new gateway is added or when the polling interval changes
-
+                                                                                                                    //Needs to instance this when the plugin initializes, needs to update when a new gateway is added or when the polling interval changes
+        private System.Threading.Timer ScratchTimer { get; set; }
 
         public SIID_Page(string pagename, InstanceHolder instance) : base(pagename)
         {
@@ -40,12 +40,15 @@ namespace HSPI_SIID_ModBusDemo
         
            
         OurPageName=pagename;
-            ItializeModbusGatewayTimers();
+           InitializeModbusGatewayTimers();
+            InitializeScratchpadTimer();
         }
 
        
 
         public int selectedPlugin { get; set; }
+
+    
 
 
         public void LoadINISettings()
@@ -152,7 +155,7 @@ namespace HSPI_SIID_ModBusDemo
                             
                             if (!hasHeader)
                             {
-                              
+                             
                                 HeaderArray = fieldRow;
                                 hasHeader = true;
                             }
@@ -162,7 +165,7 @@ namespace HSPI_SIID_ModBusDemo
                                 Dictionary<string, string> CodeLookup = new Dictionary<string, string>();
                                 foreach (string fieldRowCell in fieldRow)
                                 {
-                                    CodeLookup[HeaderArray[FRind]] = fieldRowCell;
+                                    CodeLookup[HeaderArray[FRind].ToLower()] = fieldRowCell;
                                     FRind++;
                                 }
                                 try
@@ -255,9 +258,41 @@ namespace HSPI_SIID_ModBusDemo
                                     HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
                                     switch (CodeLookup["type"])
                                     {
-                                        case ("BacNet???"):
+                                        case ("BACnet"):
                                             {
 
+                                                break;
+                                            }
+                                        case ("Scratchpad"):
+                                            {
+                                                var parts = HttpUtility.ParseQueryString(string.Empty);
+                                                parts["Type"] = FetchAttribute(CodeLookup, "type"); ;
+                                                parts["IsEnabled"] = FetchAttribute(CodeLookup, "isenabled"); ;
+                                                parts["IsAccumulator"] = FetchAttribute(CodeLookup, "isaccumulator"); ;
+                                                //    parts["UpdateInterval"] = "30000"; //Global every 30 seconds for all rules
+                                                parts["ResetType"] = FetchAttribute(CodeLookup, "resettype"); ;
+                                                parts["ResetInterval"] = FetchAttribute(CodeLookup, "resetinterval"); ;
+
+                                                parts["ResetTime"] = FetchAttribute(CodeLookup, "resettime"); ;
+                                                parts["DayOfWeek"] = FetchAttribute(CodeLookup, "dayofweek"); ;
+                                                parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); ;
+
+                                                string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
+                                                foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
+                                                {
+                                                    string old = "$(" + OLDTONEW.Key + ")";
+                                                    string NN = "$(" + OLDTONEW.Value + ")";
+                                                    ScratchString = ScratchString.Replace(old, NN);
+                                                    ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                }
+
+                                                parts["ScratchPadString"] = ScratchString;
+                                                parts["DisplayString"] = FetchAttribute(CodeLookup, "displaystring"); ;
+                                                parts["OldValue"] = FetchAttribute(CodeLookup, "oldvalue"); ;
+                                                parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); ;
+                                                parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
+                                                parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
+                                                EDO.AddNamed("SSIDKey", parts.ToString());
                                                 break;
                                             }
                                         case ("Modbus Gateway"):
@@ -409,6 +444,7 @@ namespace HSPI_SIID_ModBusDemo
             List<int> ModGateways = new List<int>();
             List<int> ModDevices = new List<int>();
             List<int> BackNetDevices = new List<int>();
+            List<int> ScratchDevices = new List<int>();
             while (Dev != null)
             {
                 try
@@ -439,7 +475,11 @@ namespace HSPI_SIID_ModBusDemo
                                     ModDevices.Add(Dev.get_Ref(Instance.host));
                                     break;
                                 }
-
+                            case ("Scratchpad"):
+                                {
+                                    ScratchDevices.Add(Dev.get_Ref(Instance.host));
+                                    break;
+                                }
                              
 
 
@@ -493,14 +533,22 @@ namespace HSPI_SIID_ModBusDemo
                     FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
+            if (ScratchDevices.Count > 0)
+            {
+                FileContent.Append("Scratchpad Rules\r\n");
+                FileContent.Append(new HSPI_SIID.SIIDDevice(ScratchDevices[0], Instance).ReturnCSVHead());
+                foreach (int ID in ScratchDevices)
+                {
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID, Instance).ReturnCSVRow());
+                }
+            }
 
 
 
 
 
-     
-         
-       
+
+
             return FileName+"_)(*&^%$#@!"+ FileContent.ToString();
         }
 
@@ -551,11 +599,16 @@ namespace HSPI_SIID_ModBusDemo
             return base.postBackProc(page, data, user, userRights);
         }
 
-       
 
-   
 
-        public void ItializeModbusGatewayTimers()
+        public void InitializeScratchpadTimer()
+        {
+
+          ScratchTimer = new System.Threading.Timer(Instance.scrPage.DoScratchRules, true, 30000,30000);
+
+        }
+
+        public void InitializeModbusGatewayTimers()
         {
             List<int> ModbusGates = Instance.modPage.getAllGateways().ToList();
             List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
@@ -712,7 +765,7 @@ namespace HSPI_SIID_ModBusDemo
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String" }); //0,1,2,3,4,5
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
 
                 foreach (Scheduler.Classes.DeviceClass Dev in Rules)
                 {
@@ -720,26 +773,27 @@ namespace HSPI_SIID_ModBusDemo
                     List<string> Row = new List<string>();
                     var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    Row.Add(Dev.get_Name(Instance.host));
+                    Row.Add(ScratchBuilder.stringInput("Name_" + ID,Dev.get_Name(Instance.host)).print());
                     Row.Add(parts["DisplayedValue"]);
                     Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
                     Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_"+ID, bool.Parse(parts["IsAccumulator"]) ).print());
 
                     //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
                     
-                    Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_"+ID,"ResetType", Convert.ToInt32(parts["ResetType"]) ).print());
+                    Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_"+ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"]) ).print());
                     //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
 
 
 
                     StringBuilder ComplexCell = new StringBuilder();
-
-                    ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in milliseconds: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
-                    ComplexCell.Append("<div id=1_" + ID + " style=display:none>24 hour clock, \"hh:mm:ss\"" + ScratchBuilder.timeInput("ResetInterval_" + ID + "_1",parts["ResetInterval"]).print() + "</div>");
-                    ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "ResetInterval_" + ID + "_2", "ResetInterval_" + ID + "_2", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
-                    ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_3", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+         
+                    ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+                    ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
+                    ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
+                    ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
                     ComplexCell.Append(@"<script>
 UpdateDisplay=function(id){
+console.log('UPDATING DISPLAY '+id);
 $('#0_'+id)[0].style.display='none';
 $('#1_'+id)[0].style.display='none';
 $('#2_'+id)[0].style.display='none';
@@ -747,13 +801,21 @@ $('#3_'+id)[0].style.display='none';
 V = $('#ResetType_'+id)[0].value;
 $('#'+V+'_'+id)[0].style.display='';
 }
+DoChange=function(){
+console.log('DoChange');
+console.log(this);
+UpdateDisplay(this.id.split('_')[1]);
+}
 UpdateDisplay("+ID+ @");
-$('#ResetType_" + ID + @"').change(UpdateDisplay("+ID+@")); //OK HERE
+$('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 </script>");
                     Row.Add(ComplexCell.ToString());
 
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
+                    Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+
+                    
                     ScratchTable.addArrayRow(Row.ToArray());
                 }
 
@@ -773,7 +835,7 @@ $('#ResetType_" + ID + @"').change(UpdateDisplay("+ID+@")); //OK HERE
             SIID_Page page = this;
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBus" + Instance.ajaxName);
             htmlBuilder BacnetBuilder = new htmlBuilder("BACnet" + Instance.ajaxName);
-            ItializeModbusGatewayTimers();
+            InitializeModbusGatewayTimers();
             try
             {
                 page.reset();

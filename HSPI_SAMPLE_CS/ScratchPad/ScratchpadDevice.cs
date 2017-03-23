@@ -19,13 +19,20 @@ namespace HSPI_SIID.ScratchPad
         "IsEnabled",
        "IsAccumulator",
        
-       "UpdateInterval",
+       //"UpdateInterval",  //Going to be default and global.
        "ResetType", //reset type is an int (0=interval
-       "ResetInterval",
+       "ResetInterval", //interval in muntes just for type=0
+       "ResetTime",//Time for time of day type=1
+       "DayOfWeek",//for type=2
+       "DayOfMonth",//for type=3
        "ScratchPadString",
+       "DisplayString",
+
        "OldValue",
        "NewValue",
-       "DisplayedValue"
+       "DisplayedValue",
+       "DateOfLastReset"
+            
         };
 
         public static string[] ResetType = new string[] {

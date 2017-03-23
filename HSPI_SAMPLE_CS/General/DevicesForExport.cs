@@ -1,4 +1,5 @@
 ﻿using HSPI_SIID.BACnet;
+using HSPI_SIID.ScratchPad;
 using HSPI_SIID_ModBusDemo;
 using HSPI_SIID_ModBusDemo.Modbus;
 using System;
@@ -176,7 +177,11 @@ namespace HSPI_SIID
                         Orderlist = BACnetDevice.Attributes;
                         break;
                     }
-
+                case ("Scratchpad"):
+                    {
+                        Orderlist = ScratchpadDevice.Attributes;
+                        break;
+                    }
 
 
             }

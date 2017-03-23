@@ -38,10 +38,12 @@ namespace HSPI_SIID_ModBusDemo
             host = Host;
 
             modPage = new ModbusDevicePage("ModbusDevicePage", this);
-            siidPage = new SIID_Page("SIIDPage", this);
+            scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
+            
             modAjax = new MosbusAjaxReceivers(this);
             bacPage = new BACnetDevicePage("BACnetDevicePage", this);
-            scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
+            siidPage = new SIID_Page("SIIDPage", this);
+
         }
         public string name;
         public string ajaxName;
