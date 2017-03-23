@@ -196,7 +196,7 @@ namespace HSPI_SIID_ModBusDemo
 
                     do
                     {
-                        System.Threading.Thread.Sleep(10);
+                        System.Threading.Thread.Sleep(1000); 
                     } while (client.CommunicationState == HSCF.Communication.Scs.Communication.CommunicationStates.Connected & !HSPI.bShutDown);
                     Console.WriteLine("Connection lost, exiting");
                     // disconnect from server for good here

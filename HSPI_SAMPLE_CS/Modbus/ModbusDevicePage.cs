@@ -744,7 +744,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         {
                             try
                             {
-                                WhoIsBeingPolled.Add(subId);
+                                lock (WhoIsBeingPolled)
+                                {
+                                    WhoIsBeingPolled.Add(subId);
+                                }
                                 Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
                                 if (MDevice != null)
                                 {
@@ -778,8 +781,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                         }
                                         finally
                                         {
-                                              //OneAtATime.ReleaseMutex();
-                                            WhoIsBeingPolled.Remove(subId);
+                                            //OneAtATime.ReleaseMutex();
+                                            lock (WhoIsBeingPolled)
+                                            {
+                                                WhoIsBeingPolled.Remove(subId);
+                                            }
                                         }
                                         System.Threading.Thread.Sleep(Convert.ToInt32(parts["Delay"]));
                                         //add delay between each address poll here
@@ -847,11 +853,25 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                 throw new Exception("Device is set to be read only. Write commands disabled");
                             }
                             Console.WriteLine("         Writing to Device: " + devID);
+                            while (WhoIsBeingPolled.Contains(devID.ToString()))
+                            {
+                                Console.WriteLine("Device currently being polled, waiting for it to be free");
+                                System.Threading.Thread.Sleep(100); //Dont try to write until we aren't reading from the register
+                            }
+                            lock (WhoIsBeingPolled)
+                            {
+                                WhoIsBeingPolled.Add(devID.ToString());
+                            }
+                            Console.WriteLine("         Writing " + Send +" To device "+devID);
                             WriteToModbusDevice(devID, Send);
+
                             Console.WriteLine("         Reading from Device: " + devID);
                             ReadFromModbusDevice(Convert.ToInt32(devID));
                             ProcessCalculator(Convert.ToInt32(devID));
-
+                            lock (WhoIsBeingPolled)
+                            {
+                                WhoIsBeingPolled.Remove(devID.ToString());
+                            }
                         }
                         catch (Exception e)
                         {
