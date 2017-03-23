@@ -103,6 +103,8 @@
     <Compile Include="Modbus\MosbusAjaxReceivers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScratchPad\ScratchpadDevice.cs" />
+    <Compile Include="ScratchPad\ScratchpadDevicePage.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="WebAddDevice.cs" />
     <Compile Include="Web_UI_Util.cs" />

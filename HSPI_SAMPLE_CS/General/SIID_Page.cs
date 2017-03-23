@@ -11,6 +11,8 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using HomeSeerAPI;
 using Microsoft.VisualBasic.FileIO;
+using HSPI_SIID.ScratchPad;
+using HSPI_SIID.General;
 
 namespace HSPI_SIID_ModBusDemo
 {
@@ -523,9 +525,9 @@ namespace HSPI_SIID_ModBusDemo
                     }
                 case "Scratchpad":
                     {
-                        
 
-                        break;
+                        return Instance.scrPage.MakeNewRule();
+                       
                     }
                 /*    case "Instance":
                     {
@@ -700,6 +702,69 @@ namespace HSPI_SIID_ModBusDemo
             return sb.ToString();
         }
 
+        public string ScratchpadRules()
+        {
+            StringBuilder sb = new StringBuilder();
+           List<Scheduler.Classes.DeviceClass> Rules= Instance.scrPage.getAllRules();
+            if (Rules.Count > 0)
+            {
+                htmlBuilder ScratchBuilder = new htmlBuilder("Scratch" + Instance.ajaxName);
+                sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
+                htmlTable ScratchTable = ScratchBuilder.htmlTable();
+
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String" }); //0,1,2,3,4,5
+
+                foreach (Scheduler.Classes.DeviceClass Dev in Rules)
+                {
+                    int ID = Dev.get_Ref(Instance.host);
+                    List<string> Row = new List<string>();
+                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    Row.Add(Dev.get_Name(Instance.host));
+                    Row.Add(parts["DisplayedValue"]);
+                    Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
+                    Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_"+ID, bool.Parse(parts["IsAccumulator"]) ).print());
+
+                    //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
+                    
+                    Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_"+ID,"ResetType", Convert.ToInt32(parts["ResetType"]) ).print());
+                    //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
+
+
+
+                    StringBuilder ComplexCell = new StringBuilder();
+
+                    ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in milliseconds: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+                    ComplexCell.Append("<div id=1_" + ID + " style=display:none>24 hour clock, \"hh:mm:ss\"" + ScratchBuilder.timeInput("ResetInterval_" + ID + "_1",parts["ResetInterval"]).print() + "</div>");
+                    ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "ResetInterval_" + ID + "_2", "ResetInterval_" + ID + "_2", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+                    ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_3", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+                    ComplexCell.Append(@"<script>
+UpdateDisplay=function(id){
+$('#0_'+id)[0].style.display='none';
+$('#1_'+id)[0].style.display='none';
+$('#2_'+id)[0].style.display='none';
+$('#3_'+id)[0].style.display='none';
+V = $('#ResetType_'+id)[0].value;
+$('#'+V+'_'+id)[0].style.display='';
+}
+UpdateDisplay("+ID+ @");
+$('#ResetType_" + ID + @"').change(UpdateDisplay("+ID+@")); //OK HERE
+
+</script>");
+                    Row.Add(ComplexCell.ToString());
+
+                    Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
+                    ScratchTable.addArrayRow(Row.ToArray());
+                }
+
+                sb.Append(ScratchTable.print());
+
+                sb.Append("</div>");
+            }
+
+            return sb.ToString();
+
+        }
 
         public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
         {
@@ -726,6 +791,7 @@ namespace HSPI_SIID_ModBusDemo
                 stb.Append("</div>");
 
 
+                stb.Append(ScratchpadRules());
 
 
 

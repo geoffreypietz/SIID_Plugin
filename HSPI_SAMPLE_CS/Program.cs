@@ -12,6 +12,7 @@ using HSCF.Communication.ScsServices.Client;
 using HSCF.Communication.ScsServices.Service;
 using HSPI_SIID_ModBusDemo.Modbus;
 using HSPI_SIID.BACnet;
+using HSPI_SIID.ScratchPad;
 
 namespace HSPI_SIID_ModBusDemo
 {
@@ -40,6 +41,7 @@ namespace HSPI_SIID_ModBusDemo
             siidPage = new SIID_Page("SIIDPage", this);
             modAjax = new MosbusAjaxReceivers(this);
             bacPage = new BACnetDevicePage("BACnetDevicePage", this);
+            scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
         }
         public string name;
         public string ajaxName;
@@ -70,6 +72,7 @@ namespace HSPI_SIID_ModBusDemo
         public SIID_Page siidPage;
         public MosbusAjaxReceivers modAjax;
         public BACnetDevicePage bacPage;
+        public ScratchpadDevicePage scrPage;
 
     }
  

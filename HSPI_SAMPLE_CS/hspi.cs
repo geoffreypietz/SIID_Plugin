@@ -255,7 +255,7 @@ namespace HSPI_SIID_ModBusDemo
                    Instance.host.RegisterPage("SIIDPage", Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage("ModBus", Util.IFACE_NAME, Instance.name);                                                                                                                                                                       //  Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ Instance.name);
 
-
+                Instance.host.RegisterPage("Scratch", Util.IFACE_NAME, Instance.name);
 
 
                 Instance.host.RegisterPage("ModbusDevicePage" , Util.IFACE_NAME, Instance.name); //MODBUS specifc ajax callback.  used in the PostBackPlugin switch area
@@ -476,6 +476,7 @@ namespace HSPI_SIID_ModBusDemo
             Console.WriteLine("PostBackProc pageName: " + pageName);
             if (pageName == "SIIDPage"+Instance.ajaxName)
             {
+                
                 return Instance.siidPage.postbackSSIDConfigPage(pageName, data, user, userRights);
             }
             else if (pageName == "ModBus" + Instance.ajaxName)
@@ -495,11 +496,17 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.modPage.parseModbusDeviceTab(data);
 
             }
-           
-		
+           else if(pageName == "Scratch" + Instance.ajaxName)
+            {
+
+                return Instance.scrPage.parseInstances(data);
+
+            }
 
 
-		return "";
+
+
+            return "";
 	}
 
 	// ================================================================================================

@@ -7,6 +7,9 @@ namespace HSPI_SIID.General
 {
     class GeneralHelperFunctions
     {
+
+        public static string[] DaysOfWeek = new string[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
         public static double Evaluate(String input) //http://stackoverflow.com/questions/333737/evaluating-string-342-yield-int-18?noredirect=1&lq=1  Modified for numbers of more than one character
         {
             String expr = "(" + input + ")";

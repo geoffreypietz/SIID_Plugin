@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Scheduler;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -59,6 +60,11 @@ namespace HSPI_SIID_ModBusDemo
         {
             return new Qbutton(l, n, AjaxPostDestination);
 
+        }
+        public timeInput timeInput(string l, string n)
+        {
+            return new timeInput(l, n, AjaxPostDestination);
+            
         }
         public Downloadbutton Downloadbutton(string l, string n)
         {
@@ -539,6 +545,45 @@ console.log(theData);
 
     }
 
+    //Numbers are displayed as hh:mm:ss so given a number 
+    public class timeInput : htmlObject
+    {
+
+        public timeInput(string id, string def, string aj)
+        {
+            AjaxPostDestination = aj;
+
+            string prescript = @"<script>  $(function()
+        {
+     $('#" + id + @"').bind('input', function() {
+
+                var value = $(this).val();
+                value = encodeURIComponent(value);
+              var theData ='&value='+ value+ '&id=' + '" + id + @"';
+console.log(theData);
+                commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+            });
+        })</script>";
+            var tp = new clsJQuery.jqTimePicker("mytm", "Time:", "test", true);
+            tp.toolTip = "Pick a time of day";
+            tp.ampm = true;
+            tp.showSeconds = true;
+            tp.minutesSeconds = false;
+            tp.editable = true ;
+            while (def.Count() < 6)
+            {
+                def = def + "0";
+            }
+            tp.defaultValue = new char[] { def[0], def[1], ':', def[2], def[3], ':', def[4], def[5] }.ToString();
+            tp.id = id;
+
+
+            html = prescript + tp.Build();
+
+        }
+
+    }
+
     public class numberInput:htmlObject
     {
 
@@ -607,6 +652,26 @@ console.log(theData);
             addRow("<td class=\"columnheader\" colspan=\"4\">"+title+"</td>");
 
     }
+        public void addHead(string[] HeadArray)
+        {
+            StringBuilder row = new StringBuilder();
+            foreach (string head in HeadArray)
+            {
+                row.Append("<td class=\"columnheader\"> "+ head + "</td>");
+            }
+            addRow(row.ToString());
+
+        }
+        public void addArrayRow(string[] HeadArray)
+        {
+            StringBuilder row = new StringBuilder();
+            foreach (string head in HeadArray)
+            {
+                row.Append("<td  class ='tablecell'> " + head + "</td>");
+            }
+            addRow(row.ToString());
+
+        }
 
 
         public void addSubHeader(string I1,string I2, string I3, string I4, string I5)
