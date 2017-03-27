@@ -1111,6 +1111,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             if (Data != null)
             {
+                
                 OpenModDeviceConnection(devID, Data);
 
             }
@@ -1314,7 +1315,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
                     master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
                     master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
-                    if (Data==null)
+                    if (Data==null)//read
                     {
                         if (Int32.Parse(parts["RegisterType"]) < 3) //It's a coil or Discrete Input
                         {
@@ -1354,7 +1355,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
     
 
                 }
-                    else
+                    else //write
                     {
 
                         if (Int32.Parse(parts["RegisterType"]) < 3) //It's a coil or Discrete Input
