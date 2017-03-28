@@ -54,8 +54,23 @@ namespace HSPI_SIID.ScratchPad
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
                 var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
-                string Rep = Tempparts["RawValue"];
-                FinalString.Replace("$(" + dv + ")", Rep);
+                try
+                {
+                    string Rep = Tempparts["RawValue"];
+                    FinalString.Replace("$(" + dv + ")", Rep);
+                }
+                catch
+                {
+                    try
+                    {
+                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        FinalString.Replace("$(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+                       
+                    }
+                }
 
             }
             foreach (int dv in Processed)
@@ -63,8 +78,23 @@ namespace HSPI_SIID.ScratchPad
                 Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
                 var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
-                string Rep = Tempparts["ProcessedValue"];
-                FinalString.Replace("$(" + dv + ")", Rep);
+                try
+                {
+                    string Rep = Tempparts["ProcessedValue"];
+                    FinalString.Replace("$(" + dv + ")", Rep);
+                }
+                catch
+                {
+                    try
+                    {
+                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        FinalString.Replace("$(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+                    
+                    }
+                }
             }
 
             return FinalString.ToString();
