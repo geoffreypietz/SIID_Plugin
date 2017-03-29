@@ -692,6 +692,9 @@ namespace Yabe
             }
         }
 
+
+
+
         private void m_SearchToolButton_Click(object sender, EventArgs e)
         {
             addDevicesearchToolStripMenuItem_Click(this, null);
@@ -871,6 +874,8 @@ namespace Yabe
                 comm.Retries = old_reties;
             }
         }
+
+
 
         private void AddObjectListOneByOneAsync(BacnetClient comm, BacnetAddress adr, uint device_id, uint count, int AsynchRequestId)
         {

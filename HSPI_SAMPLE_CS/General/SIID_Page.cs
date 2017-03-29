@@ -963,6 +963,51 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 tab.tabDIVID = "BacDiscoverTab";
                 StringBuilder DiscoverTab = new StringBuilder();
                 DiscoverTab.Append("<h3>Discover and add BACnet devices to Homeseer</h3>");
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+                //var 
+
+
+
+                var treePlugin = @"
+                                <script>
+                var dataServiceUrl = '/" + Instance.bacnetDataService.PageName + @"';
+	
+                $('#bacnetGlobalNetwork').fancytree({
+                        source: {
+                            url: dataServiceUrl, 
+                            data: {isRoot: true},
+                            cache: false
+                        },
+				
+	                  // Called when a lazy node is expanded for the first time:
+	                  lazyLoad: function(event, data){
+		                  var node = data.node;
+		                  var nodeData = node.data;
+		  
+		                  if (nodeData.is_root)
+		                  {
+			                  //TODO: fill in properties from filter.
+
+		                  }
+
+		                  data.result = {
+			                url: dataServiceUrl,
+			                data: nodeData,
+			                cache: false
+		                  };
+	                  }
+                });
+                </script>	
+                ";
+
+
+                DiscoverTab.Append(treePlugin);
+
                 htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
                 DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Discover BACnet devices on network").print());//Gobutton redirects to a new page, not a postback thing
 

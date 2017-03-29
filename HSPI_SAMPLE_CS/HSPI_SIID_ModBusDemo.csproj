@@ -81,7 +81,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -91,6 +93,14 @@
   <ItemGroup>
     <Compile Include="BACnet\BACnetDevice.cs" />
     <Compile Include="BACnet\BACnetDevicePage.cs" />
+    <Compile Include="BACnet\BACnetNetwork.cs" />
+    <Compile Include="BACnet\BACnetGlobalNetwork.cs" />
+    <Compile Include="BACnet\BACnetObject.cs" />
+    <Compile Include="BACnet\BACnetObjectTypeGroup.cs" />
+    <Compile Include="BACnet\BACnetProperty.cs" />
+    <Compile Include="BACnet\BACnetDataService.cs" />
+    <Compile Include="BACnet\BACnetTreeNode.cs" />
+    <Compile Include="BACnet\BACnetTreeDataObject.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
@@ -138,6 +148,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="modbus_settingsPage_scrapdoc.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Yabe\Yabe.csproj">
+      <Project>{ee493b17-8185-406c-881f-1144092f01cb}</Project>
+      <Name>Yabe</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BACnet\Yabe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

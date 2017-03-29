@@ -1331,6 +1331,7 @@ namespace System.IO.BACnet
 
     public struct BacnetValue
     {
+        //public static BacnetValue Null = new BacnetValue(null);
         public BacnetApplicationTags Tag;
         public object Value;
         public BacnetValue(BacnetApplicationTags tag, object value)
@@ -1391,11 +1392,39 @@ namespace System.IO.BACnet
     {
         public BacnetObjectTypes type;
         public UInt32 instance;
+        public String typeString;
+
         public BacnetObjectId(BacnetObjectTypes type, UInt32 instance)
         {
             this.type = type;
             this.instance = instance;
+
+            String ts = type.ToString();    //should just get numeric value if proprietary and outside of predefined alues.
+
+            if (ts.StartsWith("OBJECT_"))
+                ts = ts.Substring(7);   //else - proprietary...?  No, since it was already cast into BacnetObjectTypes enum.
+            else
+                ts = "PROPRIETARY_(" + ts + ")";   //not sure if this handles it adequately, but will see...
+
+            String[] tw = ts.Split("_".ToCharArray());
+            String tsFinal = "";
+            foreach (String word in tw)
+                tsFinal += word[0].ToString().ToUpper() + word.Substring(1).ToLower() + " ";
+
+            tsFinal = tsFinal.TrimEnd();
+            this.typeString = tsFinal;   
+                
+            //    St
+            //                if (name.StartsWith("OBJECT_"))
+            //    node = nodes.Add(name.Substring(7));
+            //else
+            //    node = nodes.Add("PROPRIETARY:"+object_id.Instance.ToString()+" ("+name+")");  // Propertary Objects not in enum appears only with the number such as 584:0
+
+            //node.Tag = object_id;
+
+
         }
+
         public BacnetObjectTypes Type
         {
             get { return type; }
@@ -1419,18 +1448,24 @@ namespace System.IO.BACnet
             if (obj == null) return false;
             else return obj.ToString().Equals(this.ToString());
         }
+
+        //TODO: sort by object type, then by default
         public int CompareTo(BacnetObjectId other)
         {
             if (this.type == other.type)
                 return this.instance.CompareTo(other.instance);
             else
             {
-                if (this.type == BacnetObjectTypes.OBJECT_DEVICE) return -1;
-                if (other.type == BacnetObjectTypes.OBJECT_DEVICE) return 1;
-                // cast to int for comparison otherwise unpredictable behaviour with outbound enum (proprietary type)
-                return ((int)(this.type)).CompareTo((int)other.type);
+                return this.typeString.CompareTo(other.typeString);
+                //if (this.type == BacnetObjectTypes.OBJECT_DEVICE) return -1;
+                //if (other.type == BacnetObjectTypes.OBJECT_DEVICE) return 1;
+                //// cast to int for comparison otherwise unpredictable behaviour with outbound enum (proprietary type)
+                //return ((int)(this.type)).CompareTo((int)other.type);
             }
         }
+
+
+
         public static BacnetObjectId Parse(string value)
         {
             BacnetObjectId ret = new BacnetObjectId();

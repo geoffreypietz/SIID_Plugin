@@ -271,6 +271,9 @@ namespace HSPI_SIID_ModBusDemo
                 Instance.host.RegisterPage("discoverBACnetDevices", Util.IFACE_NAME, Instance.name);//Redirect from the Gobutton for discoverBACnetDevices
                 Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
 
+                Instance.host.RegisterPage("BACnetObjectDataService", Util.IFACE_NAME, Instance.name);
+
+
                 //Figure out these ones
 
                 // Instance.host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Instance.name); //Need unique pagenames for each instance?
@@ -505,7 +508,12 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.scrPage.parseInstances(data);
 
             }
+            else if (pageName == Instance.bacnetDataService.PageName)
+            {
 
+                return Instance.bacnetDataService.GetData(data);
+
+            }
 
 
 

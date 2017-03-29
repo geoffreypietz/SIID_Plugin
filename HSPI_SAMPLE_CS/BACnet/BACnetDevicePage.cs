@@ -25,6 +25,13 @@ namespace HSPI_SIID.BACnet
             DiscoveredBACnetDevices = new List<string>();
         }
 
+
+
+        public void test()
+        {
+
+
+        }
  
             
 

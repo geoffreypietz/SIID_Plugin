@@ -44,6 +44,10 @@ namespace HSPI_SIID_ModBusDemo
             bacPage = new BACnetDevicePage("BACnetDevicePage", this);
             siidPage = new SIID_Page("SIIDPage", this);
 
+            bacnetDataService = new BACnetDataService("BACnetDataService", this);
+
+            bacnetGlobalNetwork = new BACnetGlobalNetwork(this);
+
         }
         public string name;
         public string ajaxName;
@@ -75,6 +79,8 @@ namespace HSPI_SIID_ModBusDemo
         public MosbusAjaxReceivers modAjax;
         public BACnetDevicePage bacPage;
         public ScratchpadDevicePage scrPage;
+        public BACnetDataService bacnetDataService;
+        public BACnetGlobalNetwork bacnetGlobalNetwork;
 
     }
  
@@ -223,6 +229,10 @@ namespace HSPI_SIID_ModBusDemo
 
         public static void Main(string[] args) //To start a new instance, run command ...plugIn.exe instance=InstanceName
         {
+            //BACnetGlobalNetwork.Discover();
+
+            //return;
+
             string sIp = "127.0.0.1";
             string Instance = "";
             string sCmd = null;

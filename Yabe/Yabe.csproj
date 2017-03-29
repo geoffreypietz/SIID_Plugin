@@ -76,9 +76,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\DemoServer\DeviceStorage.cs">
-      <Link>DeviceStorage.cs</Link>
-    </Compile>
     <Compile Include="AlarmSummary.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,6 +84,7 @@
     </Compile>
     <Compile Include="BACnetBase.cs" />
     <Compile Include="BACnetClient.cs" />
+    <Compile Include="BACnetDeviceLine.cs" />
     <Compile Include="BACnetTransport.cs" />
     <Compile Include="BacnetTransportEthernet.cs" />
     <Compile Include="BACnetTransportIPv6.cs" />
@@ -114,6 +112,7 @@
     <Compile Include="DeviceCommunicationControlDialog.Designer.cs">
       <DependentUpon>DeviceCommunicationControlDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="DeviceStorage.cs" />
     <Compile Include="DynamicPropertyGridContainer.cs" />
     <Compile Include="FileTransfers.cs" />
     <Compile Include="ForeignRegistry.cs">
@@ -227,7 +226,7 @@
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
@@ -243,10 +242,6 @@
     <None Include="Resources\cross.png" />
     <None Include="Resources\add.png" />
     <None Include="Resources\note.png" />
-    <Content Include="..\Docs\README.txt">
-      <Link>README.txt</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\database.png" />
     <None Include="Resources\magnifier.png" />
     <None Include="Resources\eye.png" />
