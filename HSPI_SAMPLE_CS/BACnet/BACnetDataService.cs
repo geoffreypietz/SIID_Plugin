@@ -52,21 +52,28 @@ namespace HSPI_SIID.BACnet
 
             //Get data for root node ("All networks") - to which filters are attached
 
-            if (Instance.bacnetGlobalNetwork == null || post["is_root"] != null)
+
+
+            if (post["is_root"] != null)
+                return jss.Serialize(BACnetGlobalNetwork.RootNode()); 
+
+
+
+            if (Instance.bacnetGlobalNetwork == null || (post["is_global_network"] != null))    //if they re-filtered
             {
 
                 Instance.bacnetGlobalNetwork = new BACnetGlobalNetwork(
                     this.Instance, 
                     post["selected_ip_address"], 
                     post["udp_port"] ?? "BAC0",
-                    Boolean.Parse(post["filter_device_instance"]),
-                    Int32.Parse(post["device_instance_min"]), 
-                    Int32.Parse(post["device_instance_max"]));
-
-                if (post["is_root"] != null)
-                    return jss.Serialize(Instance.bacnetGlobalNetwork.GetChildNodes());
-
+                    Boolean.Parse(post["filter_device_instance"] ?? "false"),
+                    Int32.Parse(post["device_instance_min"] ?? "0"),
+                    Int32.Parse(post["device_instance_max"] ?? "4194303"));
             }
+
+
+            if (post["is_global_network"] != null)
+                return jss.Serialize(Instance.bacnetGlobalNetwork.GetChildNodes());
 
 
             //Get data for a network node (one IP address)

@@ -13,6 +13,7 @@ using HomeSeerAPI;
 using Microsoft.VisualBasic.FileIO;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
+using System.Reflection;
 
 namespace HSPI_SIID_ModBusDemo
 {
@@ -972,6 +973,20 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 //var 
 
 
+                string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+                string cssPath = Path.Combine(basePath, @"ui.fancytree.min.css");
+                String css = File.ReadAllText(cssPath);
+                DiscoverTab.Append("<style>");
+                DiscoverTab.Append(css);
+                DiscoverTab.Append("</style>");
+
+                string path = Path.Combine(basePath, @"jquery.fancytree-all.min.js");
+                String jsLib = File.ReadAllText(path);
+                DiscoverTab.Append("<script>");
+                DiscoverTab.Append(jsLib);
+                DiscoverTab.Append("</script>");
+
 
                 var treePlugin = @"
                                 <script>
@@ -980,7 +995,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 $('#bacnetGlobalNetwork').fancytree({
                         source: {
                             url: dataServiceUrl, 
-                            data: {isRoot: true},
+                            data: {is_root: true},
                             cache: false
                         },
 				

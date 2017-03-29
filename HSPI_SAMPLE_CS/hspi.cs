@@ -271,7 +271,7 @@ namespace HSPI_SIID_ModBusDemo
                 Instance.host.RegisterPage("discoverBACnetDevices", Util.IFACE_NAME, Instance.name);//Redirect from the Gobutton for discoverBACnetDevices
                 Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
 
-                Instance.host.RegisterPage("BACnetObjectDataService", Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
 
 
                 //Figure out these ones
@@ -471,6 +471,13 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
 
             }
+
+            else if (pageName == Instance.bacnetDataService.PageName)
+            {
+
+                return Instance.bacnetDataService.GetData(queryString);
+
+            }
        
 
             return "page not registered";
@@ -508,6 +515,8 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.scrPage.parseInstances(data);
 
             }
+
+                //this is actually coming in as a GET request, so this code is not reached...
             else if (pageName == Instance.bacnetDataService.PageName)
             {
 

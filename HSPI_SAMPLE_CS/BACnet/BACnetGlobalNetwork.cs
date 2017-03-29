@@ -76,25 +76,45 @@ namespace HSPI_SIID.BACnet
         //Can call this before any filters set...good for getting initial tree data.
         public BACnetTreeNode GetTreeNode()
         {
-            return new TreeNode(this);
+            return BACnetGlobalNetwork.RootNode();
+
         }
 
 
 
-        [Serializable]
-        public class TreeNode : BACnetTreeNode
+        public static BACnetTreeNode RootNode()
         {
-            public TreeNode(BACnetGlobalNetwork bacnetNetwork) //: base(parent)
-            {
-                title = "All networks";
-
-                folder = true;
-
-                lazy = true;
-
-                data["is_root"] = true;
-            }
+            var tn = new BACnetTreeNode();
+            tn.title = "All networks";
+            tn.folder = true;
+            tn.lazy = true;
+            tn.data["is_global_network"] = true;
+            return tn;
         }
+
+
+
+
+
+        //[Serializable]
+        //public class TreeNode : BACnetTreeNode
+        //{
+        //    public TreeNode() //: base(parent)
+        //    {
+        //        title = "All networks";
+
+        //        folder = true;
+
+        //        lazy = true;
+
+        //        data["is_global_network"] = true;
+        //        //data["is_root"] = true;
+        //    }
+        //}
+
+
+
+        //TODO: maybe have separate method for filter/discover/etc.
 
 
 
