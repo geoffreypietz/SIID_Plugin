@@ -369,7 +369,7 @@ namespace HSPI_SIID_ModBusDemo
                     }
                 case ("Scratchpad")://????
                     {
-                        return "Scratchpad options are available on the SIID plugin configuration page";
+                        return Instance.scrPage.BuildScratchDeviceTab(dvRef); 
                     }
 
 
