@@ -274,6 +274,9 @@ namespace HSPI_SIID_ModBusDemo
                 Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
 
 
+                Instance.host.RegisterPage("file", Util.IFACE_NAME, Instance.name);
+
+
                 //Figure out these ones
 
                 // Instance.host.RegisterPage(MainSiidPageName+"SIIDConfPage", Util.IFACE_NAME, Instance.name); //Need unique pagenames for each instance?
@@ -478,6 +481,15 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.bacnetDataService.GetData(queryString);
 
             }
+
+            else if (pageName == "file")
+            {
+
+                //return Instance.bacnetDataService.GetData(queryString);
+
+            }
+
+
        
 
             return "page not registered";

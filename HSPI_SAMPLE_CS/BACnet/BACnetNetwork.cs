@@ -54,23 +54,14 @@ namespace HSPI_SIID.BACnet
 
         public BACnetTreeNode GetTreeNode()
         {
-            return new TreeNode(this);
+            var tn = new BACnetTreeNode();
+            tn.title = this.IpAddress;
+            tn.lazy = true;
+            tn.data["ip_address"] = this.IpAddress;
+            return tn;
         }
 
 
-
-        [Serializable]
-        public class TreeNode : BACnetTreeNode
-        {
-            public TreeNode(BACnetNetwork bacnetNetwork) //: base(parent)
-            {
-                title = bacnetNetwork.IpAddress;
-
-                lazy = true;
-
-                data["ip_address"] = bacnetNetwork.IpAddress;
-            }
-        }
 
 
 

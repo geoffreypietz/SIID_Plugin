@@ -8,17 +8,35 @@ namespace HSPI_SIID.BACnet
     [Serializable]
     public class BACnetTreeNode
     {
-        public bool lazy = false;
+        private bool _mLazy = false;
 
-        public bool folder = false;
+        public bool lazy {
+            get { return _mLazy; }
+            set {
+                if (value)
+                    children = null;
+                _mLazy = value;
+        } }
 
-        public String title;
+        public bool folder { get; set; }
+
+        public String title { get; set; }
 
         //public abstract Dictionary<String, Object> data();
 
-        public Dictionary<String, Object> data = new Dictionary<String, Object>();
+        public Dictionary<String, Object> data { get; set; }
 
-        public List<BACnetTreeNode> children = new List<BACnetTreeNode>();
+        public List<BACnetTreeNode> children { get; set; }
+
+
+        public BACnetTreeNode()
+        {
+            lazy = false;
+            folder = false;
+            data = new Dictionary<String, Object>();
+            children = new List<BACnetTreeNode>();
+        }
+
 
         //[NonSerialized]
         //public BACnetTreeNode Parent;

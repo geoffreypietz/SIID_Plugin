@@ -151,6 +151,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="modbus_settingsPage_scrapdoc.html" />
+    <Content Include="ui.fancytree.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="ui.fancytree.min.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -164,32 +164,14 @@ namespace HSPI_SIID.BACnet
 
         public BACnetTreeNode GetTreeNode()
         {
-            return new TreeNode(this);
+            var tn = new BACnetTreeNode();
+            tn.children = null;
+            tn.CopyNodeData(this.BacnetDevice.GetTreeNode());
+            tn.data["object_type"] = (Int32)this.BacnetObjectId.Type;      //could have done string, probably...but Int is more consistent (it's the underlying type)
+            tn.data["object_instance"] = this.BacnetObjectId.Instance;
+            return tn;
         }
 
-
-
-        [Serializable]
-        public class TreeNode : BACnetTreeNode
-        {
-            public TreeNode(BACnetObject bacnetObject) //: base(parent)
-            {
-                title = bacnetObject.Name;   //should already be fetched by this point
-
-                folder = true;
-
-                //lazy = true;      //For now, no object sub-nodes.
-
-                children = null;
-
-                CopyNodeData(bacnetObject.BacnetDevice.GetTreeNode());
-
-                data["object_type"] = (Int32)bacnetObject.BacnetObjectId.Type;      //could have done string, probably...but Int is more consistent (it's the underlying type)
-                data["object_instance"] = bacnetObject.BacnetObjectId.Instance;
-
-
-            }
-        }
 
 
         public List<BACnetTreeNode> GetChildNodes()     //this one only works from within the application...or on discover/refresh button?

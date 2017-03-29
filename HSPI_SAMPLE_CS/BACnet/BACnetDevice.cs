@@ -83,28 +83,13 @@ namespace HSPI_SIID.BACnet
 
         public BACnetTreeNode GetTreeNode()
         {
-            return new TreeNode(this);
+            var tn = new BACnetTreeNode();
+            tn.title = "Device " + this.InstanceNumber + " - " + this.BacnetAddress.ToString();    //TODO: use device name instead?
+            tn.lazy = true;
+            tn.CopyNodeData(this.BacnetNetwork.GetTreeNode());
+            tn.data["device_instance"] = this.InstanceNumber;
+            return tn;
         }
-
-
-
-
-        [Serializable]
-        public class TreeNode : BACnetTreeNode
-        {
-            public TreeNode(BACnetDevice bacnetDevice) //: base()
-            {
-                title = "Device " + bacnetDevice.InstanceNumber + " - " + bacnetDevice.BacnetAddress.ToString();    //TODO: use device name instead?
-
-                lazy = true;
-
-                CopyNodeData(bacnetDevice.BacnetNetwork.GetTreeNode());
-
-                data["device_instance"] = bacnetDevice.InstanceNumber;
-
-            }
-        }
-
 
 
 

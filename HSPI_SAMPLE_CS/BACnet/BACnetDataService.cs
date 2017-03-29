@@ -55,7 +55,7 @@ namespace HSPI_SIID.BACnet
 
 
             if (post["is_root"] != null)
-                return jss.Serialize(BACnetGlobalNetwork.RootNode()); 
+                return jss.Serialize(new List<BACnetTreeNode>(){BACnetGlobalNetwork.RootNode()}); 
 
 
 

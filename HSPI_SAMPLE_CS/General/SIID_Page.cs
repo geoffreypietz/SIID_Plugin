@@ -966,20 +966,28 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append("<h3>Discover and add BACnet devices to Homeseer</h3>");
 
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "style='height:400px;'")); //, "style='display:none;'")
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
 
+                //var ftPath = System.Web.Hosting.HostingEnvironment.MapPath("~/jquery.fancytree-all.min.js");
+
+                //var ftPath = HttpContext.Current.Server.MapPath("~/jquery.fancytree-all.min.js");
+                //DiscoverTab.Append(String.Format("<script src='{0}' />", ftPath));
                 //var 
 
 
                 string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
-                string cssPath = Path.Combine(basePath, @"ui.fancytree.min.css");
+                string cssPath = Path.Combine(basePath, @"ui.fancytree.css");
                 String css = File.ReadAllText(cssPath);
                 DiscoverTab.Append("<style>");
                 DiscoverTab.Append(css);
                 DiscoverTab.Append("</style>");
+
+
+
+
 
                 string path = Path.Combine(basePath, @"jquery.fancytree-all.min.js");
                 String jsLib = File.ReadAllText(path);
@@ -999,6 +1007,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                             cache: false
                         },
 				
+
+
 	                  // Called when a lazy node is expanded for the first time:
 	                  lazyLoad: function(event, data){
 		                  var node = data.node;
@@ -1015,7 +1025,19 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 			                data: nodeData,
 			                cache: false
 		                  };
-	                  }
+	                  },
+
+
+                        loadChildren: function(event, data) {
+                            console.log(data.node);
+                            return;
+                            data.node.visit(function(subNode){
+                                if( subNode.isUndefined() && subNode.isExpanded() ) {
+                                    subNode.load();
+                                }
+                            });
+                        }
+
                 });
                 </script>	
                 ";
