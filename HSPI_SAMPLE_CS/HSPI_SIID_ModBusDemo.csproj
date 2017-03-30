@@ -105,6 +105,7 @@
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
     <Compile Include="General\javascriptBuilders.cs" />
+    <Compile Include="General\SiidDevice.cs" />
     <Compile Include="General\SIID_Page.cs" />
     <Compile Include="hspi.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
