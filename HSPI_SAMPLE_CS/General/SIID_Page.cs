@@ -611,22 +611,22 @@ namespace HSPI_SIID_ModBusDemo
 
         public void InitializeModbusGatewayTimers()
         {
-            List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>> ModbusGates = Instance.modPage.getAllGateways();
+            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
           
 
-            foreach (var GID in ModbusGates)
+            foreach (var Siid in ModbusGates)
             {
-                var Dev = GID.Item1;
-                var EDO = GID.Item2;
+            
+                var EDO = Siid.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                int Ref=GID.Item1.get_Ref(Instance.host);
+              
 
-                if (!PluginTimerDictionary.ContainsKey(Ref))
+                if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
                 {
 
-                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, GID, 10000, Convert.ToInt32(parts["Poll"]));
-                        Console.WriteLine("Starting Polling timer for gateway: " + GID);
-                        PluginTimerDictionary.Add(Ref, GateTimer);
+                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 10000, Convert.ToInt32(parts["Poll"]));
+                        Console.WriteLine("Starting Polling timer for gateway: " + Siid.Ref);
+                        PluginTimerDictionary.Add(Siid.Ref, GateTimer);
                 }
             }
 
