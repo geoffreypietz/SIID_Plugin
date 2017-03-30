@@ -33,54 +33,31 @@ namespace HSPI_SIID_ModBusDemo.Modbus
             Instance = instance;
             ModbusBuilder = new htmlBuilder("ModBusGatewayPage" + Instance.ajaxName);
 
-            UpdateGateList(getAllGateways());
+          //  UpdateGateList(getAllGateways());
 
         }
 
         htmlBuilder ModbusBuilder { get; set; }
-        public static List<KeyValuePair<int, string>> ModbusGates { get; set; }
+        public static List<SiidDevice> ModbusGates { get; set; }
 
 
-        public  int[] getAllGateways()
+        public List<SiidDevice> getAllGateways()
         {
 
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
-            List<int> ModbusGates = new List<int>();
-
-            //Scheduler.Classes.DeviceClass
-            var Dev = DevNum.GetNext();
-            while (Dev != null)
+            foreach (var Siid in Instance.Devices)
             {
-                try
+                var EDO = Siid.Extra;
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                string s = parts["Type"];
+                if (parts["Type"] == "Modbus Gateway")
                 {
-                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
-                   
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string s = parts["Type"];
-                    if (parts["Type"] == "Modbus Gateway")
-                    {
-                        if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString())&&(Dev.get_InterfaceInstance(Instance.host)==Instance.name)) //Then it's one of ours
-                        {
-                            ModbusGates.Add(Dev.get_Ref(Instance.host));
-                        }
-
-
-                    }
-                    //   if (parts["Type"] == "Modbus Device")
-                    //     {
-                    //        ModbusDevs.Add(Dev.get_Ref(Instance.host));
-                    //    }
+                    ModbusGates.Add(Siid);
 
                 }
-                catch
-                { //Going to throw tons of null ref errors. But thats expected. and bad programming I guess.
-
-                }
-                Dev = DevNum.GetNext();
-
-
             }
-            return ModbusGates.ToArray();
+                return ModbusGates;
+
+            
         }
 
         public string[] RegTypeArray = new string[] { "Discrete Input (RO)", "Coil (RW)", "Input Register (RO)", "Holding Register (RW)" };
@@ -449,7 +426,7 @@ public string GetReg(string instring)
             ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry", Int32.Parse(parts["RWRetry"])).print());
             ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime", Int32.Parse(parts["RWTime"])).print());
             ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay", Int32.Parse(parts["Delay"])).print());
-            ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
+        //    ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
             stb.Append(ModbusConfHtml.print());
         //    stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
             stb.Append("<br><br>"+ModbusBuilder.ShowMesbutton(dv + "_Test", "Test").print());
@@ -458,17 +435,6 @@ public string GetReg(string instring)
 
         }
 
-        public  void UpdateGateList(int[] ModGates)
-        {
-            ModbusGates = new List<KeyValuePair<int, string>>();
-            foreach (int ModGateID in ModGates)
-            {
-                Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(ModGateID);
-                ModbusGates.Add(new KeyValuePair<int, string>(ModGateID, newDevice.get_Name(Instance.host)));
-
-            }
-
-        }
 
         public string BuildModbusDeviceTab(int dv1)
         {
