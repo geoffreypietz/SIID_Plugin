@@ -966,15 +966,33 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append("<h3>Discover and add BACnet devices to Homeseer</h3>");
 
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "style='height:400px; width: 45%; float:left; '")); //, "style='display:none;'")
+
+                DiscoverTab.Append("<script>$('#BacDiscoverTab').css('height', '500px');</script>");
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetworkTree", "style='height:400px; width: 400px; float:left; margin-bottom: 10px; '")); //, "style='display:none;'")
+
+
+                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetworkTree", "style='height:370px; width: 100%;'")); //, "style='display:none;'")
+                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetProperties", "style='height:400px; width: 45%; float:left; '")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetProperties", "style='height:380px; width: 500px; float:left; margin-left: 10px;'")); //, "style='display:none;'")
 
                 DiscoverTab.Append("<table id='bacnetPropertiesTable'></table>");
 
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:70px; width: 100%; float:left; '"));
+
+                htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
+                DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Discover BACnet devices on network").print());//Gobutton redirects to a new page, not a postback thing
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
 
                 //var ftPath = System.Web.Hosting.HostingEnvironment.MapPath("~/jquery.fancytree-all.min.js");
@@ -1006,15 +1024,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
 
-
-
-                
-
-
-
-
-                htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
-                DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Discover BACnet devices on network").print());//Gobutton redirects to a new page, not a postback thing
 
                 htmlTable BACnetTable = BacnetBuilder.htmlTable();
                 if (Instance.bacPage.DiscoveredBACnetDevices.Count > 0)

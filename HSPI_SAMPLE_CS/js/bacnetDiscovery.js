@@ -1,6 +1,8 @@
 
 
-$('#bacnetGlobalNetwork').fancytree({
+var selectedTreeNode = null;
+
+$('#bacnetGlobalNetworkTree').fancytree({
 		source: {
 			url: dataServiceUrl, 
 			data: {type: 'root'},
@@ -10,6 +12,12 @@ $('#bacnetGlobalNetwork').fancytree({
 
 		click: function(event, data){
 		    
+
+		    if (selectedTreeNode === data.node)
+		        return;
+
+		    selectedTreeNode = data.node;
+
             //only if node wasn't selected before...
 
 		    $('#bacnetPropertiesTable').empty();
@@ -90,6 +98,8 @@ function buildHtmlTable(myList, selector) {
 
     var columns = addAllColumnHeaders(myList, selector);
 
+    var tBody$ = $('<tbody/>');
+
     for (var i = 0; i < myList.length; i++) {
         var row$ = $('<tr/>');
         for (var colIndex = 0; colIndex < columns.length; colIndex++) {
@@ -97,10 +107,35 @@ function buildHtmlTable(myList, selector) {
             if (cellValue == null) cellValue = "";
             row$.append($('<td/>').html(cellValue));
         }
-        $(selector).append(row$);
+        $(tBody$).append(row$);
     }
+    $(selector).append(tBody$);
 
-    $(selector).dataTable();
+
+    //$(selector).DataTable({
+    //    "paging": false,
+    //    "ordering": false,
+    //    "info": false,
+    //    "bFilter": false
+    //});
+
+
+    //$(selector).dataTable({ bFilter: false, bInfo: false, bPaginate: false });
+
+    //$(selector).dataTable({ sDom: '<"H"lfr>t<"F"ip>' });
+
+
+
+    //$(selector).dataTable({ sDom: 't' });
+
+    $(selector).dataTable({ sDom: '<"H">t<"F">', bDestroy: true });
+
+
+
+
+    
+
+    
 }
 
 // Adds a header row to the table and returns the set of columns.
@@ -108,6 +143,7 @@ function buildHtmlTable(myList, selector) {
 // all records.
 function addAllColumnHeaders(myList, selector) {
     var columnSet = [];
+    var tHead$ = $('<thead/>');
     var headerTr$ = $('<tr/>');
 
     for (var i = 0; i < myList.length; i++) {
@@ -119,7 +155,9 @@ function addAllColumnHeaders(myList, selector) {
             }
         }
     }
-    $(selector).append(headerTr$);
+
+    tHead$.append(headerTr$);
+    $(selector).append(tHead$);
 
     return columnSet;
 }

@@ -194,23 +194,23 @@ namespace HSPI_SIID.BACnet
 
             var propertiesData = new List<Object>();
 
-            foreach (var bacnetProperty in RequiredProperties)
-            {
-                propertiesData.Add(new
-                {
-                    id = bacnetProperty.Value.Id,
-                    name = bacnetProperty.Value.Name,
-                    value = bacnetProperty.Value.BacnetValue.ToString()
-                });
-            }
+            //foreach (var bacnetProperty in RequiredProperties)
+            //{
+            //    propertiesData.Add(new
+            //    {
+            //        ID = bacnetProperty.Value.Id,
+            //        Name = bacnetProperty.Value.Name,
+            //        Value = bacnetProperty.Value.BacnetValue.ToString()
+            //    });
+            //}
 
 
-            foreach (var bacnetProperty in Properties)
+            foreach (var bacnetProperty in BacnetProperties)
             {
-                propertiesData.Add(new { 
-                    id = bacnetProperty.Value.Id,
-                    name = bacnetProperty.Value.Name,
-                    value = bacnetProperty.Value.BacnetValue.ToString()
+                propertiesData.Add(new {
+                    ID = bacnetProperty.Value.Id,
+                    Name = bacnetProperty.Value.Name,
+                    Value = bacnetProperty.Value.BacnetValue.ToString()
                 });
             }
 
@@ -298,7 +298,7 @@ namespace HSPI_SIID.BACnet
 
 
         [DataMember]
-        public List<KeyValuePair<BacnetPropertyIds, BACnetProperty>> Properties = new List<KeyValuePair<BacnetPropertyIds, BACnetProperty>>();
+        public List<KeyValuePair<BacnetPropertyIds, BACnetProperty>> BacnetProperties = new List<KeyValuePair<BacnetPropertyIds, BACnetProperty>>();
 
 
 
@@ -333,7 +333,7 @@ namespace HSPI_SIID.BACnet
                                                                           BacnetPropertyIds.PROP_MAX_PRES_VALUE, 
                                                                           BacnetPropertyIds.PROP_RESOLUTION, 
                                                                           BacnetPropertyIds.PROP_COV_INCREMENT, 
-                                                                          BacnetPropertyIds.PROP_NOTIFICATION_CLASS,                                                                          BacnetPropertyIds.PROP_NOTIFICATION_CLASS,
+                                                                          BacnetPropertyIds.PROP_NOTIFICATION_CLASS,
                                                                           BacnetPropertyIds.PROP_HIGH_LIMIT,
                                                                           BacnetPropertyIds.PROP_LOW_LIMIT,
                                                                           BacnetPropertyIds.PROP_DEADBAND,
@@ -433,10 +433,43 @@ namespace HSPI_SIID.BACnet
 
 
 
-            Name = RequiredProperties[BacnetPropertyIds.PROP_OBJECT_NAME].BacnetValue.Value.ToString();
+            //Name = RequiredProperties[BacnetPropertyIds.PROP_OBJECT_NAME].BacnetValue.Value.ToString();
+
+
+            Name = GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME).BacnetValue.Value.ToString();;
 
 
         }
+
+
+
+        //public Boolean TryGetBacnetProperty(BacnetObjectId boi, out BACnetProperty bnp)
+        //{
+        //    bnp = null;
+        //    foreach (var kvp in BacnetProperties)
+        //    {
+        //        if (kvp.Key.Equals(boi))
+        //        {
+        //            bo = kvp.Value;
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
+
+
+
+        public BACnetProperty GetBacnetProperty(BacnetPropertyIds bpi)
+        {
+            foreach (var kvp in BacnetProperties)
+            {
+                if (kvp.Key.Equals(bpi))
+                    return kvp.Value;
+                
+            }
+            return null;
+        }
+
 
 
 
@@ -624,6 +657,18 @@ namespace HSPI_SIID.BACnet
         protected void FetchProperties()      //if NOT structured view, etc...right?
         {
 
+            //BacnetProperties.Clear();     //yes, just re-fetch required properties.       //don't want to wipe this out if an error occurs though
+
+
+            var oldProperties = new List<KeyValuePair<BacnetPropertyIds, BACnetProperty>>();
+            oldProperties.AddRange(BacnetProperties);
+
+
+
+
+            BacnetProperties.Clear();
+
+
 
             //TODO: if this is a structured view or object group, handle differently
             //A structured view has no Present Value prooperty
@@ -674,18 +719,26 @@ namespace HSPI_SIID.BACnet
                 }
                 else{
                     Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
-                    if (!ReadAllPropertiesBySingle())   //shouldn't really have to return and process values...just add in place.
-                    {
-                        //MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
+
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
-                return; //?
+
+                if (!ReadAllPropertiesBySingle())   //shouldn't really have to return and process values...just add in place.
+                {
+                    Trace.TraceWarning("Couldn't perform ReadProperty ... Trying ReadProperty instead");
+                    //MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                    BacnetProperties = oldProperties;
+                    return;
+                }
+
+                //return; //?
             }
+
+            //BacnetProperties = newProperties;   //TODO: release reference to BacnetProperties?
 
 
             ////TODO: process value list...?
@@ -823,20 +876,25 @@ namespace HSPI_SIID.BACnet
 
         private bool ReadAllPropertiesBySingle() //(out IList<BacnetReadAccessResult> value_list)
         {
+
+            FetchRequiredProperties();
+
             var comm = BacnetDevice.BacnetNetwork.BacnetClient;
             var adr = BacnetDevice.BacnetAddress;
             var object_id = BacnetObjectId;
 
             //lock (BACnetGlobalNetwork.objectsDescriptionDefault)  //read-only, should be fine
+            //lock (BACnetGlobalNetwork.objectsDescriptionExternal)
             if (BACnetGlobalNetwork.objectsDescriptionDefault == null)  // first call, Read Objects description from internal & optional external xml file
             {
                 StreamReader sr;
                 XmlSerializer xs = new XmlSerializer(typeof(List<BacnetObjectDescription>));
 
                 // embedded resource
-                System.Reflection.Assembly _assembly;
-                _assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                sr = new StreamReader(_assembly.GetManifestResourceStream("Yabe.ReadSinglePropDescrDefault.xml"));
+                //System.Reflection.Assembly _assembly;
+                //_assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                //sr = new StreamReader(_assembly.GetManifestResourceStream("ReadSinglePropDescrDefault.xml"));
+                sr = new StreamReader("ReadSinglePropDescrDefault.xml");
                 BACnetGlobalNetwork.objectsDescriptionDefault = (List<BacnetObjectDescription>)xs.Deserialize(sr);
 
                 try  // External optional file
@@ -972,12 +1030,12 @@ namespace HSPI_SIID.BACnet
 
             
 
-            if (BACnetObject.RequiredPropertyIds.Contains(id))
-                RequiredProperties[id] = prop;      //TODO: could put option to not overwrite, I guess...
-            else
-            {
+            //if (BACnetObject.RequiredPropertyIds.Contains(id))        //don't keep required properties separate anymore.....
+            //    RequiredProperties[id] = prop;      //TODO: could put option to not overwrite, I guess...
+            //else
+            //{
                 var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
-                Properties.Add(kvp);
+                BacnetProperties.Add(kvp);
             }
 
 
@@ -1006,5 +1064,4 @@ namespace HSPI_SIID.BACnet
 
 
 
-    }
 }

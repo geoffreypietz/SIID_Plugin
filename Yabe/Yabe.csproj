@@ -255,9 +255,11 @@
     <None Include="Resources\bell.png" />
     <None Include="Resources\date.png" />
     <Content Include="ReadSinglePropDescr.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="ReadSinglePropDescrDefault.xml" />
+    <Content Include="ReadSinglePropDescrDefault.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\error.png" />
     <None Include="Resources\book_open.png" />
     <None Include="Resources\database_go1.png" />

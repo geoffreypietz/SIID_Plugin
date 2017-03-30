@@ -229,18 +229,31 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public Boolean TryGetBacnetObject(BacnetObjectId boi, out BACnetObject bo)
+        //public Boolean TryGetBacnetObject(BacnetObjectId boi, out BACnetObject bo)
+        //{
+        //    bo = null;
+        //    foreach (var kvp in BacnetObjects)
+        //    {
+        //        if (kvp.Key.Equals(boi))
+        //        {
+        //            bo = kvp.Value;
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
+
+
+
+        public BACnetObject GetBacnetObject(BacnetObjectId boi)
         {
-            bo = null;
             foreach (var kvp in BacnetObjects)
             {
                 if (kvp.Key.Equals(boi))
-                {
-                    bo = kvp.Value;
-                    return true;
-                }
+                    return kvp.Value;
+                
             }
-            return false;
+            return null;
         }
 
 

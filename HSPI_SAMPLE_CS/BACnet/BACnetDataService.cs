@@ -41,7 +41,7 @@ namespace HSPI_SIID.BACnet
         {
 
             var jss = new JavaScriptSerializer();
-
+            var emptyResult = "[]";
 
             //TODO: if there are no keys supplied, just get all data.  
 
@@ -83,7 +83,7 @@ namespace HSPI_SIID.BACnet
             BACnetNetwork bacnetNetwork;
             string ipAddr = node["ip_address"];
             if (!Instance.bacnetGlobalNetwork.BacnetNetworks.TryGetValue(ipAddr, out bacnetNetwork))
-                return "[]";
+                return emptyResult;
 
             if (dataType == "network")
                 return jss.Serialize(bacnetNetwork.GetChildNodes());
@@ -91,7 +91,7 @@ namespace HSPI_SIID.BACnet
             uint deviceInstance = uint.Parse(node["device_instance"]);
             BACnetDevice bacnetDevice;
             if (!bacnetNetwork.BacnetDevices.TryGetValue(deviceInstance, out bacnetDevice))
-                return "[]";
+                return emptyResult;
 
 
             if (dataType == "device")
@@ -104,10 +104,14 @@ namespace HSPI_SIID.BACnet
 
 
             //uint deviceInstance = uint.Parse(post["device_instance"]);
-            BACnetObject bacnetObject;
-            if (!bacnetDevice.TryGetBacnetObject(bacnetObjectId, out bacnetObject))
-                return "[]";
+            //BACnetObject bacnetObject;
+            //if (!bacnetDevice.TryGetBacnetObject(bacnetObjectId, out bacnetObject))
+            //    return "[]";
 
+
+            var bacnetObject = bacnetDevice.GetBacnetObject(bacnetObjectId);
+            if (bacnetObject == null)
+                return emptyResult;
 
             if (dataType == "object")
                 return jss.Serialize(bacnetObject.GetProperties());

@@ -30,7 +30,7 @@ ul.fancytree-container {
   position: relative;
   height: 95%;
   overflow: auto;
-  width: 500px;
+  width: 95%;
 }
 ul.fancytree-container ul {
   padding: 0 0 0 16px;

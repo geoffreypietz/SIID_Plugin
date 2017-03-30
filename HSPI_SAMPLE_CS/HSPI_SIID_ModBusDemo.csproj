@@ -157,6 +157,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="modbus_settingsPage_scrapdoc.html" />
+    <Content Include="ReadSinglePropDescr.xml" />
+    <Content Include="ReadSinglePropDescrDefault.xml" />
+    <Content Include="YabeDeviceDescriptor.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Yabe\Yabe.csproj">
