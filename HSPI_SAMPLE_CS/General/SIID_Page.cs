@@ -963,7 +963,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 tab.tabTitle = "Discover BACnet devices";
                 tab.tabDIVID = "BacDiscoverTab";
                 StringBuilder DiscoverTab = new StringBuilder();
-                DiscoverTab.Append("<h3>Discover and add BACnet devices/objects to HomeSeer</h3>");
+                DiscoverTab.Append("<h3>Discover BACnet devices/objects</h3>");
 
 
 
@@ -982,7 +982,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryDetails", "style='height:380px; width: 700px; float:left; margin-left: 10px; overflow: auto; '")); //, "style='display:none;'")
 
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryFilters", "style='height:95%; width: 95%; float:left; margin-left: 10px; overflow: hidden; '")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryFilters", "style='height:300px; width: 95%; float:left; margin-left: 10px; overflow: hidden; '")); //, "style='display:none;'")
 
 
                 var bdp = "bacnetGlobalNetwork__";
@@ -1010,9 +1010,9 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append(bacnetDiscoveryFiltersHtml.print());
 
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:50px; width: 100%; float:left; margin-top:10px;'"));
-                htmlBuilder DiscoverBACNET = new htmlBuilder(); 
-                DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Refresh devices/objects").print());  
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryButtonFooter", "style='height:40px; width: 100%; float:left; margin-top:10px;'"));
+                htmlBuilder buttonBuilder = new htmlBuilder();  //no AJAX destination; instead, button behavior is controlled in JS
+                DiscoverTab.Append(buttonBuilder.Gobutton("discoverBACnetDevices", "Refresh devices/objects").print());  
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
 
@@ -1025,7 +1025,22 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryObjectProperties", "style='display: none; '")); //, "style='display:none;'")
 
 
+                
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("addBacnetDeviceButtonContainer", "style='height:40px; width: 100%; float:left; margin-top:10px; display: none'"));
+                DiscoverTab.Append(buttonBuilder.Gobutton("addBacnetDevice", "Add BACnet device to HomeSeer").print());
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("addBacnetObjectButtonContainer", "style='height:40px; width: 100%; float:left; margin-top:10px; display: none'"));
+                DiscoverTab.Append(buttonBuilder.Gobutton("addBacnetObject", "Add BACnet object to HomeSeer").print());
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetPropertiesTableContainer", "style='height:300px; width: 100%; float:left; margin-top:10px; overflow:auto; display: none'"));
                 DiscoverTab.Append("<table id='bacnetPropertiesTable'></table>");
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
 
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 

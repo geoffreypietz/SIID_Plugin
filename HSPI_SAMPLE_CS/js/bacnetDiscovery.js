@@ -17,18 +17,34 @@ $('#bacnetDiscoveryTree').fancytree({
 		        return;
 		    selectedTreeNode = data.node;
 
+		    console.log(selectedTreeNode);
 
-		    if (selectedTreeNode.data['type'] == "global_network") {
+		    var nodeType = selectedTreeNode.data['type'];
+
+		    if (nodeType == "global_network") {
 
 		        $('#bacnetDiscoveryObjectProperties').css('display', 'none');
 		        $('#bacnetDiscoveryFilters').css('display', 'block');
 
 		    } else {
 		        $('#bacnetDiscoveryFilters').css('display', 'none');
+		        $('#bacnetDiscoveryObjectProperties').css('display', 'block');      //even if empty.  May have "Add device" button
+		        
 		    }
 
 
 
+		    $('#addBacnetDeviceButtonContainer').css('display', 'none');
+		    $('#addBacnetObjectButtonContainer').css('display', 'none');
+		    if ((nodeType == "device") || ((nodeType == "object") && (selectedTreeNode.data["object_type"] === 8))) {   //device master node or device object node...
+		        $('#addBacnetDeviceButtonContainer').css('display', 'block');
+		    } else if (nodeType == "object") {
+		        $('#addBacnetObjectButtonContainer').css('display', 'block');
+		    }
+
+
+
+		    $('#bacnetPropertiesTable').empty();
 		    if (selectedTreeNode.data['type'] == "object") {
 
 		        $.ajax({
@@ -39,13 +55,15 @@ $('#bacnetDiscoveryTree').fancytree({
 		                returnData = JSON.parse(returnData);
 		                console.log(returnData);
 		                buildHtmlTable(returnData, '#bacnetPropertiesTable');
-		                $('#bacnetDiscoveryObjectProperties').css('display', 'block');
+		                $('#bacnetPropertiesTableContainer').css('display', 'block');
 		                //$("#bacnetGlobalNetwork").html(returnData);
 		                //alert("Load was performed.");
 		            }//,
 		            //dataType: dataType
 		        });
 
+		    } else {
+		        $('#bacnetPropertiesTableContainer').css('display', 'none');
 		    }
 
 		},
@@ -102,7 +120,7 @@ $('#bacnetDiscoveryTree').fancytree({
 // Builds the HTML Table out of myList.
 function buildHtmlTable(myList, selector) {
 
-    $(selector).empty();
+    $(selector).empty();    //just to be sure
 
     var columns = addAllColumnHeaders(myList, selector);
 
@@ -184,3 +202,65 @@ $('#discoverBACnetDevices').click(function() {
 
 
 });
+
+
+
+$('#addBacnetDevice').click(function () {
+
+
+    //var tree = $("#bacnetDiscoveryTree").fancytree("getTree");
+
+    //var allNetworksNode = tree.rootNode.children[0];
+
+    //allNetworksNode.resetLazy();
+    //allNetworksNode.load();
+
+
+});
+
+
+
+$('#addBacnetObject').click(function () {
+
+
+    //var tree = $("#bacnetDiscoveryTree").fancytree("getTree");
+
+    //var allNetworksNode = tree.rootNode.children[0];
+
+    //allNetworksNode.resetLazy();
+    //allNetworksNode.load();
+
+
+});
+
+
+//function nodeDevice(node) {
+
+//    if ((node.data["type"] == "device") || ((nodeType == "object") && (selectedTreeNode.data))) {
+//        $('#addBacnetDeviceButtonContainer').css('display', 'block');
+//    }
+
+
+
+//    if ((nodeType == "device") || ((nodeType == "object") && (selectedTreeNode.data))) {
+//        $('#addBacnetDeviceButtonContainer').css('display', 'block');
+//    }
+
+
+
+
+
+
+
+
+//}
+
+
+
+//function nodeObject(node) {
+
+
+
+//}
+
+

@@ -37,6 +37,9 @@ namespace HSPI_SIID.BACnet
 
 
 
+       //TODO: private methods for getting diff. objects....because we will need these
+
+
         public string GetData(String data)
         {
 

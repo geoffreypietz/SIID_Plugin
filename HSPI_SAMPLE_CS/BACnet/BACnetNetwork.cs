@@ -104,7 +104,7 @@ namespace HSPI_SIID.BACnet
 
             GetDevices();
 
-            System.Threading.Thread.Sleep(2000);    //wait for OnIam's...
+            System.Threading.Thread.Sleep(1000);    //wait for OnIam's...
         }
 
 
