@@ -963,13 +963,13 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 tab.tabTitle = "Discover BACnet devices";
                 tab.tabDIVID = "BacDiscoverTab";
                 StringBuilder DiscoverTab = new StringBuilder();
-                DiscoverTab.Append("<h3>Discover and add BACnet devices to Homeseer</h3>");
+                DiscoverTab.Append("<h3>Discover and add BACnet devices/objects to HomeSeer</h3>");
 
 
 
-                DiscoverTab.Append("<script>$('#BacDiscoverTab').css('height', '500px');</script>");
+                DiscoverTab.Append("<script>$('#BacDiscoverTab').css('height', '500px');</script>");    // since clsJQuery.Tab doesn't provide API for styling
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetworkTree", "style='height:400px; width: 400px; float:left; margin-bottom: 10px; '")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryTree", "style='height:400px; width: 400px; float:left; margin-bottom: 10px; '")); //, "style='display:none;'")
 
 
                 //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetworkTree", "style='height:370px; width: 100%;'")); //, "style='display:none;'")
@@ -979,20 +979,63 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetProperties", "style='height:380px; width: 500px; float:left; margin-left: 10px;'")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryDetails", "style='height:380px; width: 700px; float:left; margin-left: 10px; overflow: auto; '")); //, "style='display:none;'")
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryFilters", "style='height:95%; width: 95%; float:left; margin-left: 10px; overflow: hidden; '")); //, "style='display:none;'")
+
+
+                var bdp = "bacnetGlobalNetwork__";
+
+                htmlTable bacnetDiscoveryFiltersHtml = BacnetBuilder.htmlTable();
+
+
+                bacnetDiscoveryFiltersHtml.addT("Network Settings");
+
+                bacnetDiscoveryFiltersHtml.add("IP Addresses:", BacnetBuilder.radioButton(bdp + "filter_ip_address",
+                    new string[] { "All", "Filter by IP Address (below)" }, 0).print());
+                bacnetDiscoveryFiltersHtml.add("Selected IP:", BacnetBuilder.stringInput(bdp + "selected_ip_address", "").print());
+                bacnetDiscoveryFiltersHtml.add("UDP Port:", BacnetBuilder.stringInput(bdp + "udp_port", "BAC0").print());
+
+
+                bacnetDiscoveryFiltersHtml.addT("Device Settings");
+
+                bacnetDiscoveryFiltersHtml.add("Device Instances:", BacnetBuilder.radioButton(bdp + "filter_device_instance",
+                    new string[] { "All", "Filter by Instance Number (below)" }, 0).print());
+                bacnetDiscoveryFiltersHtml.add("Device Instance Min.:", BacnetBuilder.numberInput(bdp + "device_instance_min", 0).print());
+                bacnetDiscoveryFiltersHtml.add("Device Instance Max.:", BacnetBuilder.numberInput(bdp + "device_instance_max", 4194303).print());
+
+
+
+                DiscoverTab.Append(bacnetDiscoveryFiltersHtml.print());
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:50px; width: 100%; float:left; margin-top:10px;'"));
+                htmlBuilder DiscoverBACNET = new htmlBuilder(); 
+                DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Refresh devices/objects").print());  
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetDiscoveryObjectProperties", "style='display: none; '")); //, "style='display:none;'")
+
 
                 DiscoverTab.Append("<table id='bacnetPropertiesTable'></table>");
 
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
-
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:70px; width: 100%; float:left; '"));
-
-                htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
-                DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Discover BACnet devices on network").print());//Gobutton redirects to a new page, not a postback thing
-
-
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+
+                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:70px; width: 100%; float:left; '"));
+                //htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
+                //DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Refresh devices/objects").print());//Gobutton redirects to a new page, not a postback thing
+                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
 
                 //var ftPath = System.Web.Hosting.HostingEnvironment.MapPath("~/jquery.fancytree-all.min.js");
@@ -1060,9 +1103,30 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 tab.tabTitle = "Configuration";
                 tab.tabDIVID = "BACnetConfTab";
 
+
+
+
+
+
+
+
                 htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
                 BACnetConfigTable.add(" Configuration:");
-                BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
+
+
+                BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
+
+
+
+                selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
+                BACnetConfigTable.add(" Log Level:", loglevel.print());
+                checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
+                BACnetConfigTable.add(" Log To File:", logTF.print());
+
+
+
+
+                //BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
                 ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
 
 

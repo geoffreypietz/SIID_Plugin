@@ -9,7 +9,7 @@ namespace HSPI_SIID_ModBusDemo
     public class htmlBuilder //interface for the html buidling functions, to enable one to set the AJax destination
     {
         string AjaxPostDestination = "";
-        public htmlBuilder(string Ajax)
+        public htmlBuilder(string Ajax = "")
         {
             AjaxPostDestination = Ajax;
 
@@ -413,7 +413,12 @@ console.log(theData);
            //  html = prescript+@"
            html=@"
 <button type = 'submit' id = '" + id + @"'  class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'>
-<a class='ui-button-text' href=/"+AjaxPostDestination+ @"><span  class='ui-button-tex'>" + label + @"</span></a></button>";
+<a class='ui-button-text' ";
+            
+            if (!String.IsNullOrEmpty(AjaxPostDestination))
+                html += "href='/"+AjaxPostDestination+"' ";
+            
+            html += "><span  class='ui-button-tex'>" + label + @"</span></a></button>";
 
         }
 

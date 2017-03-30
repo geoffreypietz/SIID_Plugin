@@ -66,6 +66,7 @@ namespace HSPI_SIID.BACnet
 
                 Instance.bacnetGlobalNetwork = new BACnetGlobalNetwork(
                     this.Instance,
+                    Boolean.Parse(node["filter_ip_address"]),
                     node["selected_ip_address"],
                     node["udp_port"] ?? "BAC0",
                     Boolean.Parse(node["filter_device_instance"] ?? "false"),

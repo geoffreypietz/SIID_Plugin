@@ -2,7 +2,7 @@
 
 var selectedTreeNode = null;
 
-$('#bacnetGlobalNetworkTree').fancytree({
+$('#bacnetDiscoveryTree').fancytree({
 		source: {
 			url: dataServiceUrl, 
 			data: {type: 'root'},
@@ -15,39 +15,38 @@ $('#bacnetGlobalNetworkTree').fancytree({
 
 		    if (selectedTreeNode === data.node)
 		        return;
-
 		    selectedTreeNode = data.node;
 
-            //only if node wasn't selected before...
 
-		    $('#bacnetPropertiesTable').empty();
+		    if (selectedTreeNode.data['type'] == "global_network") {
+
+		        $('#bacnetDiscoveryObjectProperties').css('display', 'none');
+		        $('#bacnetDiscoveryFilters').css('display', 'block');
+
+		    } else {
+		        $('#bacnetDiscoveryFilters').css('display', 'none');
+		    }
 
 
-		    var nodeData = data.node.data;
 
-		    if (nodeData['type'] == "object") {
+		    if (selectedTreeNode.data['type'] == "object") {
 
 		        $.ajax({
 		            type: "POST",
 		            url: dataServiceUrl,
-		            data: nodeData,
+		            data: selectedTreeNode.data,
 		            success: function (returnData) {
 		                returnData = JSON.parse(returnData);
 		                console.log(returnData);
 		                buildHtmlTable(returnData, '#bacnetPropertiesTable');
+		                $('#bacnetDiscoveryObjectProperties').css('display', 'block');
 		                //$("#bacnetGlobalNetwork").html(returnData);
 		                //alert("Load was performed.");
 		            }//,
 		            //dataType: dataType
 		        });
 
-		    } else {
-
-		        
 		    }
-
-
-
 
 		},
 
@@ -59,13 +58,22 @@ $('#bacnetGlobalNetworkTree').fancytree({
 
 			if (nodeData.type == 'global_network')
 			{
-                //TODO: 'filter_ip_address'
+			    var bgn = 'bacnetGlobalNetwork__';
 
-			    nodeData['selected_ip_address'] = $('#bacnetGlobalNetwork__selected_ip_address').val();     //Text: "Filter by Network IP address":,  "Filter by 
-			    nodeData['udp_port'] = $('#bacnetGlobalNetwork__udp_port').val();
-			    nodeData['filter_device_instance'] = $('#bacnetGlobalNetwork__filter_device_instance').val();  //TODO: use checkbox?
-			    nodeData['device_instance_min'] = $('#bacnetGlobalNetwork__device_instance_min').val();
-			    nodeData['device_instance_max'] = $('#bacnetGlobalNetwork__device_instance_max').val();
+			    //console.log($('input:radio[name=' + bgn + 'filter_ip_address]:checked').val());
+			    //console.log($('input:radio[name=' + bgn + 'filter_device_instance]:checked').val());
+
+			    nodeData['filter_ip_address'] = $('#' + bgn + 'filter_ip_address_1').is(':checked');
+			    nodeData['selected_ip_address'] = $('#' + bgn + 'selected_ip_address').val();
+			    nodeData['udp_port'] = $('#' + bgn + 'udp_port').val();
+
+			    //nodeData['filter_device_instance'] = ($('input:radio[name=' + bgn + 'filter_device_instance]:checked').val() !== 0);  //0 = all devices, 1 = filter
+			    nodeData['filter_device_instance'] = $('#' + bgn + 'filter_device_instance_1').is(':checked');
+			    nodeData['device_instance_min'] = $('#' + bgn + 'device_instance_min').val();
+			    nodeData['device_instance_max'] = $('#' + bgn + 'device_instance_max').val();
+
+			    console.log(nodeData);
+
 			}
 
 			data.result = {
@@ -128,7 +136,7 @@ function buildHtmlTable(myList, selector) {
 
     //$(selector).dataTable({ sDom: 't' });
 
-    $(selector).dataTable({ sDom: '<"H">t<"F">', bDestroy: true });
+    $(selector).dataTable({ sDom: '<"H">t<"F">', bDestroy: true, bPaginate: false });
 
 
 
@@ -161,3 +169,18 @@ function addAllColumnHeaders(myList, selector) {
 
     return columnSet;
 }
+
+
+
+$('#discoverBACnetDevices').click(function() {
+    
+
+    var tree = $("#bacnetDiscoveryTree").fancytree("getTree");
+
+    var allNetworksNode = tree.rootNode.children[0];
+
+    allNetworksNode.resetLazy();
+    allNetworksNode.load();
+
+
+});

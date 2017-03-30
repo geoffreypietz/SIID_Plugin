@@ -17,11 +17,12 @@ namespace HSPI_SIID.BACnet
     public class BACnetGlobalNetwork : IBACnetTreeDataObject
     {
 
-        public BACnetGlobalNetwork(InstanceHolder instance, String selectedIpAddress = null, String udpPort = "UDP0",
+        public BACnetGlobalNetwork(InstanceHolder instance, Boolean filterIpAddress = false, String selectedIpAddress = "", String udpPort = "UDP0",
             Boolean filterDeviceInstance = false, Int32 deviceInstanceMin = 0, Int32 deviceInstanceMax = 4194303)
         {
             this.Instance = instance;
 
+            this.FilterIpAddress = filterIpAddress;
             this.SelectedIpAddress = selectedIpAddress;
             this.UdpPort = udpPort;
             this.FilterDeviceInstance = filterDeviceInstance;
@@ -33,6 +34,8 @@ namespace HSPI_SIID.BACnet
 
         public InstanceHolder Instance { get; set; }
 
+
+        public Boolean FilterIpAddress = false;
 
         public String SelectedIpAddress = null;
 
@@ -183,7 +186,7 @@ namespace HSPI_SIID.BACnet
 
             foreach (String ipAddress in ipAddresses)
             {
-                if (String.IsNullOrEmpty(SelectedIpAddress) || (ipAddress == SelectedIpAddress))
+                if (!FilterIpAddress || (ipAddress == SelectedIpAddress))
                     BacnetNetworks.Add(ipAddress, new BACnetNetwork(this, ipAddress));
             }
 
