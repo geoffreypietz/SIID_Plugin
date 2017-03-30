@@ -71,23 +71,31 @@ namespace HSPI_SIID.BACnet
 
 
 
+
+
+
+
         public BACnetTreeNode GetTreeNode()
         {
-            return new TreeNode(this);
+            var tn = new BACnetTreeNode();
+            tn.title = this.TypeString;
+            tn.children = this.GetChildNodes();
+            tn.data["type"] = "object_type";
+            return tn;
         }
 
+        //[Serializable]
+        //public class TreeNode : BACnetTreeNode
+        //{
+        //    public TreeNode(BACnetObjectTypeGroup bacnetObjectTypeGroup)  //: base(parent)
+        //    {
+        //        title = bacnetObjectTypeGroup.TypeString;
 
-        [Serializable]
-        public class TreeNode : BACnetTreeNode
-        {
-            public TreeNode(BACnetObjectTypeGroup bacnetObjectTypeGroup)  //: base(parent)
-            {
-                title = bacnetObjectTypeGroup.TypeString;
-
-                lazy = false;
-                children = bacnetObjectTypeGroup.GetChildNodes();
-            }
-        }
+        //        lazy = false;
+        //        children = bacnetObjectTypeGroup.GetChildNodes();
+        //        data["type"] = "object_type";
+        //    }
+        //}
 
 
 

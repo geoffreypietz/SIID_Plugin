@@ -133,16 +133,52 @@ namespace HSPI_SIID.BACnet
 
             this.BacnetObject = bno;
             this.BacnetPropertyId = property_id;
+
+            this.Id = (Int32)property_id;
+
+            //this.BacnetPropertyId = 
+
+            SetName();
+
+
             this.arrayIndex = array_index;
 
 
             if (property_value.Value == null)
                 ReadProperty();
+            else
+                this.BacnetValue = property_value;
         }
 
 
 
+        private void SetName()
+        {
+
+            String ts = BacnetPropertyId.ToString();    //should just get numeric value if proprietary and outside of predefined alues.
+
+            if (ts.StartsWith("PROP_"))
+                ts = ts.Substring(5);   //else - proprietary...?  No, since it was already cast into BacnetObjectTypes enum.
+            //else
+            //    ts = "PROPRIETARY_(" + ts + ")";   //not sure if this handles it adequately, but will see...
+
+            String[] tw = ts.Split("_".ToCharArray());
+            String tsFinal = "";
+            foreach (String word in tw)
+                tsFinal += word[0].ToString().ToUpper() + word.Substring(1).ToLower() + " ";
+
+            tsFinal = tsFinal.TrimEnd();
+            this.Name = tsFinal;   
+
+        }
+
+
         private uint arrayIndex;
+
+
+        public String Name;
+
+        public Int32 Id;
 
 
 

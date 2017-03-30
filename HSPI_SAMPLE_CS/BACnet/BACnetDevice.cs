@@ -88,6 +88,7 @@ namespace HSPI_SIID.BACnet
             tn.lazy = true;
             tn.CopyNodeData(this.BacnetNetwork.GetTreeNode());
             tn.data["device_instance"] = this.InstanceNumber;
+            tn.data["type"] = "device";
             return tn;
         }
 
@@ -108,6 +109,24 @@ namespace HSPI_SIID.BACnet
 
             return childNodes;
         }
+
+
+
+
+        public static readonly BacnetObjectTypes[] SupportedObjectTypes = { 
+                                                                          BacnetObjectTypes.OBJECT_ANALOG_INPUT,
+                                                                          BacnetObjectTypes.OBJECT_ANALOG_OUTPUT,
+                                                                          BacnetObjectTypes.OBJECT_ANALOG_VALUE,
+                                                                          BacnetObjectTypes.OBJECT_BINARY_INPUT,
+                                                                          BacnetObjectTypes.OBJECT_BINARY_OUTPUT,
+                                                                          BacnetObjectTypes.OBJECT_BINARY_VALUE,
+                                                                          BacnetObjectTypes.OBJECT_DEVICE,
+                                                                          BacnetObjectTypes.OBJECT_EVENT_ENROLLMENT,
+                                                                          BacnetObjectTypes.OBJECT_MULTI_STATE_INPUT,
+                                                                          BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT,
+                                                                          BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS,
+                                                                          };
+
 
 
 
@@ -201,6 +220,8 @@ namespace HSPI_SIID.BACnet
 
         public void AddObject(BacnetObjectId boi, BACnetObject bo)
         {
+            if (!BACnetDevice.SupportedObjectTypes.Contains(boi.Type))
+                return;
             var kvp = new KeyValuePair<BacnetObjectId, BACnetObject>(boi, bo);
             BacnetObjects.Add(kvp);
         }

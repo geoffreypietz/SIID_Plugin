@@ -58,6 +58,7 @@ namespace HSPI_SIID.BACnet
             tn.title = this.IpAddress;
             tn.lazy = true;
             tn.data["ip_address"] = this.IpAddress;
+            tn.data["type"] = "network";
             return tn;
         }
 
@@ -103,7 +104,7 @@ namespace HSPI_SIID.BACnet
 
             GetDevices();
 
-            System.Threading.Thread.Sleep(5000);    //wait for OnIam's...
+            System.Threading.Thread.Sleep(2000);    //wait for OnIam's...
         }
 
 

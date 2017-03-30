@@ -165,10 +165,12 @@ namespace HSPI_SIID.BACnet
         public BACnetTreeNode GetTreeNode()
         {
             var tn = new BACnetTreeNode();
-            tn.children = null;
+            //tn.children = null;
+            tn.title = this.Name;
             tn.CopyNodeData(this.BacnetDevice.GetTreeNode());
             tn.data["object_type"] = (Int32)this.BacnetObjectId.Type;      //could have done string, probably...but Int is more consistent (it's the underlying type)
             tn.data["object_instance"] = this.BacnetObjectId.Instance;
+            tn.data["type"] = "object";
             return tn;
         }
 
@@ -182,6 +184,82 @@ namespace HSPI_SIID.BACnet
 
             return childNodes;
         }
+
+
+
+
+        public List<Object> GetProperties()
+        {
+            FetchProperties();
+
+            var propertiesData = new List<Object>();
+
+            foreach (var bacnetProperty in RequiredProperties)
+            {
+                propertiesData.Add(new
+                {
+                    id = bacnetProperty.Value.Id,
+                    name = bacnetProperty.Value.Name,
+                    value = bacnetProperty.Value.BacnetValue.ToString()
+                });
+            }
+
+
+            foreach (var bacnetProperty in Properties)
+            {
+                propertiesData.Add(new { 
+                    id = bacnetProperty.Value.Id,
+                    name = bacnetProperty.Value.Name,
+                    value = bacnetProperty.Value.BacnetValue.ToString()
+                });
+            }
+
+            return propertiesData;
+        }
+
+
+
+        //public Boolean TryGetProperty(BacnetObjectId boi, out BACnetObject bo)
+        //{
+        //    bo = null;
+        //    foreach (var kvp in BacnetObjects)
+        //    {
+        //        if (kvp.Key.Equals(boi))
+        //        {
+        //            bo = kvp.Value;
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
+
+
+
+        //[Serializable]
+        //public class BACnetPropertyData
+        //{
+        //    public bool folder { get; set; }
+
+        //    public String title { get; set; }
+
+        //    //public abstract Dictionary<String, Object> data();
+
+        //    public Dictionary<String, Object> data { get; set; }
+
+        //    public List<BACnetTreeNode> children { get; set; }
+
+
+        //    public BACnetPropertyData()
+        //    {
+        //        lazy = false;
+        //        folder = false;
+        //        data = new Dictionary<String, Object>();
+        //        children = new List<BACnetTreeNode>();
+        //    }
+
+
+
+        //}
 
 
 
@@ -237,6 +315,32 @@ namespace HSPI_SIID.BACnet
                                                                           BacnetPropertyIds.PROP_OBJECT_TYPE, 
                                                                           BacnetPropertyIds.PROP_OBJECT_IDENTIFIER,     //instance #
                                                                           BacnetPropertyIds.PROP_OBJECT_NAME };
+
+
+        public static readonly BacnetPropertyIds[] SupportedPropertyIds = {
+                                                                          BacnetPropertyIds.PROP_OBJECT_IDENTIFIER,    
+                                                                          BacnetPropertyIds.PROP_OBJECT_NAME,
+                                                                          BacnetPropertyIds.PROP_OBJECT_TYPE, 
+                                                                          BacnetPropertyIds.PROP_PRESENT_VALUE, 
+                                                                          BacnetPropertyIds.PROP_DESCRIPTION, 
+                                                                          BacnetPropertyIds.PROP_DEVICE_TYPE, 
+                                                                          BacnetPropertyIds.PROP_STATUS_FLAGS, 
+                                                                          BacnetPropertyIds.PROP_EVENT_STATE, 
+                                                                          BacnetPropertyIds.PROP_OUT_OF_SERVICE, 
+                                                                          BacnetPropertyIds.PROP_UPDATE_INTERVAL, 
+                                                                          BacnetPropertyIds.PROP_UNITS, 
+                                                                          BacnetPropertyIds.PROP_MIN_PRES_VALUE, 
+                                                                          BacnetPropertyIds.PROP_MAX_PRES_VALUE, 
+                                                                          BacnetPropertyIds.PROP_RESOLUTION, 
+                                                                          BacnetPropertyIds.PROP_COV_INCREMENT, 
+                                                                          BacnetPropertyIds.PROP_NOTIFICATION_CLASS,                                                                          BacnetPropertyIds.PROP_NOTIFICATION_CLASS,
+                                                                          BacnetPropertyIds.PROP_HIGH_LIMIT,
+                                                                          BacnetPropertyIds.PROP_LOW_LIMIT,
+                                                                          BacnetPropertyIds.PROP_DEADBAND,
+                                                                          BacnetPropertyIds.PROP_LIMIT_ENABLE,
+                                                                          BacnetPropertyIds.PROP_EVENT_ENABLE,
+                                                                          BacnetPropertyIds.PROP_NOTIFY_TYPE,
+                                                                          };
 
 
 
@@ -549,6 +653,9 @@ namespace HSPI_SIID.BACnet
                     {
 
                         var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
+
+
+
                         var val = p_value.value[0];
 
 
@@ -852,10 +959,17 @@ namespace HSPI_SIID.BACnet
             //var id = BacnetPropertyIds.PROP_OBJECT_IDENTIFIER;
             //var val = new BacnetValue(object_id);
 
+
+            if (!BACnetObject.SupportedPropertyIds.Contains(id))
+                return;
+
             var prop = new BACnetProperty(this, id, val);
 
 
             //if id == BacnetPropertyIds.
+
+
+
             
 
             if (BACnetObject.RequiredPropertyIds.Contains(id))

@@ -46,71 +46,71 @@ namespace HSPI_SIID.BACnet
             //TODO: if there are no keys supplied, just get all data.  
 
 
-            System.Collections.Specialized.NameValueCollection post = null;
-            post = System.Web.HttpUtility.ParseQueryString(data);
+            System.Collections.Specialized.NameValueCollection node = null;
+            node = System.Web.HttpUtility.ParseQueryString(data);
 
+
+            var dataType = node["type"];
 
             //Get data for root node ("All networks") - to which filters are attached
 
 
 
-            if (post["is_root"] != null)
-                return jss.Serialize(new List<BACnetTreeNode>(){BACnetGlobalNetwork.RootNode()}); 
+            if (dataType == "root")
+                return jss.Serialize(new List<BACnetTreeNode>(){BACnetGlobalNetwork.RootNode()});
 
 
 
-            if (Instance.bacnetGlobalNetwork == null || (post["is_global_network"] != null))    //if they re-filtered
+            if (Instance.bacnetGlobalNetwork == null || dataType == "global_network")    //if they re-filtered
             {
 
                 Instance.bacnetGlobalNetwork = new BACnetGlobalNetwork(
-                    this.Instance, 
-                    post["selected_ip_address"], 
-                    post["udp_port"] ?? "BAC0",
-                    Boolean.Parse(post["filter_device_instance"] ?? "false"),
-                    Int32.Parse(post["device_instance_min"] ?? "0"),
-                    Int32.Parse(post["device_instance_max"] ?? "4194303"));
+                    this.Instance,
+                    node["selected_ip_address"],
+                    node["udp_port"] ?? "BAC0",
+                    Boolean.Parse(node["filter_device_instance"] ?? "false"),
+                    Int32.Parse(node["device_instance_min"] ?? "0"),
+                    Int32.Parse(node["device_instance_max"] ?? "4194303"));
             }
 
 
-            if (post["is_global_network"] != null)
+            if (dataType == "global_network")
                 return jss.Serialize(Instance.bacnetGlobalNetwork.GetChildNodes());
 
 
             //Get data for a network node (one IP address)
             
             BACnetNetwork bacnetNetwork;
-            string ipAddr = post["ip_address"];
+            string ipAddr = node["ip_address"];
             if (!Instance.bacnetGlobalNetwork.BacnetNetworks.TryGetValue(ipAddr, out bacnetNetwork))
                 return "[]";
 
-            if (post["device_instance"] == null)
+            if (dataType == "network")
                 return jss.Serialize(bacnetNetwork.GetChildNodes());
 
-            uint deviceInstance = uint.Parse(post["device_instance"]);
+            uint deviceInstance = uint.Parse(node["device_instance"]);
             BACnetDevice bacnetDevice;
             if (!bacnetNetwork.BacnetDevices.TryGetValue(deviceInstance, out bacnetDevice))
                 return "[]";
 
 
-            if (post["object_type"] == null)
-                return jss.Serialize(bacnetNetwork.GetChildNodes());
+            if (dataType == "device")
+                return jss.Serialize(bacnetDevice.GetChildNodes());
 
 
-
-            return "[]";
-
-
-
-            BacnetObjectTypes objType = (BacnetObjectTypes)(Int32.Parse(post["object_type"]));
-            UInt32 objInstance = UInt32.Parse(post["object_instance"]);
+            BacnetObjectTypes objType = (BacnetObjectTypes)(Int32.Parse(node["object_type"]));
+            UInt32 objInstance = UInt32.Parse(node["object_instance"]);
             var bacnetObjectId = new BacnetObjectId(objType, objInstance);
-
 
 
             //uint deviceInstance = uint.Parse(post["device_instance"]);
             BACnetObject bacnetObject;
             if (!bacnetDevice.TryGetBacnetObject(bacnetObjectId, out bacnetObject))
                 return "[]";
+
+
+            if (dataType == "object")
+                return jss.Serialize(bacnetObject.GetProperties());
 
 
             //return jss.Serialize(bacnetObject.GetChildNodes());
@@ -146,7 +146,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-            //return "";
+            return "";
 
         }
 

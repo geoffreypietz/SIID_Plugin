@@ -528,7 +528,7 @@ namespace HSPI_SIID_ModBusDemo
 
             }
 
-                //this is actually coming in as a GET request, so this code is not reached...
+            
             else if (pageName == Instance.bacnetDataService.PageName)
             {
 

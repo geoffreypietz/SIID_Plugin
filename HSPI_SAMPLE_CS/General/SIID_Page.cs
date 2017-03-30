@@ -966,8 +966,15 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append("<h3>Discover and add BACnet devices to Homeseer</h3>");
 
 
-                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "style='height:400px;'")); //, "style='display:none;'")
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetGlobalNetwork", "style='height:400px; width: 45%; float:left; '")); //, "style='display:none;'")
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetProperties", "style='height:400px; width: 45%; float:left; '")); //, "style='display:none;'")
+
+                DiscoverTab.Append("<table id='bacnetPropertiesTable'></table>");
+
+                DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
+
 
 
                 //var ftPath = System.Web.Hosting.HostingEnvironment.MapPath("~/jquery.fancytree-all.min.js");
@@ -979,71 +986,32 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                 string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
-                string cssPath = Path.Combine(basePath, @"ui.fancytree.css");
-                String css = File.ReadAllText(cssPath);
-                DiscoverTab.Append("<style>");
-                DiscoverTab.Append(css);
-                DiscoverTab.Append("</style>");
+
+                DiscoverTab.Append("<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css' />");
+                DiscoverTab.Append("<script type='text/javascript' src='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.js'></script>");
+
+
+                String ftCss = File.ReadAllText(Path.Combine(basePath, "js", "ui.fancytree.css"));
+                DiscoverTab.Append("<style>" + ftCss + "</style>");
+
+
+                String ftJs = File.ReadAllText(Path.Combine(basePath, "js", "jquery.fancytree-all.min.js"));
+                DiscoverTab.Append("<script>" + ftJs + "</script>");
+
+                DiscoverTab.Append(String.Format("<script>var dataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName)); 
+                //BacNet discovery needs to know this - this is where tree gets its data from
+
+                String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
+                DiscoverTab.Append("<script>" + bacnetDiscoveryJs + "</script>");
 
 
 
 
 
-                string path = Path.Combine(basePath, @"jquery.fancytree-all.min.js");
-                String jsLib = File.ReadAllText(path);
-                DiscoverTab.Append("<script>");
-                DiscoverTab.Append(jsLib);
-                DiscoverTab.Append("</script>");
+                
 
 
-                var treePlugin = @"
-                                <script>
-                var dataServiceUrl = '/" + Instance.bacnetDataService.PageName + @"';
-	
-                $('#bacnetGlobalNetwork').fancytree({
-                        source: {
-                            url: dataServiceUrl, 
-                            data: {is_root: true},
-                            cache: false
-                        },
-				
 
-
-	                  // Called when a lazy node is expanded for the first time:
-	                  lazyLoad: function(event, data){
-		                  var node = data.node;
-		                  var nodeData = node.data;
-		  
-		                  if (nodeData.is_root)
-		                  {
-			                  //TODO: fill in properties from filter.
-
-		                  }
-
-		                  data.result = {
-			                url: dataServiceUrl,
-			                data: nodeData,
-			                cache: false
-		                  };
-	                  },
-
-
-                        loadChildren: function(event, data) {
-                            console.log(data.node);
-                            return;
-                            data.node.visit(function(subNode){
-                                if( subNode.isUndefined() && subNode.isExpanded() ) {
-                                    subNode.load();
-                                }
-                            });
-                        }
-
-                });
-                </script>	
-                ";
-
-
-                DiscoverTab.Append(treePlugin);
 
                 htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
                 DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Discover BACnet devices on network").print());//Gobutton redirects to a new page, not a postback thing
