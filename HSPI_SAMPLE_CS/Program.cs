@@ -13,11 +13,36 @@ using HSCF.Communication.ScsServices.Service;
 using HSPI_SIID_ModBusDemo.Modbus;
 using HSPI_SIID.BACnet;
 using HSPI_SIID.ScratchPad;
+using HSPI_SIID.General;
 
 namespace HSPI_SIID_ModBusDemo
 {
+
+
     public class InstanceHolder
     {
+
+        private List<SiidDevice> GetDevices(InstanceHolder Instance) {
+            List<SiidDevice> AssociatedDevices = new List<SiidDevice>();
+
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+            var Dev = DevNum.GetNext();
+            while (Dev != null)
+            {
+                if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name))
+                {
+                    AssociatedDevices.Add(new SiidDevice(Instance,Dev));
+                
+                }
+
+
+
+            }
+
+                return AssociatedDevices;
+
+        }
+
         private static void client_Disconnected(object sender, System.EventArgs e)
         {
             Console.WriteLine("Disconnected from server - client");
@@ -36,7 +61,7 @@ namespace HSPI_SIID_ModBusDemo
             client = Client;
             callback = ClientCallback;
             host = Host;
-
+Devices = GetDevices(this);
             modPage = new ModbusDevicePage("ModbusDevicePage", this);
             scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
             
@@ -46,11 +71,13 @@ namespace HSPI_SIID_ModBusDemo
 
             bacnetDataService = new BACnetDataService("BACnetDataService", this);
 
+
             bacnetHomeSeerDevicePage = new BACnetHomeSeerDevicePage("BACnetHomeSeerDevicePage", this);
 
-            //bacnetGlobalNetwork = new BACnetGlobalNetwork(this);      //will be instantiated when user first gets data.
 
         }
+        public List<SiidDevice> Devices;
+
         public string name;
         public string ajaxName;
         public HSCF.Communication.ScsServices.Client.IScsServiceClient<IHSApplication> withEventsField_client;

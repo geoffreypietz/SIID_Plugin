@@ -611,26 +611,22 @@ namespace HSPI_SIID_ModBusDemo
 
         public void InitializeModbusGatewayTimers()
         {
-            List<int> ModbusGates = Instance.modPage.getAllGateways().ToList();
-            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
+            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
+          
 
-            foreach (int GID in ModbusGates)
+            foreach (var Siid in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
-                var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+            
+                var EDO = Siid.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+              
 
-                if (!PluginTimerDictionary.ContainsKey(Convert.ToInt32(GID)))
+                if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
                 {
 
-                    if (Dev.get_InterfaceInstance(Instance.host) == Instance.name)
-                    {
-                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, GID, 10000, Convert.ToInt32(parts["Poll"]));
-
-                        Console.WriteLine("Starting Polling timer for gateway: " + GID);
-                        PluginTimerDictionary.Add(Convert.ToInt32(GID), GateTimer);
-                    }
-                    
+                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 10000, Convert.ToInt32(parts["Poll"]));
+                        Console.WriteLine("Starting Polling timer for gateway: " + Siid.Ref);
+                        PluginTimerDictionary.Add(Siid.Ref, GateTimer);
                 }
             }
 
@@ -677,13 +673,13 @@ namespace HSPI_SIID_ModBusDemo
             StringBuilder sb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
 
-          List<int>  ModbusGates= Instance.modPage.getAllGateways().ToList();
-            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
+            List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>> ModbusGates = Instance.modPage.getAllGateways();
+            List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>> ModbusDevs = new List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>>();
 
-            foreach (int GID in ModbusGates)
+            foreach (var GID in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
-                 var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                var Dev = GID.Item1;
+                var EDO = GID.Item2;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 StringBuilder updatedList = new StringBuilder();
                 foreach (var subId in parts["LinkedDevices"].Split(','))
@@ -912,9 +908,9 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 ModbusConfHtml.add(" Configuration:");
                 ModbusConfHtml.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
                 selectorInput loglevel = ModbusBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" },"logL","Log Level", Instance.modbusLogLevel);
-                ModbusConfHtml.add(" Log Level:", loglevel.print());
+              //  ModbusConfHtml.add(" Log Level:", loglevel.print()); //unused currently
                 checkBoxInput logTF = ModbusBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
-                ModbusConfHtml.add(" Log To File:", logTF.print());
+             //   ModbusConfHtml.add(" Log To File:", logTF.print());
 
                  string ConfigTable = "<div id=confTab style='display:block;'>" + ModbusConfHtml.print() + "</div>";
 

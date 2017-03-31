@@ -37,6 +37,7 @@ namespace HSPI_SIID_ModBusDemo
       public string OurInstanceFriendlyName { get; set; }
 
 
+      
 
         public  string MainSiidPageName = "";
         
