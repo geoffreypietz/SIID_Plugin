@@ -8,7 +8,10 @@ using Scheduler;
 using HSPI_SIID_ModBusDemo;
 using HomeSeerAPI;
 using System.Web;
+using System.Web.Script.Serialization;
+using System.IO;
 using System.IO.BACnet;
+using System.Reflection;
 
 namespace HSPI_SIID.BACnet
 {
@@ -354,12 +357,28 @@ namespace HSPI_SIID.BACnet
         public string BuildBACnetDeviceTab(int dv1)
         {//Need to pull from device associated modbus information. Need to create when new device is made
 
-            return "";
+            //return "";
+
+
+
+            //or just return a JS initialization for dataTable which goes and grabs data from service based on node....
+
+
+            //******************************
+            //OK, so homeseer device will store BACnetNodeData even when network not on...
+
+
+            //also, is it worth using homeseer device to get data directly instead of nodeData?  NO, it's probably fine...
+
+
+
+            //TODO: can check if this is a master device or object device, and display accordingly...though it really shouldn't be much different...
+
 
             //TODO: can't let this get triggered for root node
 
 
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
+            Scheduler.Classes.DeviceClass device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
 
 
 
@@ -369,10 +388,30 @@ namespace HSPI_SIID.BACnet
                    //TODO: handle differently depending on if this represents BACnet device or object...
 
 
-            var EDO = newDevice.get_PlugExtraData_Get(Instance.host);
+            var EDO = device.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
-            var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+            var bacnetNodeDataString = parts["BACnetNodeData"];
+            var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+
+
+            BACnetObject bno;
+
+            if (bacnetNodeData["node_type"] == "device")
+            {
+                var d = this.Instance.bacnetDataService.GetBacnetDevice(bacnetNodeData, true);
+                bno = d.DeviceObject;
+            }
+            else
+            {
+                bno = this.Instance.bacnetDataService.GetBacnetObject(bacnetNodeData, true);
+            }
+
+            
+
+
+            //TODO: for now, return object.GetProperties() and format it into a table.  But ultimately, need to display widgets....
+            //Look at how it's done on modbus page - string inputs, numeric, drop-downs.  Are there any other types we need?
 
 
 
@@ -382,33 +421,47 @@ namespace HSPI_SIID.BACnet
 
 
 
-            if (Int32.Parse(bacnetNodeData["object_type"]) == BacnetObjectTypes.OBJECT_DEVICE.ToInt())
-            {
+            //if (Int32.Parse(bacnetNodeData["object_type"]) == BacnetObjectTypes.OBJECT_DEVICE.ToInt())
+            //{
 
 
 
-            }
-
-
-            if (bacnetNodeData["node_type"] == "device")
-            {
+            //}
 
 
 
-            }
 
 
-            string dv = "" + dv1 + "";
+            //string dv = "" + dv1 + "";
 
             StringBuilder stb = new StringBuilder();
-            stb.Append("SO HERE WE CAN PUT BACNET SPECIFIC STUFF<br>");
-            stb.Append("Generate it as HTML<br> THE CURRENT QUERY STRING IS:");
+            //stb.Append("SO HERE WE CAN PUT BACNET SPECIFIC STUFF<br>");
+            //stb.Append("Generate it as HTML<br> THE CURRENT QUERY STRING IS:");
 
+
+            stb.Append("<div><table id='bacnetObjProps'></table></div>");
+
+
+            string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+
+            stb.Append("<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css' />");
+            stb.Append("<script type='text/javascript' src='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.js'></script>");
+
+
+
+            String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
+            stb.Append("<script>" + tableJs + "</script>");
+
+            var props = new JavaScriptSerializer().Serialize(bno.GetProperties());
+            stb.Append(String.Format("<script>var propsList = {0};</script>", props));
+
+
+            stb.Append("<script>buildHtmlTable(propsList, '#bacnetObjProps');</script>");
 
                    //TODO: Go and find the object in the network...then connect to it and get its properties.  Should live connection be necessary?  Should it retain knowledge of properties from last time?
 
-
-            stb.Append(parts.ToString());
+            //stb.Append(parts.ToString());
             return stb.ToString();
 
         }

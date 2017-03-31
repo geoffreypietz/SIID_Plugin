@@ -242,24 +242,10 @@ function addBacnetObjectNode() {
         url: bacnetHomeSeerDevicePageUrl,
         data: bacnetObjectData,
         success: function (returnData) {
-
+            //redirect to HomeSeer device edit page (whether new or existing device)
             console.log(returnData);
-
             window.location.href = returnData;
 
-            return;
-
-            console.log(returnData);
-            return;
-
-            //really need to redirect, actually....
-
-            returnData = JSON.parse(returnData);
-            console.log(returnData);
-            buildHtmlTable(returnData, '#bacnetPropertiesTable');
-            $('#bacnetPropertiesTableContainer').css('display', 'block');
-            //$("#bacnetGlobalNetwork").html(returnData);
-            //alert("Load was performed.");
         }//,
         //dataType: dataType
     });

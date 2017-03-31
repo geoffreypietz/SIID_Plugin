@@ -74,9 +74,11 @@ namespace HSPI_SIID.BACnet
         public BACnetNetwork GetBacnetNetwork(NameValueCollection nodeData, Boolean refresh = false)
         {
             var bacnetGlobalNetwork = GetBacnetGlobalNetwork(nodeData, refresh);
+            if (refresh)    //if calling from API, children won't exist yet.
+                bacnetGlobalNetwork.Discover();
 
             BACnetNetwork bacnetNetwork; // = null;
-            bacnetGlobalNetwork.BacnetNetworks.TryGetValue(nodeData["ip_address"], out bacnetNetwork);
+            bacnetGlobalNetwork.BacnetNetworks.TryGetValue(nodeData["ip_address"], out bacnetNetwork);  //sometimes BacnetNetwork can be null, if discovery not initiated.
             return bacnetNetwork;
         }
 
@@ -87,6 +89,8 @@ namespace HSPI_SIID.BACnet
         {
 
             var bacnetNetwork = GetBacnetNetwork(nodeData, refresh);
+            if (refresh)
+                bacnetNetwork.Discover();
 
             BACnetDevice bacnetDevice;
             bacnetNetwork.BacnetDevices.TryGetValue(uint.Parse(nodeData["device_instance"]), out bacnetDevice);
@@ -98,8 +102,10 @@ namespace HSPI_SIID.BACnet
 
         public BACnetObject GetBacnetObject(NameValueCollection nodeData, Boolean refresh = false)
         {
-
             var bacnetDevice = GetBacnetDevice(nodeData, refresh);
+            if (refresh)
+                bacnetDevice.GetObjects();
+
 
             BacnetObjectTypes objType = (BacnetObjectTypes)(Int32.Parse(nodeData["object_type"]));
             UInt32 objInstance = UInt32.Parse(nodeData["object_instance"]);

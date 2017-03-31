@@ -142,7 +142,7 @@ namespace HSPI_SIID.BACnet
             dv = getExistingBacnetHomeseerDevice(bacnetNodeDataString, "device") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "device");
 
             if (nodeType == "object")
-                dv = getExistingBacnetHomeseerDevice(bacnetNodeDataString, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "object");
+                dv = getExistingBacnetHomeseerDevice(bacnetNodeDataString, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "object", dv);
 
 
 
@@ -234,7 +234,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)
+        private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
         {
 
             var dv = Instance.host.NewDeviceRef("BACnet Device");   //TODO: do I need to name it something else?  Maybe at least differentiate between device and object?
@@ -248,7 +248,20 @@ namespace HSPI_SIID.BACnet
 
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
 
-            newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
+
+
+            if (nodeType == "device")
+                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+            else
+            {
+                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
+                var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef((int)parentDv);
+                parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
+
+                newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
+            }
+
+            //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
             //Can do:
             /* Not_Set = 0,
             Indeterminate = 1,
@@ -268,11 +281,7 @@ namespace HSPI_SIID.BACnet
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
-
-
-
             newDevice.set_PlugExtraData_Set(Instance.host, EDO);
-
 
 
             var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();

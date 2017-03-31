@@ -152,7 +152,7 @@ namespace HSPI_SIID.BACnet
 
         //for this device, get its properties, and all object names
 
-        private void GetObjects()
+        public void GetObjects()
         {
             DeviceObject = null;
             BacnetObjects.Clear();

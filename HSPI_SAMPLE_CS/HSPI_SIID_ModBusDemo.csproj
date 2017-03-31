@@ -152,6 +152,9 @@
     <Content Include="js\bacnetDiscovery.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="js\bacnetPropertiesTable.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="js\jquery.fancytree-all.min.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
