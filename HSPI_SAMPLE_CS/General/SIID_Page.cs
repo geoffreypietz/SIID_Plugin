@@ -1074,7 +1074,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 String ftJs = File.ReadAllText(Path.Combine(basePath, "js", "jquery.fancytree-all.min.js"));
                 DiscoverTab.Append("<script>" + ftJs + "</script>");
 
-                DiscoverTab.Append(String.Format("<script>var dataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName)); 
+                DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName));
+                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevicePage.PageName)); 
                 //BacNet discovery needs to know this - this is where tree gets its data from
 
                 String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
@@ -1129,14 +1130,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 BACnetConfigTable.add(" Configuration:");
 
 
-                BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
-
-
-
-                selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
-                BACnetConfigTable.add(" Log Level:", loglevel.print());
-                checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
-                BACnetConfigTable.add(" Log To File:", logTF.print());
+                //TODO: .......................
+                //BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
+                //selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
+                //BACnetConfigTable.add(" Log Level:", loglevel.print());
+                //checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
+                //BACnetConfigTable.add(" Log To File:", logTF.print());
 
 
 

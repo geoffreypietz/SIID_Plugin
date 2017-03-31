@@ -4,8 +4,8 @@ var selectedTreeNode = null;
 
 $('#bacnetDiscoveryTree').fancytree({
 		source: {
-			url: dataServiceUrl, 
-			data: {type: 'root'},
+			url: bacnetDataServiceUrl, 
+			data: {node_type: 'root'},
 			cache: false
 		},
 	
@@ -19,7 +19,7 @@ $('#bacnetDiscoveryTree').fancytree({
 
 		    console.log(selectedTreeNode);
 
-		    var nodeType = selectedTreeNode.data['type'];
+		    var nodeType = selectedTreeNode.data['node_type'];
 
 		    if (nodeType == "global_network") {
 
@@ -36,7 +36,7 @@ $('#bacnetDiscoveryTree').fancytree({
 
 		    $('#addBacnetDeviceButtonContainer').css('display', 'none');
 		    $('#addBacnetObjectButtonContainer').css('display', 'none');
-		    if ((nodeType == "device") || ((nodeType == "object") && (selectedTreeNode.data["object_type"] === 8))) {   //device master node or device object node...
+		    if (isDeviceNodeSelected()) {   //device master node or device object node...
 		        $('#addBacnetDeviceButtonContainer').css('display', 'block');
 		    } else if (nodeType == "object") {
 		        $('#addBacnetObjectButtonContainer').css('display', 'block');
@@ -45,11 +45,11 @@ $('#bacnetDiscoveryTree').fancytree({
 
 
 		    $('#bacnetPropertiesTable').empty();
-		    if (selectedTreeNode.data['type'] == "object") {
+		    if (nodeType == "object") {
 
 		        $.ajax({
 		            type: "POST",
-		            url: dataServiceUrl,
+		            url: bacnetDataServiceUrl,
 		            data: selectedTreeNode.data,
 		            success: function (returnData) {
 		                returnData = JSON.parse(returnData);
@@ -95,7 +95,7 @@ $('#bacnetDiscoveryTree').fancytree({
 			}
 
 			data.result = {
-			    url: dataServiceUrl,
+			    url: bacnetDataServiceUrl,
 			    data: nodeData,
 			    cache: false
 			};
@@ -207,14 +207,7 @@ $('#discoverBACnetDevices').click(function() {
 
 $('#addBacnetDevice').click(function () {
 
-
-    //var tree = $("#bacnetDiscoveryTree").fancytree("getTree");
-
-    //var allNetworksNode = tree.rootNode.children[0];
-
-    //allNetworksNode.resetLazy();
-    //allNetworksNode.load();
-
+    addBacnetObjectNode();
 
 });
 
@@ -222,16 +215,70 @@ $('#addBacnetDevice').click(function () {
 
 $('#addBacnetObject').click(function () {
 
-
-    //var tree = $("#bacnetDiscoveryTree").fancytree("getTree");
-
-    //var allNetworksNode = tree.rootNode.children[0];
-
-    //allNetworksNode.resetLazy();
-    //allNetworksNode.load();
-
+    addBacnetObjectNode();
 
 });
+
+
+function addBacnetObjectNode() {
+    //to homeSeer, if not already present
+
+
+    var bacnetObjectData = selectedTreeNode.data;
+
+
+    if (isDeviceNodeSelected()) {
+        bacnetObjectData.node_type = 'device';      //even if they selected the device object, we want to indicate that this is a special case
+        bacnetObjectData.object_type = 8;           //these attributes weren't present before if they selected the device node directly...
+        bacnetObjectData.object_instance = bacnetObjectData.device_instance;
+    }
+
+
+
+    //TODO: maybe should get instead?
+
+    $.ajax({
+        type: "POST",
+        url: bacnetHomeSeerDevicePageUrl,
+        data: bacnetObjectData,
+        success: function (returnData) {
+
+            console.log(returnData);
+
+            window.location.href = returnData;
+
+            return;
+
+            console.log(returnData);
+            return;
+
+            //really need to redirect, actually....
+
+            returnData = JSON.parse(returnData);
+            console.log(returnData);
+            buildHtmlTable(returnData, '#bacnetPropertiesTable');
+            $('#bacnetPropertiesTableContainer').css('display', 'block');
+            //$("#bacnetGlobalNetwork").html(returnData);
+            //alert("Load was performed.");
+        }//,
+        //dataType: dataType
+    });
+
+
+
+
+}
+
+
+
+function isDeviceNodeSelected() {
+
+    var nodeType = selectedTreeNode.data.node_type;
+
+    return ((nodeType == "device") || ((nodeType == "object")  && (selectedTreeNode.data["object_type"] === 8)))
+
+}
+
 
 
 //function nodeDevice(node) {

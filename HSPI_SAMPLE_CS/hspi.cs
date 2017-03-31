@@ -273,6 +273,8 @@ namespace HSPI_SIID_ModBusDemo
 
                 Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
 
+                Instance.host.RegisterPage("BACnetHomeSeerDevicePage", Util.IFACE_NAME, Instance.name);
+
 
                 Instance.host.RegisterPage("file", Util.IFACE_NAME, Instance.name);
 
@@ -446,6 +448,9 @@ namespace HSPI_SIID_ModBusDemo
 	// ================================================================================================
 	public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
 	{
+        //TODO: do we need to add instance name to these pageNames?
+
+
 		//If you have more than one web page, use pageName to route it to the proper GetPagePlugin
 		Console.WriteLine("GetPagePlugin pageName: " + pageName +" "+queryString);
             // get the correct page
@@ -464,23 +469,46 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.modPage.MakeSubDeviceRedirect(pageName, user, userRights, queryString);
 
             }
-            else if (pageName == "discoverBACnetDevices")
+
+
+            //else if (pageName == "discoverBACnetDevices")
+            //{
+            //    return Instance.bacPage.DiscoverDevicesRedirect(pageName, user, userRights, queryString);
+
+            //}
+
+
+            else if (pageName == Instance.bacnetHomeSeerDevicePage.PageName)
             {
-                return Instance.bacPage.DiscoverDevicesRedirect(pageName, user, userRights, queryString);
+
+                return Instance.bacnetHomeSeerDevicePage.addOrEditBacnetHomeseerDevice(queryString);
+
+
+                //TODO: check if device already exists in homeseer.  If so, fine, just point to device config page anyway.
+
+
+                //var bacnetDevice = Instance.bacnetDataService.GetBacnetDevice(queryString);
+
+                //return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
 
             }
-            else if (pageName == "addBACnetDevice")
-            {
-                return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
 
-            }
+            //else if (pageName == "addBACnetObject")     //this comes from a separate button
+            //{
+
+            //    //TODO: check if device already exists in homeseer.  If so, fine, just point to device config page anyway.
+
+            //    return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
+
+            //}
 
             else if (pageName == Instance.bacnetDataService.PageName)
             {
 
-                return Instance.bacnetDataService.GetData(queryString);
+                return Instance.bacnetDataService.GetTreeData(queryString);
 
             }
+
 
             else if (pageName == "file")
             {
@@ -528,11 +556,27 @@ namespace HSPI_SIID_ModBusDemo
 
             }
 
+
+            else if (pageName == Instance.bacnetHomeSeerDevicePage.PageName)
+            {
+
+                return Instance.bacnetHomeSeerDevicePage.addOrEditBacnetHomeseerDevice(data);
+
+
+                //TODO: check if device already exists in homeseer.  If so, fine, just point to device config page anyway.
+
+
+                //var bacnetDevice = Instance.bacnetDataService.GetBacnetDevice(queryString);
+
+                //return Instance.bacPage.MakeBACnetRedirect(pageName, user, userRights, queryString);
+
+            }
+
             
             else if (pageName == Instance.bacnetDataService.PageName)
             {
 
-                return Instance.bacnetDataService.GetData(data);
+                return Instance.bacnetDataService.GetTreeData(data);
 
             }
 

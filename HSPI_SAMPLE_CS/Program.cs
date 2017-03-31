@@ -46,7 +46,9 @@ namespace HSPI_SIID_ModBusDemo
 
             bacnetDataService = new BACnetDataService("BACnetDataService", this);
 
-            bacnetGlobalNetwork = new BACnetGlobalNetwork(this);
+            bacnetHomeSeerDevicePage = new BACnetHomeSeerDevicePage("BACnetHomeSeerDevicePage", this);
+
+            //bacnetGlobalNetwork = new BACnetGlobalNetwork(this);      //will be instantiated when user first gets data.
 
         }
         public string name;
@@ -80,6 +82,7 @@ namespace HSPI_SIID_ModBusDemo
         public BACnetDevicePage bacPage;
         public ScratchpadDevicePage scrPage;
         public BACnetDataService bacnetDataService;
+        public BACnetHomeSeerDevicePage bacnetHomeSeerDevicePage;
         public BACnetGlobalNetwork bacnetGlobalNetwork;
 
     }

@@ -93,7 +93,7 @@ namespace HSPI_SIID.BACnet
             tn.lazy = true;
             //tn.children = null;
             //tn.data["is_global_network"] = true;
-            tn.data["type"] = "global_network";
+            tn.data["node_type"] = "global_network";
             return tn;
         }
 

@@ -71,7 +71,25 @@ namespace HSPI_SIID.BACnet
 
 
 
-        //public BACnetObject DeviceObject { get; set; }      //TODO: don't really need to nest these.
+        private BACnetObject _mDeviceObject = null;
+
+        public BACnetObject DeviceObject { 
+            
+            get {
+
+                if (_mDeviceObject == null)     //in case user tries to add device node before its children have been populated...
+                    GetObjects();
+                return _mDeviceObject;
+            }
+            
+             set {
+
+                 _mDeviceObject = value;
+             }
+        
+        
+        
+        }      //TODO: don't really need to nest these.
 
 
 
@@ -88,7 +106,7 @@ namespace HSPI_SIID.BACnet
             tn.lazy = true;
             tn.CopyNodeData(this.BacnetNetwork.GetTreeNode());
             tn.data["device_instance"] = this.InstanceNumber;
-            tn.data["type"] = "device";
+            tn.data["node_type"] = "device";
             return tn;
         }
 
@@ -136,7 +154,7 @@ namespace HSPI_SIID.BACnet
 
         private void GetObjects()
         {
-           // DeviceObject // = null;
+            DeviceObject = null;
             BacnetObjects.Clear();
 
 
@@ -202,6 +220,10 @@ namespace HSPI_SIID.BACnet
 
                         var bacnetObject = new BACnetObject(this, bobj_id);
 
+
+
+
+
                         AddObject(bobj_id, bacnetObject);
 
 
@@ -222,6 +244,10 @@ namespace HSPI_SIID.BACnet
         {
             if (!BACnetDevice.SupportedObjectTypes.Contains(boi.Type))
                 return;
+
+            if (boi.Type == BacnetObjectTypes.OBJECT_DEVICE)
+                this.DeviceObject = bo;
+
             var kvp = new KeyValuePair<BacnetObjectId, BACnetObject>(boi, bo);
             BacnetObjects.Add(kvp);
         }

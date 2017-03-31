@@ -113,7 +113,32 @@ namespace HSPI_SIID.BACnet
     //}
 
 
+        //public static readonly Dictionary<BacnetPropertyIds, BACnetPropertyDataType> PropertyDataTypes = new Dictionary<BacnetPropertyIds, BACnetPropertyDataType>(){
 
+        //                                                                  {BacnetPropertyIds.PROP_OBJECT_IDENTIFIER,    
+        //                                                                  BacnetPropertyIds.PROP_OBJECT_NAME,
+        //                                                                  BacnetPropertyIds.PROP_OBJECT_TYPE, 
+        //                                                                  BacnetPropertyIds.PROP_PRESENT_VALUE, 
+        //                                                                  BacnetPropertyIds.PROP_DESCRIPTION, 
+        //                                                                  BacnetPropertyIds.PROP_DEVICE_TYPE, 
+        //                                                                  BacnetPropertyIds.PROP_STATUS_FLAGS, 
+        //                                                                  BacnetPropertyIds.PROP_EVENT_STATE, 
+        //                                                                  BacnetPropertyIds.PROP_OUT_OF_SERVICE, 
+        //                                                                  BacnetPropertyIds.PROP_UPDATE_INTERVAL, 
+        //                                                                  BacnetPropertyIds.PROP_UNITS, 
+        //                                                                  BacnetPropertyIds.PROP_MIN_PRES_VALUE, 
+        //                                                                  BacnetPropertyIds.PROP_MAX_PRES_VALUE, 
+        //                                                                  BacnetPropertyIds.PROP_RESOLUTION, 
+        //                                                                  BacnetPropertyIds.PROP_COV_INCREMENT, 
+        //                                                                  BacnetPropertyIds.PROP_NOTIFICATION_CLASS,
+        //                                                                  BacnetPropertyIds.PROP_HIGH_LIMIT,
+        //                                                                  BacnetPropertyIds.PROP_LOW_LIMIT,
+        //                                                                  BacnetPropertyIds.PROP_DEADBAND,
+        //                                                                  BacnetPropertyIds.PROP_LIMIT_ENABLE,
+        //                                                                  BacnetPropertyIds.PROP_EVENT_ENABLE,
+        //                                                                  BacnetPropertyIds.PROP_NOTIFY_TYPE,
+
+        //};
 
 
 
