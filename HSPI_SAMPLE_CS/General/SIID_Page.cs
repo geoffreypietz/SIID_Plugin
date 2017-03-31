@@ -940,6 +940,16 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
                  jqtabs = new clsJQuery.jqTabs("tab2id", this.PageName + Instance.ajaxName);
+
+
+
+
+
+
+
+
+
+
                  tab = new clsJQuery.Tab();
                 tab.tabTitle = "Homeseer BACnet devices";
                 tab.tabDIVID = "bacNetDevTab";
@@ -948,12 +958,45 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 //have the ModBus Add device button
                 //Also list all associated modbus devices
 
-                DeviceTab.Append(AllBacnetDevices());
+                DeviceTab.Append(Instance.bacnetHomeSeerDevicePage.AllBacnetDevices());
 
                 tab.tabContent = DeviceTab.ToString();
 
                 jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
+
+
+
+
+                //tab.tabTitle = "Devices";
+                //tab.tabDIVID = "modBusDevTab";
+
+                ////have the ModBus Add device button
+                ////Also list all associated modbus devices
+                //htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate" + Instance.ajaxName);
+                //StringBuilder ModbusDevPage = new StringBuilder();
+                //ModbusDevPage.Append("<br><br><div style='display:block;'>");
+                //ModbusDevPage.Append(AddModbusDevBuilder.Gobutton("addModGateway", "Add Modbus IP Gateway").print());
+                //ModbusDevPage.Append("</div><br>");
+                //ModbusDevPage.Append(AllModbusDevices());
+                //tab.tabContent = ModbusDevPage.ToString();
+
+                //jqtabs.postOnTabClick = true;
+                //jqtabs.tabs.Add(tab);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 tab = new clsJQuery.Tab();
                 tab.tabTitle = "Discover BACnet devices";
@@ -1070,8 +1113,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 String ftJs = File.ReadAllText(Path.Combine(basePath, "js", "jquery.fancytree-all.min.js"));
                 DiscoverTab.Append("<script>" + ftJs + "</script>");
 
-                DiscoverTab.Append(String.Format("<script>var dataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName)); 
+                DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName));
+                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevicePage.PageName)); 
                 //BacNet discovery needs to know this - this is where tree gets its data from
+
+                String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
+                DiscoverTab.Append("<script>" + tableJs + "</script>");
 
                 String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
                 DiscoverTab.Append("<script>" + bacnetDiscoveryJs + "</script>");
@@ -1108,11 +1155,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
 
-                StringBuilder ConfigTab = new StringBuilder();
-
-                tab = new clsJQuery.Tab();
-                tab.tabTitle = "Configuration";
-                tab.tabDIVID = "BACnetConfTab";
 
 
 
@@ -1121,32 +1163,55 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
 
-                htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
-                BACnetConfigTable.add(" Configuration:");
-
-
-                BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
-
-
-
-                selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
-                BACnetConfigTable.add(" Log Level:", loglevel.print());
-                checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
-                BACnetConfigTable.add(" Log To File:", logTF.print());
 
 
 
 
-                //BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
-                ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
 
 
-                // string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
-                // tab.tabContent = TestStuff;
+                //StringBuilder ConfigTab = new StringBuilder();
 
-                tab.tabContent = ConfigTab.ToString();
-                jqtabs.postOnTabClick = false;
-                jqtabs.tabs.Add(tab);
+                //tab = new clsJQuery.Tab();
+                //tab.tabTitle = "Configuration";
+                //tab.tabDIVID = "BACnetConfTab";
+
+                //htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
+                //BACnetConfigTable.add(" Configuration:");
+
+
+                ////TODO: .......................
+                ////BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
+                ////selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
+                ////BACnetConfigTable.add(" Log Level:", loglevel.print());
+                ////checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
+                ////BACnetConfigTable.add(" Log To File:", logTF.print());
+
+
+
+
+                ////BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
+                //ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
+
+
+                //// string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
+                //// tab.tabContent = TestStuff;
+
+                //tab.tabContent = ConfigTab.ToString();
+                //jqtabs.postOnTabClick = false;
+                //jqtabs.tabs.Add(tab);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 stb.Append(jqtabs.Build());
 

@@ -58,7 +58,7 @@ namespace HSPI_SIID.BACnet
             tn.title = this.IpAddress;
             tn.lazy = true;
             tn.data["ip_address"] = this.IpAddress;
-            tn.data["type"] = "network";
+            tn.data["node_type"] = "network";
             return tn;
         }
 

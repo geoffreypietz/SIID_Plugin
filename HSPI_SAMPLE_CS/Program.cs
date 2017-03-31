@@ -61,7 +61,7 @@ namespace HSPI_SIID_ModBusDemo
             client = Client;
             callback = ClientCallback;
             host = Host;
-
+Devices = GetDevices(this);
             modPage = new ModbusDevicePage("ModbusDevicePage", this);
             scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
             
@@ -71,9 +71,9 @@ namespace HSPI_SIID_ModBusDemo
 
             bacnetDataService = new BACnetDataService("BACnetDataService", this);
 
-            bacnetGlobalNetwork = new BACnetGlobalNetwork(this);
-            Devices = GetDevices(this); //CPU use is high, so try to minimize iterating through devices
-            //Also minimize calls to and from the device's plugin extra data store. Keep parallel copy, maybe only update when change
+
+            bacnetHomeSeerDevicePage = new BACnetHomeSeerDevicePage("BACnetHomeSeerDevicePage", this);
+
 
         }
         public List<SiidDevice> Devices;
@@ -109,6 +109,7 @@ namespace HSPI_SIID_ModBusDemo
         public BACnetDevicePage bacPage;
         public ScratchpadDevicePage scrPage;
         public BACnetDataService bacnetDataService;
+        public BACnetHomeSeerDevicePage bacnetHomeSeerDevicePage;
         public BACnetGlobalNetwork bacnetGlobalNetwork;
 
     }
