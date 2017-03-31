@@ -395,6 +395,10 @@ namespace HSPI_SIID.BACnet
             var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
 
+            if (bacnetNodeData["node_type"] == "root")
+                return "";     //not sure how this is happening, but...
+
+
             BACnetObject bno;
 
             if (bacnetNodeData["node_type"] == "device")
@@ -508,25 +512,109 @@ namespace HSPI_SIID.BACnet
 
 
 
-            //Not using this since tree gets its own data from dataService...However, maybe we can put that stuff in here
-            public string DiscoverDevicesRedirect(string pageName, string user, int userRights, string GatewayID)
+
+
+            private bool belongsToThisInstance(Scheduler.Classes.DeviceClass Dev)
             {
-                StringBuilder stb = new StringBuilder();
-                BACnetDevicePage page = this;
-
-                //Is a placeholder now, so currently will populate DiscoveredBACnetDevices with a dumb stringlist of not much
-
-                DiscoveredBACnetDevices.Add("String 1");
-                DiscoveredBACnetDevices.Add("String 2");
-                DiscoveredBACnetDevices.Add("String 3");
-
-                // stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='history.back()'\" />");
-                stb.Append("<head><script type = 'text/javascript'>location.href = document.referrer;</script></head>>"); //Reloads previous page?
-                page.AddBody(stb.ToString());
-                return page.BuildPage();
+                return ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name));
 
 
             }
+
+
+
+            public List<Scheduler.Classes.DeviceClass> getParentBacnetDevices()
+            {
+                List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+
+                Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+                var Dev = DevNum.GetNext();
+                while (Dev != null)
+                {
+                    try
+                    {
+                        var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        string s = parts["Type"];
+                        var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                        if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "device")
+                            listOfDevices.Add(Dev);
+                    }
+                    catch
+                    {
+
+                    }
+                    Dev = DevNum.GetNext();
+
+
+                }
+                return listOfDevices;
+
+            }
+
+
+
+
+            public List<Scheduler.Classes.DeviceClass> getChildBacnetDevices(String bacnetDeviceInstance)
+            {
+                List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+
+                Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+                var Dev = DevNum.GetNext();
+                while (Dev != null)
+                {
+                    try
+                    {
+                        var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        string s = parts["Type"];
+                        var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                        if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
+                            listOfDevices.Add(Dev);
+                    }
+                    catch
+                    {
+
+                    }
+                    Dev = DevNum.GetNext();
+
+
+                }
+                return listOfDevices;
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            ////Not using this since tree gets its own data from dataService...However, maybe we can put that stuff in here
+            //public string DiscoverDevicesRedirect(string pageName, string user, int userRights, string GatewayID)
+            //{
+            //    StringBuilder stb = new StringBuilder();
+            //    BACnetDevicePage page = this;
+
+            //    //Is a placeholder now, so currently will populate DiscoveredBACnetDevices with a dumb stringlist of not much
+
+            //    DiscoveredBACnetDevices.Add("String 1");
+            //    DiscoveredBACnetDevices.Add("String 2");
+            //    DiscoveredBACnetDevices.Add("String 3");
+
+            //    // stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='history.back()'\" />");
+            //    stb.Append("<head><script type = 'text/javascript'>location.href = document.referrer;</script></head>>"); //Reloads previous page?
+            //    page.AddBody(stb.ToString());
+            //    return page.BuildPage();
+
+
+            //}
 
 
 

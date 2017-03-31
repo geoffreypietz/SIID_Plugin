@@ -944,6 +944,16 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
                  jqtabs = new clsJQuery.jqTabs("tab2id", this.PageName + Instance.ajaxName);
+
+
+
+
+
+
+
+
+
+
                  tab = new clsJQuery.Tab();
                 tab.tabTitle = "Homeseer BACnet devices";
                 tab.tabDIVID = "bacNetDevTab";
@@ -952,12 +962,45 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 //have the ModBus Add device button
                 //Also list all associated modbus devices
 
-                DeviceTab.Append(AllBacnetDevices());
+                DeviceTab.Append(Instance.bacnetHomeSeerDevicePage.AllBacnetDevices());
 
                 tab.tabContent = DeviceTab.ToString();
 
                 jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
+
+
+
+
+                //tab.tabTitle = "Devices";
+                //tab.tabDIVID = "modBusDevTab";
+
+                ////have the ModBus Add device button
+                ////Also list all associated modbus devices
+                //htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate" + Instance.ajaxName);
+                //StringBuilder ModbusDevPage = new StringBuilder();
+                //ModbusDevPage.Append("<br><br><div style='display:block;'>");
+                //ModbusDevPage.Append(AddModbusDevBuilder.Gobutton("addModGateway", "Add Modbus IP Gateway").print());
+                //ModbusDevPage.Append("</div><br>");
+                //ModbusDevPage.Append(AllModbusDevices());
+                //tab.tabContent = ModbusDevPage.ToString();
+
+                //jqtabs.postOnTabClick = true;
+                //jqtabs.tabs.Add(tab);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 tab = new clsJQuery.Tab();
                 tab.tabTitle = "Discover BACnet devices";

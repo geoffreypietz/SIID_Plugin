@@ -241,7 +241,9 @@ namespace HSPI_SIID.BACnet
             MakeBACnetGraphicsAndStatus(dv);
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
-            newDevice.set_Name(Instance.host, "BACnet Device " + dv); //Can include ID in the name cause why not
+
+
+            
 
             newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
             newDevice.set_Location(Instance.host, "System");
@@ -251,9 +253,13 @@ namespace HSPI_SIID.BACnet
 
 
             if (nodeType == "device")
+            {
+                newDevice.set_Name(Instance.host, "BACnet Device " + dv); //Can include ID in the name cause why not
                 newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+            }
             else
             {
+                newDevice.set_Name(Instance.host, "BACnet Object " + dv); //Can include ID in the name cause why not
                 newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
                 var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef((int)parentDv);
                 parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
@@ -387,56 +393,172 @@ namespace HSPI_SIID.BACnet
 
         
 
-        public string BuildBACnetDeviceTab(int dv1)
-        {//Need to pull from device associated modbus information. Need to create when new device is made
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
+
+        public string AllBacnetDevices()
+        {//gets list of all associated devices. 
+            //Get the collection of these devices which are bacnet
+            //build Devices table with the appropriate data displays
+
+            StringBuilder sb = new StringBuilder();
+            htmlBuilder BACnetBuilder = new htmlBuilder("BacnetDev" + Instance.ajaxName);
+
+            htmlTable bacnetConfHtml = BACnetBuilder.htmlTable(800);
+
+            List<Scheduler.Classes.DeviceClass> BACnetDevs = Instance.bacPage.getParentBacnetDevices().ToList();
+            //HERE
 
 
 
-                   //TODO: handle differently depending on if this represents BACnet device or object...
-
-
-            var EDO = newDevice.get_PlugExtraData_Get(Instance.host);
-            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-
-            var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
-
-
-            if (bacnetNodeData["node_type"] == "root")      //shouldn't happen, but...
-                return "";
-
-
-            if (Int32.Parse(bacnetNodeData["object_type"]) == BacnetObjectTypes.OBJECT_DEVICE.ToInt())
+            foreach (Scheduler.Classes.DeviceClass bacnetDevice in BACnetDevs)
             {
+                var EDO = bacnetDevice.get_PlugExtraData_Get(Instance.host);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+
+                var DevRef = bacnetDevice.get_Ref(Instance.host);
 
 
+                //Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
+
+
+
+                bacnetConfHtml.addDevHeader("BACnet Device");
+                bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, bacnetDevice.get_Image(Instance.host)).print() +
+                    BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
+                    + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
+                //  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
+                sb.Append(bacnetConfHtml.print());
+                bacnetConfHtml = BACnetBuilder.htmlTable(800);
+                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
+
+
+
+                List<Scheduler.Classes.DeviceClass> BACnetObjs = Instance.bacPage.getChildBacnetDevices(bacnetNodeData["device_instance"]).ToList(); ;
+
+
+
+                foreach (Scheduler.Classes.DeviceClass bacnetObject in BACnetObjs)
+                {
+
+                    var EDO2 = bacnetObject.get_PlugExtraData_Get(Instance.host);
+                    var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+
+                    bacnetConfHtml.addSubMain(BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print(),
+                           BACnetBuilder.MakeLink("/deviceutility?ref=" + bacnetObject.get_Ref(Instance.host) + "&edit=1", bacnetObject.get_Name(Instance.host)).print(),
+                           "", "", "");
+                           //Instance.modPage.GetReg(parts["RegisterType"]),
+                           //Instance.modPage.GetRet(parts["ReturnType"])
+
+                }
+
+
+
+
+
+                //bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, device.get_Image(Instance.host)).print() +
+                //    BACnetBuilder.MakeLink("/deviceutility?ref=" + device.get_Ref(Instance.host)
+                //    + "&edit=1", device.get_Name(Instance.host)).print(), EDO.GetNamed("SSIDKey").ToString());
 
             }
-
-
-            if (bacnetNodeData["node_type"] == "device")
-            {
+            sb.Append(bacnetConfHtml.print());
 
 
 
-            }
-
-
-            string dv = "" + dv1 + "";
-
-            StringBuilder stb = new StringBuilder();
-            stb.Append("SO HERE WE CAN PUT BACNET SPECIFIC STUFF<br>");
-            stb.Append("Generate it as HTML<br> THE CURRENT QUERY STRING IS:");
-
-
-                   //TODO: Go and find the object in the network...then connect to it and get its properties.  Should live connection be necessary?  Should it retain knowledge of properties from last time?
-
-
-            stb.Append(parts.ToString());
-            return stb.ToString();
-
+            return sb.ToString();
         }
 
+
+
+
+
+       
+       //maybe not
+        public string AllModbusDevices()
+        {//gets list of all associated devices. 
+            //Get the collection of these devices which are modbus gateways or devices
+            //build Gateway / Devices table with the appropriate links and the appropriate Add Device buttons
+            //returns the built html string
+            StringBuilder sb = new StringBuilder();
+            htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
+
+            List<int> ModbusGates = Instance.modPage.getAllGateways().ToList();
+            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
+
+            //foreach (int GID in ModbusGates)
+            //{
+            //    Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
+            //    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+            //    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            //    StringBuilder updatedList = new StringBuilder();
+            //    foreach (var subId in parts["LinkedDevices"].Split(','))
+            //    {
+            //        try
+            //        {
+            //            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
+            //            if (MDevice != null)
+            //            {
+            //                ModbusDevs.Add(MDevice);
+            //                updatedList.Append(subId + ",");
+            //            }
+            //        }
+            //        catch
+            //        {
+
+            //        }
+
+
+            //    }
+            //    parts["LinkedDevices"] = updatedList.ToString();
+            //    EDO.RemoveNamed("SSIDKey");
+            //    EDO.AddNamed("SSIDKey", parts.ToString());
+            //    Dev.set_PlugExtraData_Set(Instance.host, EDO);
+            //}
+
+            htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
+            sb.Append("<br>");
+            foreach (int GateRef in ModbusGates)
+            {
+                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
+                ModbusConfHtml.addDevHeader("Gateway");
+                Gateway.get_Image(Instance.host);
+                Gateway.get_Name(Instance.host);
+                ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16, 16, Gateway.get_Image(Instance.host)).print() +
+                    ModbusBuilder.MakeLink("/deviceutility?ref=" + GateRef
+                    + "&edit=1", Gateway.get_Name(Instance.host)).print(), ModbusBuilder.Qbutton("G_" + GateRef, "Add Device").print());
+                sb.Append(ModbusConfHtml.print());
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+                ModbusConfHtml.addSubHeader("Enabled", "Device Name", "Address", "Type", "Format");
+
+
+                foreach (Scheduler.Classes.DeviceClass MDevice in ModbusDevs)
+                {
+
+                    if (MDevice != null)
+                    {
+                        var EDO = MDevice.get_PlugExtraData_Get(Instance.host);
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        if (Convert.ToInt32(parts["GateID"]) == GateRef)
+                        {
+                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Instance.host) + "&edit=1", MDevice.get_Name(Instance.host)).print(),
+                               parts["SlaveId"],
+                               Instance.modPage.GetReg(parts["RegisterType"]),
+                               Instance.modPage.GetRet(parts["ReturnType"]));
+
+                        }
+                    }
+
+
+                }
+                sb.Append(ModbusConfHtml.print());
+                sb.Append("<br>");
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+            }
+
+
+            Instance.modPage.UpdateGateList(ModbusGates.ToArray());
+            return sb.ToString();
+        }
 
 
 
