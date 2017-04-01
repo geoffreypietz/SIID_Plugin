@@ -12,7 +12,7 @@ using VB = Microsoft.VisualBasic;
 using System.Web;
 using HomeSeerAPI;
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
 	
 	static internal class Web_UI_Util

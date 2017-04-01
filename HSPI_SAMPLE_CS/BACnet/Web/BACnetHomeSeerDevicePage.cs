@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using HSPI_SIID.General;
 using Scheduler;
-using HSPI_SIID_ModBusDemo;
+using HSPI_SIID;
 using HomeSeerAPI;
 using System.Web;
 using System.IO.BACnet;
@@ -154,16 +154,6 @@ namespace HSPI_SIID.BACnet
 
             return "/deviceutility?ref=" + dv + "&edit=1";
 
-
-            //they can also be routed here if they are trying to access an existing device.
-
-            StringBuilder stb = new StringBuilder();
-            //BACnetDevicePage page = this;
-            stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />"); 
-            //This will refresh the page and take the browser to the new device's config page
-            //May not work on NotChrome
-            this.AddBody(stb.ToString());
-            return this.BuildPage();
 
         }
 
@@ -472,154 +462,11 @@ namespace HSPI_SIID.BACnet
 
 
        
-       //maybe not
-        public string AllModbusDevices()
-        {//gets list of all associated devices. 
-            //Get the collection of these devices which are modbus gateways or devices
-            //build Gateway / Devices table with the appropriate links and the appropriate Add Device buttons
-            //returns the built html string
-            StringBuilder sb = new StringBuilder();
-            htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
-
-            List<int> ModbusGates = Instance.modPage.getAllGateways().ToList();
-            List<Scheduler.Classes.DeviceClass> ModbusDevs = new List<Scheduler.Classes.DeviceClass>();
-
-            //foreach (int GID in ModbusGates)
-            //{
-            //    Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(GID));
-            //    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
-            //    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-            //    StringBuilder updatedList = new StringBuilder();
-            //    foreach (var subId in parts["LinkedDevices"].Split(','))
-            //    {
-            //        try
-            //        {
-            //            Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
-            //            if (MDevice != null)
-            //            {
-            //                ModbusDevs.Add(MDevice);
-            //                updatedList.Append(subId + ",");
-            //            }
-            //        }
-            //        catch
-            //        {
-
-            //        }
-
-
-            //    }
-            //    parts["LinkedDevices"] = updatedList.ToString();
-            //    EDO.RemoveNamed("SSIDKey");
-            //    EDO.AddNamed("SSIDKey", parts.ToString());
-            //    Dev.set_PlugExtraData_Set(Instance.host, EDO);
-            //}
-
-            htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
-            sb.Append("<br>");
-            foreach (int GateRef in ModbusGates)
-            {
-                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
-                ModbusConfHtml.addDevHeader("Gateway");
-                Gateway.get_Image(Instance.host);
-                Gateway.get_Name(Instance.host);
-                ModbusConfHtml.addDevMain(ModbusBuilder.MakeImage(16, 16, Gateway.get_Image(Instance.host)).print() +
-                    ModbusBuilder.MakeLink("/deviceutility?ref=" + GateRef
-                    + "&edit=1", Gateway.get_Name(Instance.host)).print(), ModbusBuilder.Qbutton("G_" + GateRef, "Add Device").print());
-                sb.Append(ModbusConfHtml.print());
-                ModbusConfHtml = ModbusBuilder.htmlTable(800);
-                ModbusConfHtml.addSubHeader("Enabled", "Device Name", "Address", "Type", "Format");
-
-
-                foreach (Scheduler.Classes.DeviceClass MDevice in ModbusDevs)
-                {
-
-                    if (MDevice != null)
-                    {
-                        var EDO = MDevice.get_PlugExtraData_Get(Instance.host);
-                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                        if (Convert.ToInt32(parts["GateID"]) == GateRef)
-                        {
-                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
-                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Instance.host) + "&edit=1", MDevice.get_Name(Instance.host)).print(),
-                               parts["SlaveId"],
-                               Instance.modPage.GetReg(parts["RegisterType"]),
-                               Instance.modPage.GetRet(parts["ReturnType"]));
-
-                        }
-                    }
-
-
-                }
-                sb.Append(ModbusConfHtml.print());
-                sb.Append("<br>");
-                ModbusConfHtml = ModbusBuilder.htmlTable(800);
-            }
-
-
-            Instance.modPage.UpdateGateList(ModbusGates.ToArray());
-            return sb.ToString();
-        }
+    
 
 
 
-
-
-
-            //public List<Scheduler.Classes.DeviceClass> getAllBacnetDevices()
-            //{
-            //    List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
-
-            //    Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
-            //    var Dev = DevNum.GetNext();
-            //    while (Dev != null)
-            //    {
-            //        try
-            //        {
-            //            var EDO = Dev.get_PlugExtraData_Get(Instance.host);
-            //            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-            //            string s = parts["Type"];
-            //            if (parts["Type"] == "BACnet Device")
-            //            {
-            //                if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name)) //Then it's one of ours
-            //                {
-            //                    listOfDevices.Add(Dev);
-            //                }
-            //            }
-            //        }
-            //        catch
-            //        {
-
-            //        }
-            //        Dev = DevNum.GetNext();
-
-
-            //    }
-            //    return listOfDevices;
-
-
-            //}
-
-
-
-            ////Not using this since tree gets its own data from dataService...However, maybe we can put that stuff in here
-            //public string DiscoverDevicesRedirect(string pageName, string user, int userRights, string GatewayID)
-            //{
-            //    StringBuilder stb = new StringBuilder();
-            //    BACnetDevicePage page = this;
-
-            //    //Is a placeholder now, so currently will populate DiscoveredBACnetDevices with a dumb stringlist of not much
-
-            //    DiscoveredBACnetDevices.Add("String 1");
-            //    DiscoveredBACnetDevices.Add("String 2");
-            //    DiscoveredBACnetDevices.Add("String 3");
-
-            //    // stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='history.back()'\" />");
-            //    stb.Append("<head><script type = 'text/javascript'>location.href = document.referrer;</script></head>>"); //Reloads previous page?
-            //    page.AddBody(stb.ToString());
-            //    return page.BuildPage();
-
-
-            //}
+        
 
 
 

@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HSPI_SIID</RootNamespace>
-    <AssemblyName>HSPI_SIID_ModBusDemo</AssemblyName>
+    <AssemblyName>HSPI_SIID</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -43,7 +43,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -107,6 +107,7 @@
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
     <Compile Include="General\javascriptBuilders.cs" />
+    <Compile Include="General\SiidDevice.cs" />
     <Compile Include="General\SIID_Page.cs" />
     <Compile Include="hspi.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
