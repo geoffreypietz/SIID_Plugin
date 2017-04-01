@@ -1485,7 +1485,7 @@ namespace System.IO.BACnet
     {
         public UInt32 propertyIdentifier;
         public UInt32 propertyArrayIndex;        /* optional */
-        public BacnetPropertyReference(uint id, uint array_index)
+        public BacnetPropertyReference(uint id, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
         {
             propertyIdentifier = id;
             propertyArrayIndex = array_index;

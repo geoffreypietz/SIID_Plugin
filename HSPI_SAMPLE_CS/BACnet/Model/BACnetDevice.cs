@@ -273,13 +273,24 @@ namespace HSPI_SIID.BACnet
 
         public BACnetObject GetBacnetObject(BacnetObjectId boi)
         {
+            //foreach (var kvp in BacnetObjects)
+            //{
+            //    if (kvp.Key.Equals(boi))
+            //        return kvp.Value;
+                
+            //}
+            //return null;
+
             foreach (var kvp in BacnetObjects)
             {
-                if (kvp.Key.Equals(boi))
+                BacnetObjectId thisObjId = kvp.Key;
+                if (thisObjId.Equals(boi))
                     return kvp.Value;
-                
+
             }
             return null;
+
+
         }
 
 

@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using System.IO.BACnet;
-//using Utilities.
+using Utilities;
+using System.ComponentModel;
 
 namespace HSPI_SIID.BACnet
 {
@@ -142,10 +143,25 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
-            : this(bno, property_id, new BacnetValue(null), array_index)
-        {
 
+        private void Initialize(BACnetObject bno, BacnetPropertyIds property_id)
+        {
+            this.BacnetObject = bno;
+            this.BacnetPropertyId = property_id;        //this is how these are indexed within the object
+
+            this.Id = (Int32)property_id;
+            SetName();
+
+
+
+        }
+
+
+        public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id)
+        {
+            Initialize(bno, property_id);
+            ReadValue();
+            ParseValue();
 
             //if (property_value = null)
             //    ReadProperty();
@@ -153,31 +169,145 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, BacnetValue property_value, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) //this(bno, property_id, array_index)
+        public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, BacnetPropertyValue property_value) //, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) //this(bno, property_id, array_index)
         {
+            Initialize(bno, property_id);
+            this.BacnetPropertyValue = property_value;
+            ParseValue();
 
-            this.BacnetObject = bno;
-            this.BacnetPropertyId = property_id;
-
-            this.Id = (Int32)property_id;
-
-            //this.BacnetPropertyId = 
-
-            SetName();
-
-
-            this.arrayIndex = array_index;
-
-
-            if (property_value.Value == null)
-                ReadProperty();
-            else
-                this.BacnetValue = property_value;
         }
 
 
 
-        private void SetName()
+
+
+
+
+
+        private void ParseValue()
+        {
+            if (this.BacnetPropertyValue == null)
+                return;
+
+            BacnetPropertyValue p_value = (BacnetPropertyValue)this.BacnetPropertyValue;
+
+            object value = null;
+            BacnetValue[] b_values = null;
+            if (p_value.value != null)
+            {
+
+                b_values = new BacnetValue[p_value.value.Count];
+
+                p_value.value.CopyTo(b_values, 0);
+                if (b_values.Length > 1)
+                {
+                    object[] arr = new object[b_values.Length];
+                    for (int j = 0; j < arr.Length; j++)
+                        arr[j] = b_values[j].Value;
+                    value = arr;
+                }
+                else if (b_values.Length == 1)
+                    value = b_values[0].Value;
+            }
+            else
+                b_values = new BacnetValue[0];
+
+
+            var propName = GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier);
+            var propRef = p_value.property;
+            //var readOnly = false;   //may change...
+            var appTag = b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null;
+
+
+            // Modif FC
+            CustomProperty cp;
+
+            Type propType = null;
+            Boolean readOnly;
+
+            switch ((BacnetPropertyIds)p_value.property.propertyIdentifier)
+            {
+                // PROP_RELINQUISH_DEFAULT can be write to null value
+                case BacnetPropertyIds.PROP_PRESENT_VALUE:
+                    // change to the related nullable type
+                    Type t = null;
+                    try
+                    {
+                        t = value.GetType();
+                        t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
+                    }
+                    catch { }
+
+                    propType = t != null ? t : typeof(string);
+                    readOnly = false;   //for now - in future, some properties may be
+                    break;
+
+                default:
+
+                    propType = value != null ? value.GetType() : typeof(string);
+                    readOnly = false;
+                    break;
+            }
+
+            this.PropertyData = new Utilities.CustomProperty(propName, value, propType, readOnly, "", appTag, null, propRef); 
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
+        //    : this(bno, property_id, new BacnetValue(null), array_index)
+        //{
+
+
+        //    //if (property_value = null)
+        //    //    ReadProperty();
+        //}
+
+
+
+        //public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, BacnetValue property_value, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) //this(bno, property_id, array_index)
+        //{
+
+        //    this.BacnetObject = bno;
+        //    this.BacnetPropertyId = property_id;
+
+        //    this.Id = (Int32)property_id;
+
+        //    //this.BacnetPropertyId = 
+
+        //    SetName();
+
+
+        //    this.arrayIndex = array_index;
+
+
+        //    if (property_value.Value == null)
+        //        ReadProperty();
+        //    else
+        //        this.BacnetValue = property_value;
+        //}
+
+
+
+
+        //TODO: still not sure what to store in property object.
+
+
+
+
+        private void SetName()          //todo: this function exists in Yabe already as GetNiceName....it's what we display as opposed to the enum value
         {
 
             String ts = BacnetPropertyId.ToString();    //should just get numeric value if proprietary and outside of predefined alues.
@@ -198,6 +328,25 @@ namespace HSPI_SIID.BACnet
         }
 
 
+
+        private static string GetNiceName(BacnetPropertyIds property)
+        {
+            string name = property.ToString();
+            if (name.StartsWith("PROP_"))
+            {
+                name = name.Substring(5);
+                name = name.Replace('_', ' ');
+                name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            }
+            else
+                //name = "Proprietary (" + property.ToString() + ")";
+                name = property.ToString() + " - Proprietary";
+            return name;
+        }
+
+
+
+
         private uint arrayIndex;
 
 
@@ -214,6 +363,15 @@ namespace HSPI_SIID.BACnet
         public BacnetValue BacnetValue;
 
 
+
+        public BacnetPropertyValue? BacnetPropertyValue;
+
+
+
+        public Utilities.CustomProperty PropertyData = null;
+
+
+
         public IList<BacnetValue> BacnetValues;  //not sure how this works yet...
 
 
@@ -225,7 +383,135 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private bool ReadProperty()
+
+
+        //TODO: method to get value from HTML.  If we know what ID we assigned it to on page, will be easy....
+
+
+
+        public bool WriteValue(object new_value)
+        {
+            var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;
+            var adr = BacnetObject.BacnetDevice.BacnetAddress;
+            var object_id = BacnetObject.BacnetObjectId;
+            var property_id = BacnetPropertyId;
+
+            var success = false;
+
+
+            var customProperty = this.PropertyData;  //customProperty
+
+            //fetch property
+
+            //BacnetPropertyReference property = (BacnetPropertyReference)customProperty.Tag;
+
+            //new value
+            //object new_value = gridItem.Value;
+            var ty = new_value.GetType();
+
+            //convert to bacnet
+            BacnetValue[] b_value = null;
+            try
+            {
+                if (new_value != null && new_value.GetType().IsArray)
+                {
+                    Array arr = (Array)new_value;
+                    b_value = new BacnetValue[arr.Length];
+                    for (int i = 0; i < arr.Length; i++)
+                        b_value[i] = new BacnetValue(arr.GetValue(i));
+                }
+                else
+                {
+                    {
+                        // Modif FC
+                        b_value = new BacnetValue[1];
+                        if ((BacnetApplicationTags)customProperty.bacnetApplicationTags != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        {
+                            b_value[0] = new BacnetValue((BacnetApplicationTags)customProperty.bacnetApplicationTags, new_value);
+                        }
+                        else
+                        {
+                            object o = null;
+                            TypeConverter t = new TypeConverter();
+                            // try to convert to the simplest type
+                            String[] typelist = { "Boolean", "UInt32", "Int32", "Single", "Double" };
+
+                            foreach (String typename in typelist)
+                            {
+                                try
+                                {
+                                    o = Convert.ChangeType(new_value, Type.GetType("System." + typename));
+                                    break;
+                                }
+                                catch { }
+                            }
+
+                            if (o == null)
+                                b_value[0] = new BacnetValue(new_value);
+                            else
+                                b_value[0] = new BacnetValue(o);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(this, "Couldn't convert property: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            //write
+            try
+            {
+                comm.WritePriority = (uint)Yabe.Properties.Settings.Default.DefaultWritePriority;   //TODO: let this be changeable
+                if (!comm.WritePropertyRequest(adr, object_id, BacnetPropertyId, b_value))
+                {
+                    success = false;
+                    //MessageBox.Show(this, "Couldn't write property", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                //MessageBox.Show(this, "Error during write: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            success = true;
+
+            //ReadValue();            //or do we let the webpage do this?  Once write callback has returned, read the value again?
+
+            return success;
+
+        }
+
+        //instead of doing fancy HTML stuff, what about using AJAX call for each read and each write?  Generate the table row with the ability to get its initial value as well as write...
+        //Yes...essentially the JS will include all of this.  The generated HTML will know to, on click, open up a dialog that, on close, will read
+
+
+
+
+        public string GetHtml()     //maybe do a read to be safe?  Or, again, rather than embedding value, just give the controls the ability to get the data.
+        {
+            return "";
+
+
+        }
+
+
+
+        public string ValueString()
+        {
+
+            var bacnetValue = this.BacnetPropertyValue.Value;
+
+            IList<BacnetValue> vals = bacnetValue.value;
+
+            return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+        }
+
+
+
+        public bool ReadValue()
         {
 
 
@@ -236,23 +522,28 @@ namespace HSPI_SIID.BACnet
             var array_index = arrayIndex;
 
 
-            //BacnetPropertyValue new_entry = new BacnetPropertyValue();
-            //new_entry.property = new BacnetPropertyReference((uint)property_id, array_index);   //don't need this.  Already have.
+            BacnetPropertyValue new_entry = new BacnetPropertyValue();
+            new_entry.property = new BacnetPropertyReference((uint)property_id); //, array_index);   //don't need this.  Already have.
             IList<BacnetValue> value;
             try
             {
-                if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value, 0, array_index))
+                if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value)) //, 0, array_index))      //TODO: do we ever need array index?
                     return false;     //ignore
             }
             catch
             {
                 return false;         //ignore
             }
+            new_entry.value = value;
 
-            if (value.Count == 1)
-                this.BacnetValue = value[0];    //this should never be called on object groups or structured views, so will only contain one value....
-            else
-                this.BacnetValues = value;  //otherwise leave value as Null, since we can't handle multiples here...
+
+            this.BacnetPropertyValue = new_entry;
+
+
+            //if (value.Count == 1)
+            //    this.BacnetValue = value[0];    //this should never be called on object groups or structured views, so will only contain one value....
+            //else
+            //    this.BacnetValues = value;  //otherwise leave value as Null, since we can't handle multiples here...
 
             //this.BacnetValues = value;      //will this list always only contain one?  What about possible properties?
 
@@ -260,6 +551,10 @@ namespace HSPI_SIID.BACnet
             //values.Add(new_entry);
             return true;
         }
+
+
+
+
 
 
 

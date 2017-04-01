@@ -272,6 +272,9 @@ namespace HSPI_SIID_ModBusDemo
                 Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
 
                 Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage("BACnetDevTab", Util.IFACE_NAME, Instance.name);
+
+
 
                 Instance.host.RegisterPage("BACnetHomeSeerDevicePage", Util.IFACE_NAME, Instance.name);
 
@@ -555,6 +558,20 @@ namespace HSPI_SIID_ModBusDemo
                 return Instance.scrPage.parseInstances(data);
 
             }
+
+
+            else if (pageName == "BACnetDevTab" + Instance.ajaxName)
+            {
+
+                //TODO: should really add a separate page for this, since separate post URL, but...
+
+                //return "";
+
+                return Instance.bacPage.parseBacnetDeviceTab(data);
+
+            }
+
+
 
 
             else if (pageName == Instance.bacnetHomeSeerDevicePage.PageName)

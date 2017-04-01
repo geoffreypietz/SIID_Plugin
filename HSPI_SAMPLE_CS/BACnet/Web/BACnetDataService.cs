@@ -62,6 +62,7 @@ namespace HSPI_SIID.BACnet
                     Boolean.Parse(nodeData["filter_device_instance"] ?? "false"),
                     Int32.Parse(nodeData["device_instance_min"] ?? "0"),
                     Int32.Parse(nodeData["device_instance_max"] ?? "4194303"));
+                Instance.bacnetGlobalNetwork.Discover();
             }
 
             return Instance.bacnetGlobalNetwork;

@@ -1035,6 +1035,10 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                 bacnetDiscoveryFiltersHtml.addT("Network Settings");
 
+
+                //TODO: later, register these globally, and handle their changes in handler just like parseBacnetDevice
+                //could keep them directly in SSIDkey
+
                 bacnetDiscoveryFiltersHtml.add("IP Addresses:", BacnetBuilder.radioButton(bdp + "filter_ip_address",
                     new string[] { "All", "Filter by IP Address (below)" }, 0).print());
                 bacnetDiscoveryFiltersHtml.add("Selected IP:", BacnetBuilder.stringInput(bdp + "selected_ip_address", "").print());

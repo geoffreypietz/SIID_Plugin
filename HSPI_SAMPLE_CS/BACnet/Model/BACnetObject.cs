@@ -404,24 +404,66 @@ namespace HSPI_SIID.BACnet
         //}
 
 
+
+
+        //private 
+
+
+        //private bool ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, ref IList<BacnetPropertyValue> values, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
+        //{
+        //    BacnetPropertyValue new_entry = new BacnetPropertyValue();
+        //    new_entry.property = new BacnetPropertyReference((uint)property_id, array_index);
+        //    IList<BacnetValue> value;
+        //    try
+        //    {
+        //        if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value, 0, array_index))
+        //            return false;     //ignore
+        //    }
+        //    catch
+        //    {
+        //        return false;         //ignore
+        //    }
+        //    new_entry.value = value;
+        //    values.Add(new_entry);
+        //    return true;
+        //}
+
+
+        //private BacnetPropertyValue propVal()
+        //{
+        //    BacnetPropertyValue new_entry = new BacnetPropertyValue();
+        //    new_entry.property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+        //    new_entry.value = new BacnetValue[] { new BacnetValue(object_id) };
+
+        //}
+
+
+
         public void FetchRequiredProperties()           //honesty could just fetch all properties and then add them in appropriately...
         {
             var object_id = this.BacnetObjectId;
 
 
-            AddProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, new BacnetValue(object_id));
+
+            BacnetPropertyValue new_entry = new BacnetPropertyValue();
+            new_entry.property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_IDENTIFIER); //, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+            new_entry.value = new BacnetValue[] { new BacnetValue(object_id) };
+            AddProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, new_entry);
+
+
+            //AddProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, new BacnetValue(object_id));
 
             
 
             // ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
             // No need to query it, known value
-            //new_entry = new BacnetPropertyValue();
-            //new_entry.property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_TYPE, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
-            //new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type) };
+            new_entry = new BacnetPropertyValue();
+            new_entry.property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_TYPE, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+            new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type) };
             //values.Add(new_entry);
+            AddProperty(BacnetPropertyIds.PROP_OBJECT_TYPE, new_entry);
 
-
-            AddProperty(BacnetPropertyIds.PROP_OBJECT_TYPE, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type));
+            //AddProperty(BacnetPropertyIds.PROP_OBJECT_TYPE, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type));
 
 
 
@@ -436,10 +478,16 @@ namespace HSPI_SIID.BACnet
             //Name = RequiredProperties[BacnetPropertyIds.PROP_OBJECT_NAME].BacnetValue.Value.ToString();
 
 
-            Name = GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME).BacnetValue.Value.ToString();;
+
+            BacnetPropertyValue namePropVal = (BacnetPropertyValue)GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME).BacnetPropertyValue;
+
+            Name = namePropVal.value[0].ToString();   //BacnetValue.Value.ToString();
 
 
         }
+
+
+        public Boolean AllPropertiesFetched = false;
 
 
 
@@ -463,7 +511,8 @@ namespace HSPI_SIID.BACnet
         {
             foreach (var kvp in BacnetProperties)
             {
-                if (kvp.Key.Equals(bpi))
+                BacnetPropertyIds thisPropId = kvp.Key;
+                if (thisPropId == bpi)
                     return kvp.Value;
                 
             }
@@ -654,7 +703,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        protected void FetchProperties()      //if NOT structured view, etc...right?
+        public void FetchProperties()      //if NOT structured view, etc...right?
         {
 
             //BacnetProperties.Clear();     //yes, just re-fetch required properties.       //don't want to wipe this out if an error occurs though
@@ -665,6 +714,9 @@ namespace HSPI_SIID.BACnet
 
 
 
+
+            //TODO: put a lock on this in case another is trying at the same time...
+            //but wait, these are kept per-instance, right?
 
             BacnetProperties.Clear();
 
@@ -696,21 +748,24 @@ namespace HSPI_SIID.BACnet
                     //Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
                     foreach (BacnetPropertyValue p_value in multi_value_list[0].values)
                     {
-
-                        var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
-
+                        AddProperty(p_value);
 
 
-                        var val = p_value.value[0];
+
+                        //var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
 
 
-                        //var requiredProps = new List<BacnetPropertyIds>(){BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, BacnetPropertyIds.PROP_OBJECT_TYPE, BacnetPropertyIds.PROP_OBJECT_NAME};
 
-                        //if (requiredProps.Contains(id))     //already fetched these before.
-                        //    continue;
+                        //var val = p_value.value[0];
 
 
-                        AddProperty(id, val);   //if required properties, will just overwrite
+                        ////var requiredProps = new List<BacnetPropertyIds>(){BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, BacnetPropertyIds.PROP_OBJECT_TYPE, BacnetPropertyIds.PROP_OBJECT_NAME};
+
+                        ////if (requiredProps.Contains(id))     //already fetched these before.
+                        ////    continue;
+
+
+                        //AddProperty(id, val);   //if required properties, will just overwrite
                     }
 
 
@@ -738,138 +793,13 @@ namespace HSPI_SIID.BACnet
                 //return; //?
             }
 
-            //BacnetProperties = newProperties;   //TODO: release reference to BacnetProperties?
-
-
-            ////TODO: process value list...?
-
-
-
-
-            ////update grid
-            ////Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
-            //foreach (BacnetPropertyValue p_value in multi_value_list[0].values)
-            //{
-
-            //    var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
-            //    var val = p_value.value[0];
-
-
-            //    var requiredProps = new List<BacnetPropertyIds>(){BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, BacnetPropertyIds.PROP_OBJECT_TYPE, BacnetPropertyIds.PROP_OBJECT_NAME};
-
-            //    if (requiredProps.Contains(id))     //already fetched these before.
-            //        continue;
-
-
-            //AddProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, new BacnetValue(object_id));
-
-            //// ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-            //// No need to query it, known value
-            ////new_entry = new BacnetPropertyValue();
-            ////new_entry.property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_TYPE, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
-            ////new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type) };
-            ////values.Add(new_entry);
-
-
-            //AddProperty(BacnetPropertyIds.PROP_OBJECT_TYPE, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)object_id.type));
-
-
-
-            //// We do not know the value here
-            ////ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-
-            //AddProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
-
-            //    AddProperty(id, p_value.value[0]
-
-            //    //Properties.Add(new BACnetProperty(
-
-            //    //create new BACnetProperty object.
-
-
-            //    object value = null;
-            //    BacnetValue[] b_values = null;
-            //    if (p_value.value != null)
-            //    {
-
-            //        b_values = new BacnetValue[p_value.value.Count];
-
-            //        p_value.value.CopyTo(b_values, 0);
-            //        if (b_values.Length > 1)
-            //        {
-            //            object[] arr = new object[b_values.Length];
-            //            for (int j = 0; j < arr.Length; j++)
-            //                arr[j] = b_values[j].Value;
-            //            value = arr;
-            //        }
-            //        else if (b_values.Length == 1)
-            //            value = b_values[0].Value;
-            //    }
-            //    else
-            //        b_values = new BacnetValue[0];
-
-
-            //    //TODO: are these sub-properties or just lists of possible values?
-
-            //     //Modif FC
-            //    switch ((BacnetPropertyIds)p_value.property.propertyIdentifier)
-            //    {
-            //        // PROP_RELINQUISH_DEFAULT can be write to null value
-            //        case BacnetPropertyIds.PROP_PRESENT_VALUE:
-            //            // change to the related nullable type
-            //            Type t = null;
-            //            try
-            //            {
-            //                t = value.GetType();
-            //                t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
-            //            }
-            //            catch { }
-            //            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
-            //            break;
-
-            //        default:
-            //            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
-            //            break;
-            //    }
-
-
-            //    //TODO: implement display name stuff here too
-
-            //    //// The Prop Name replace the PropId into the Treenode 
-            //    //if (p_value.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)
-            //    //{
-            //    //    if (selected_node.ToolTipText == "")  // Tooltip not set is not null, strange !
-            //    //        selected_node.ToolTipText = selected_node.Text;
-
-            //    //    selected_node.Text = value.ToString(); // Update the object name if needed
-            //    //    lock (DevicesObjectsName)
-            //    //    {
-            //    //        Tuple<String, BacnetObjectId> t = new Tuple<String, BacnetObjectId>(adr.FullHashString(), object_id);
-            //    //        DevicesObjectsName.Remove(t);
-            //    //        DevicesObjectsName.Add(t, value.ToString());
-            //    //    }
-            //    //}
-            //}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            //TODO: remove handlers for property reads from Bacnet Client?
-
-
-
+            AllPropertiesFetched = true;
 
         }
+
+
+
+
 
 
 
@@ -1004,42 +934,123 @@ namespace HSPI_SIID.BACnet
 
 
 
-
         private void AddProperty(BacnetPropertyIds id)
         {
-            AddProperty(id, new BacnetValue(null));     //setting this to null means we still need to read the property.
+
+            if (!BACnetObject.SupportedPropertyIds.Contains(id))        //make this better later
+                return;
+
+            //var bpv = new BacnetPropertyValue();
+
+
+            var prop = new BACnetProperty(this, id);
+
+            addProp(id, prop);
+
+            //AddProperty(id, new BacnetValue(null));     //setting this to null means we still need to read the property.
 
         }
 
 
-        private void AddProperty(BacnetPropertyIds id, BacnetValue val)
+
+        private void AddProperty(BacnetPropertyValue val)
+        {
+            var id = (BacnetPropertyIds)val.property.propertyIdentifier;
+            AddProperty(id, val);
+        }
+
+
+
+        private void AddProperty(BacnetPropertyIds id, BacnetPropertyValue val)
         {
             //var id = BacnetPropertyIds.PROP_OBJECT_IDENTIFIER;
             //var val = new BacnetValue(object_id);
 
 
+
             if (!BACnetObject.SupportedPropertyIds.Contains(id))
                 return;
 
+
             var prop = new BACnetProperty(this, id, val);
 
-
+            addProp(id, prop);
             //if id == BacnetPropertyIds.
 
 
 
-            
+
 
             //if (BACnetObject.RequiredPropertyIds.Contains(id))        //don't keep required properties separate anymore.....
             //    RequiredProperties[id] = prop;      //TODO: could put option to not overwrite, I guess...
             //else
             //{
-                var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
-                BacnetProperties.Add(kvp);
-            }
-
-
+            //var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
+            //BacnetProperties.Add(kvp);
         }
+
+
+        private void addProp(BacnetPropertyIds id, BACnetProperty prop)
+        {
+            if (!BACnetObject.SupportedPropertyIds.Contains(id))
+                return;
+
+            var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
+            BacnetProperties.Add(kvp);
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+        //private void AddProperty(BacnetPropertyIds id)
+        //{
+        //    AddProperty(id, new BacnetValue(null));     //setting this to null means we still need to read the property.
+
+        //}
+
+
+        //private void AddProperty(BacnetPropertyIds id, BacnetValue val)
+        //{
+        //    //var id = BacnetPropertyIds.PROP_OBJECT_IDENTIFIER;
+        //    //var val = new BacnetValue(object_id);
+
+
+
+
+
+
+        //    if (!BACnetObject.SupportedPropertyIds.Contains(id))
+        //        return;
+
+        //    var prop = new BACnetProperty(this, id, val);
+
+
+        //    //if id == BacnetPropertyIds.
+
+
+
+            
+
+        //    //if (BACnetObject.RequiredPropertyIds.Contains(id))        //don't keep required properties separate anymore.....
+        //    //    RequiredProperties[id] = prop;      //TODO: could put option to not overwrite, I guess...
+        //    //else
+        //    //{
+        //        var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
+        //        BacnetProperties.Add(kvp);
+        //    }
+
+
+        //}
 
 
         //private bool ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, ref IList<BacnetPropertyValue> values, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
