@@ -170,7 +170,7 @@ namespace HSPI_SIID.BACnet
             tn.CopyNodeData(this.BacnetDevice.GetTreeNode());
             tn.data["object_type"] = (Int32)this.BacnetObjectId.Type;      //could have done string, probably...but Int is more consistent (it's the underlying type)
             tn.data["object_instance"] = this.BacnetObjectId.Instance;
-            tn.data["type"] = "object";
+            tn.data["node_type"] = "object";
             return tn;
         }
 

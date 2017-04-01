@@ -91,16 +91,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BACnet\BACnetDevice.cs" />
-    <Compile Include="BACnet\BACnetDevicePage.cs" />
-    <Compile Include="BACnet\BACnetNetwork.cs" />
-    <Compile Include="BACnet\BACnetGlobalNetwork.cs" />
-    <Compile Include="BACnet\BACnetObject.cs" />
-    <Compile Include="BACnet\BACnetObjectTypeGroup.cs" />
-    <Compile Include="BACnet\BACnetProperty.cs" />
-    <Compile Include="BACnet\BACnetDataService.cs" />
-    <Compile Include="BACnet\BACnetTreeNode.cs" />
-    <Compile Include="BACnet\BACnetTreeDataObject.cs" />
+    <Compile Include="BACnet\Model\BACnetDevice.cs" />
+    <Compile Include="BACnet\Web\BACnetDevicePage.cs" />
+    <Compile Include="BACnet\Model\BACnetNetwork.cs" />
+    <Compile Include="BACnet\Model\BACnetGlobalNetwork.cs" />
+    <Compile Include="BACnet\Model\BACnetObject.cs" />
+    <Compile Include="BACnet\Model\BACnetObjectTypeGroup.cs" />
+    <Compile Include="BACnet\Model\BACnetProperty.cs" />
+    <Compile Include="BACnet\Web\BACnetDataService.cs" />
+    <Compile Include="BACnet\Model\BACnetPropertyDataType.cs" />
+    <Compile Include="BACnet\Model\BACnetTreeNode.cs" />
+    <Compile Include="BACnet\Model\BACnetTreeDataObject.cs" />
+    <Compile Include="BACnet\Web\BACnetHomeSeerDevicePage.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
@@ -149,6 +151,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="js\bacnetDiscovery.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="js\bacnetPropertiesTable.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="js\jquery.fancytree-all.min.js">

@@ -8,6 +8,11 @@ namespace HSPI_SIID.BACnet
     [Serializable]
     public class BACnetTreeNode
     {
+
+       public static readonly String[] DeviceNodeProperties = new String[] { "ip_address", "device_instance" };
+
+       public static readonly String[] ObjectNodeProperties = new String[] { "ip_address", "device_instance", "object_type", "object_instance" };
+
         private bool _mLazy = false;
 
         public bool lazy {

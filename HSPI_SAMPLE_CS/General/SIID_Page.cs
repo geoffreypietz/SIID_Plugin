@@ -172,6 +172,7 @@ namespace HSPI_SIID_ModBusDemo
                                 try
                                 {
                                     Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
+                                   
                                     newDevice.set_Name(Instance.host, FetchAttribute(CodeLookup, "Name"));
                                     newDevice.set_Location2(Instance.host, FetchAttribute(CodeLookup, "Floor"));
                                     newDevice.set_Location(Instance.host, FetchAttribute(CodeLookup, "Room"));
@@ -384,7 +385,7 @@ namespace HSPI_SIID_ModBusDemo
 
                                     }
                                     newDevice.set_PlugExtraData_Set(Instance.host, EDO);
-
+                                    Instance.Devices.Add(new SiidDevice(Instance, newDevice));
 
 
 
@@ -440,13 +441,14 @@ namespace HSPI_SIID_ModBusDemo
             string FileName = Instance.hspi.InstanceFriendlyName() + "_" + "Export_Devices.CSV";
             StringBuilder FileContent = new StringBuilder();
   
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
-            var Dev = DevNum.GetNext();
-            List<int> ModGateways = new List<int>();
-            List<int> ModDevices = new List<int>();
-            List<int> BackNetDevices = new List<int>();
-            List<int> ScratchDevices = new List<int>();
-            while (Dev != null)
+           // Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+         //   var Dev = DevNum.GetNext();
+            List<SiidDevice> ModGateways = new List<SiidDevice>();
+            List<SiidDevice> ModDevices = new List<SiidDevice>();
+            List<SiidDevice> BackNetDevices = new List<SiidDevice>();
+            List<SiidDevice> ScratchDevices = new List<SiidDevice>();
+            SiidDevice.Update(Instance);
+            foreach (SiidDevice Dev in Instance.Devices)
             {
                 try
                 {
@@ -455,30 +457,29 @@ namespace HSPI_SIID_ModBusDemo
                  
 
 
-                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var EDO = Dev.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString()); //So it is a SIID device
-                   if (Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString() && Dev.get_InterfaceInstance(Instance.host).ToString() == Instance.name) //Then it's one of ours (Need maybe an extra chack for Instance
-                        {
+               
                         switch (parts["Type"])
                         {
                             case ("BACnet Device"):
                                 {
-                                    BackNetDevices.Add(Dev.get_Ref(Instance.host));
+                                    BackNetDevices.Add(Dev);
                                     break;
                                 }
                             case ("Modbus Gateway"):
                                 {
-                                    ModGateways.Add(Dev.get_Ref(Instance.host));
+                                    ModGateways.Add(Dev);
                                     break;
                                 }
                             case ("Modbus Device"):
                                 {
-                                    ModDevices.Add(Dev.get_Ref(Instance.host));
+                                    ModDevices.Add(Dev);
                                     break;
                                 }
                             case ("Scratchpad"):
                                 {
-                                    ScratchDevices.Add(Dev.get_Ref(Instance.host));
+                                    ScratchDevices.Add(Dev);
                                     break;
                                 }
                              
@@ -488,7 +489,7 @@ namespace HSPI_SIID_ModBusDemo
                                   
 
 
-                        }
+                        
 
 
                     
@@ -502,7 +503,7 @@ namespace HSPI_SIID_ModBusDemo
                 {
                    
                 }
-                Dev = DevNum.GetNext();
+              
 
 
             }
@@ -511,16 +512,16 @@ namespace HSPI_SIID_ModBusDemo
             {
                 FileContent.Append("Backnet Devices\r\n");
                 FileContent.Append(new HSPI_SIID.SIIDDevice(BackNetDevices[0],Instance).ReturnCSVHead());
-                foreach (int ID in BackNetDevices)
+                foreach (SiidDevice DV in BackNetDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
+                    FileContent.Append(new HSPI_SIID.SIIDDevice(DV, Instance).ReturnCSVRow());
                 }
             }
             if (ModGateways.Count > 0)
             {
                 FileContent.Append("Modbus Gateways\r\n");
                 FileContent.Append(new HSPI_SIID.SIIDDevice(ModGateways[0],Instance).ReturnCSVHead());
-                foreach (int ID in ModGateways)
+                foreach (SiidDevice ID in ModGateways)
                 {
                     FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
@@ -529,7 +530,7 @@ namespace HSPI_SIID_ModBusDemo
             {
                 FileContent.Append("Modbus Devices\r\n");
                 FileContent.Append(new HSPI_SIID.SIIDDevice(ModDevices[0],Instance).ReturnCSVHead());
-                foreach (int ID in ModDevices)
+                foreach (SiidDevice ID in ModDevices)
                 {
                     FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
@@ -538,7 +539,7 @@ namespace HSPI_SIID_ModBusDemo
             {
                 FileContent.Append("Scratchpad Rules\r\n");
                 FileContent.Append(new HSPI_SIID.SIIDDevice(ScratchDevices[0], Instance).ReturnCSVHead());
-                foreach (int ID in ScratchDevices)
+                foreach (SiidDevice ID in ScratchDevices)
                 {
                     FileContent.Append(new HSPI_SIID.SIIDDevice(ID, Instance).ReturnCSVRow());
                 }
@@ -644,7 +645,7 @@ namespace HSPI_SIID_ModBusDemo
             htmlTable ModbusConfHtml = BACnetBuilder.htmlTable(800);
 
             List<Scheduler.Classes.DeviceClass> BACnetDevs = Instance.bacPage.getAllBacnetDevices().ToList();
-            //HERE
+        
 
             foreach (Scheduler.Classes.DeviceClass device in BACnetDevs)
             {
@@ -673,23 +674,24 @@ namespace HSPI_SIID_ModBusDemo
             StringBuilder sb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
 
-            List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>> ModbusGates = Instance.modPage.getAllGateways();
-            List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>> ModbusDevs = new List<Tuple<Scheduler.Classes.DeviceClass, PlugExtraData.clsPlugExtraData>>();
+            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
+            List<SiidDevice> ModbusDevs = new List<SiidDevice>();
 
             foreach (var GID in ModbusGates)
             {
-                var Dev = GID.Item1;
-                var EDO = GID.Item2;
+                var Dev = GID.Device;
+                var EDO = GID.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 StringBuilder updatedList = new StringBuilder();
                 foreach (var subId in parts["LinkedDevices"].Split(','))
                 {
                     try
                     {
-                        Scheduler.Classes.DeviceClass MDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(Convert.ToInt32(subId));
-                        if (MDevice != null)
+                        SiidDevice ModDevice = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
+                        
+                        if (ModDevice != null)
                         {
-                            ModbusDevs.Add(MDevice);
+                            ModbusDevs.Add(ModDevice);
                             updatedList.Append(subId + ",");
                         }
                     }
@@ -708,9 +710,10 @@ namespace HSPI_SIID_ModBusDemo
 
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable(800);
             sb.Append("<br>");
-            foreach (int GateRef in ModbusGates)
+            foreach (SiidDevice G in ModbusGates)
             {
-                Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
+                int GateRef = G.Ref;
+                Scheduler.Classes.DeviceClass Gateway = G.Device; 
                 ModbusConfHtml.addDevHeader("Gateway");
                 Gateway.get_Image(Instance.host);
                 Gateway.get_Name(Instance.host);
@@ -722,12 +725,12 @@ namespace HSPI_SIID_ModBusDemo
                 ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
                
                 
-                foreach (Scheduler.Classes.DeviceClass MDevice in ModbusDevs)
+                foreach (SiidDevice M in ModbusDevs)
                 {
-                 
+                    Scheduler.Classes.DeviceClass MDevice = M.Device;
                     if (MDevice != null)
                     {
-                        var EDO = MDevice.get_PlugExtraData_Get(Instance.host);
+                        var EDO = M.Extra;
                         var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                         if (Convert.ToInt32(parts["GateID"]) == GateRef)
                         {
@@ -748,14 +751,14 @@ namespace HSPI_SIID_ModBusDemo
             }
 
             
-            Instance.modPage.UpdateGateList(ModbusGates.ToArray());
+           // Instance.modPage.UpdateGateList(ModbusGates.ToArray());
             return sb.ToString();
         }
 
         public string ScratchpadRules()
         {
             StringBuilder sb = new StringBuilder();
-           List<Scheduler.Classes.DeviceClass> Rules= Instance.scrPage.getAllRules();
+           List<SiidDevice> Rules= Instance.scrPage.getAllRules();
             if (Rules.Count > 0)
             {
                 htmlBuilder ScratchBuilder = new htmlBuilder("Scratch" + Instance.ajaxName);
@@ -764,13 +767,13 @@ namespace HSPI_SIID_ModBusDemo
 
                 ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
 
-                foreach (Scheduler.Classes.DeviceClass Dev in Rules)
+                foreach (SiidDevice Dev in Rules)
                 {
-                    int ID = Dev.get_Ref(Instance.host);
+                    int ID = Dev.Ref;
                     List<string> Row = new List<string>();
-                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var EDO = Dev.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    Row.Add(ScratchBuilder.stringInput("Name_" + ID,Dev.get_Name(Instance.host)).print());
+                    Row.Add(ScratchBuilder.stringInput("Name_" + ID,Dev.Device.get_Name(Instance.host)).print());
                     Row.Add(parts["DisplayedValue"]);
                     Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
                     Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_"+ID, bool.Parse(parts["IsAccumulator"]) ).print());
@@ -1070,8 +1073,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 String ftJs = File.ReadAllText(Path.Combine(basePath, "js", "jquery.fancytree-all.min.js"));
                 DiscoverTab.Append("<script>" + ftJs + "</script>");
 
-                DiscoverTab.Append(String.Format("<script>var dataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName)); 
+                DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName));
+                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevicePage.PageName)); 
                 //BacNet discovery needs to know this - this is where tree gets its data from
+
+                String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
+                DiscoverTab.Append("<script>" + tableJs + "</script>");
 
                 String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
                 DiscoverTab.Append("<script>" + bacnetDiscoveryJs + "</script>");
@@ -1108,11 +1115,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
 
-                StringBuilder ConfigTab = new StringBuilder();
-
-                tab = new clsJQuery.Tab();
-                tab.tabTitle = "Configuration";
-                tab.tabDIVID = "BACnetConfTab";
 
 
 
@@ -1121,32 +1123,55 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
 
-                htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
-                BACnetConfigTable.add(" Configuration:");
-
-
-                BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
-
-
-
-                selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
-                BACnetConfigTable.add(" Log Level:", loglevel.print());
-                checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
-                BACnetConfigTable.add(" Log To File:", logTF.print());
 
 
 
 
-                //BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
-                ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
 
 
-                // string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
-                // tab.tabContent = TestStuff;
+                //StringBuilder ConfigTab = new StringBuilder();
 
-                tab.tabContent = ConfigTab.ToString();
-                jqtabs.postOnTabClick = false;
-                jqtabs.tabs.Add(tab);
+                //tab = new clsJQuery.Tab();
+                //tab.tabTitle = "Configuration";
+                //tab.tabDIVID = "BACnetConfTab";
+
+                //htmlTable BACnetConfigTable = BacnetBuilder.htmlTable();
+                //BACnetConfigTable.add(" Configuration:");
+
+
+                ////TODO: .......................
+                ////BACnetConfigTable.add(" Default Poll Interval in miliseconds<br>(can be overridden per gateway):", ModbusBuilder.numberInput("polltime", Instance.modbusDefaultPoll).print());
+                ////selectorInput loglevel2 = BacnetBuilder.selectorInput(new string[] { "Trace", "Debug", "Info", "Warn", "Error", "Fatal" }, "logL", "Log Level", Instance.modbusLogLevel);
+                ////BACnetConfigTable.add(" Log Level:", loglevel.print());
+                ////checkBoxInput logTF2 = BacnetBuilder.checkBoxInput("modlog", Instance.modbusLogToFile);
+                ////BACnetConfigTable.add(" Log To File:", logTF.print());
+
+
+
+
+                ////BACnetConfigTable.add(" Need to add specific BACnet options here and also save/load these options from config file");
+                //ConfigTab.Append("<div id=confTab style='display:block;'>" + BACnetConfigTable.print() + "</div>");
+
+
+                //// string TestStuff = new numberInput().print() + loglevel.print() + logTF.print();
+                //// tab.tabContent = TestStuff;
+
+                //tab.tabContent = ConfigTab.ToString();
+                //jqtabs.postOnTabClick = false;
+                //jqtabs.tabs.Add(tab);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 stb.Append(jqtabs.Build());
 
