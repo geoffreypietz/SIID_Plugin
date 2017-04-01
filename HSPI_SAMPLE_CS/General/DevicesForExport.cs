@@ -1,4 +1,5 @@
 ﻿using HSPI_SIID.BACnet;
+using HSPI_SIID.General;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID_ModBusDemo;
 using HSPI_SIID_ModBusDemo.Modbus;
@@ -62,21 +63,21 @@ namespace HSPI_SIID
             // "associatedDevices"
         };
 
-         public    HomeSeerDevice(int DeviceID, InstanceHolder instance)
+         public    HomeSeerDevice(SiidDevice SiidDev, InstanceHolder instance)
             {
             Instance = instance;
-                GenericDeviceStuff(DeviceID);
+                GenericDeviceStuff(SiidDev);
             }
         public HomeSeerDevice()//To get general information about length of attributes list
         {
         }
 
-           public void GenericDeviceStuff(int DeviceID)
+           public void GenericDeviceStuff(SiidDevice SiidDev)
             {
 
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(DeviceID);
+                Scheduler.Classes.DeviceClass Device = SiidDev.Device;
 
-             Values["ID"]=DeviceID;
+             Values["ID"]= SiidDev.Ref;
              Values["Name"]=Device.get_Name(Instance.host);
              Values["Floor"]=Device.get_Location2(Instance.host);
              Values["Room"]=Device.get_Location(Instance.host);
@@ -85,7 +86,7 @@ namespace HSPI_SIID
              Values["statusOnly"]=Device.get_Status_Support(Instance.host);
              Values["CanDim"]=Device.get_Can_Dim(Instance.host);
 
-             Values["doNotLog"]= Instance.host.DeviceNoLog(DeviceID);
+             Values["doNotLog"]= Instance.host.DeviceNoLog(SiidDev.Ref);
                 //    voiceC=AllInstances[InstanceFriendlyName].host.DeviceProperty_Boolean(DeviceID", HomeSeerAPI.Enums.eDeviceProperty.Prop;
                 //   includeInPower=AllInstances[InstanceFriendlyName].host.;
                 // usePopUp=Device.use;
@@ -150,15 +151,15 @@ namespace HSPI_SIID
         class SIIDDevice : HomeSeerDevice
         {
 
-            public SIIDDevice(int DeviceID, InstanceHolder instance):base(DeviceID,instance)
+            public SIIDDevice(SiidDevice SiidDev, InstanceHolder instance):base(SiidDev, instance)
             {
             
             
                 Instance = instance;
 
 
-                Scheduler.Classes.DeviceClass Device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(DeviceID);
-                var EDO = Device.get_PlugExtraData_Get(Instance.host);
+                Scheduler.Classes.DeviceClass Device = SiidDev.Device;
+                var EDO = SiidDev.Extra;
             System.Collections.Specialized.NameValueCollection parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             //Need to grab the key order from somewhere 
            string[] Orderlist = null;

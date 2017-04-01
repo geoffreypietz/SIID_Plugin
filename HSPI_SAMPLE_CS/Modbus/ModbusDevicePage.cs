@@ -43,7 +43,8 @@ namespace HSPI_SIID_ModBusDemo.Modbus
 
         public List<SiidDevice> getAllGateways()
         {
-
+            SiidDevice.Update(Instance);
+           ModbusGates = new List<SiidDevice>();
             foreach (var Siid in Instance.Devices)
             {
                 var EDO = Siid.Extra;
@@ -387,7 +388,7 @@ public string GetReg(string instring)
 
             EDO.AddNamed("SSIDKey", makeNewModbusGateway());
             newDevice.set_PlugExtraData_Set(Instance.host, EDO);
-            pingGateway(dv);
+         
 
             // newDevice.set_Device_Type_String(Instance.host, makeNewModbusGateway());
           var DevINFO=  new DeviceTypeInfo_m.DeviceTypeInfo();
@@ -411,7 +412,7 @@ public string GetReg(string instring)
             //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
 
             Instance.Devices.Add(new SiidDevice(Instance, newDevice));
-
+         
             page.AddBody(stb.ToString());
             return page.BuildPage();
         }
@@ -745,7 +746,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                         catch (Exception e)
                                         {
                                             Console.WriteLine("Exception: " + e.StackTrace);
-                                            Instance.host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
+                              
                                             if (Subset.Device.get_devValue(Instance.host) == 2 || Subset.Device.get_devValue(Instance.host) == 1)
                                             {
                                                 Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
@@ -753,6 +754,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                             else
                                             {
                                                 Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+                                                Instance.host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
                                             }
 
 
@@ -1263,10 +1265,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             Scheduler.Classes.DeviceClass ModDev = SIIDDev.Device;
             var EDO = SIIDDev.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-            //STILL HERE. WORKING HERE
+      
             int GatewayID = Int32.Parse(parts["GateID"]);
-            Scheduler.Classes.DeviceClass Gatrway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayID);
-            var EDOGate = Gatrway.get_PlugExtraData_Get(Instance.host);
+            SiidDevice Gateway = SiidDevice.GetFromListByID(Instance.Devices,GatewayID);
+            var EDOGate = Gateway.Extra;
             var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
 
             bool flipbits = bool.Parse(partsGate["BigE"]);
@@ -1391,86 +1393,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         
         }
-        /* var parts = HttpUtility.ParseQueryString(string.Empty);
-
-
-            parts["Type"] = "Modbus Gateway";
-            parts["Gateway"] = "";
-            parts["TCP"] = "502";
-            parts["Poll"] = MosbusAjaxReceivers.modbusDefaultPoll.ToString();
-            parts["Enabled"] = "false";
-            parts["BigE"] = "false";
-            parts["ZeroB"] = "true";
-            parts["RWRetry"] = "2";
-            parts["RWTime"] = "1000";
-            parts["Delay"] = "0";
-            parts["RegWrite"] = "1";
-            parts["LinkedDevices"] = "";
-            return parts.ToString();
-
-        }
-        public string makeNewModbusDevice(int GatewayID)
-        {
-            var parts = HttpUtility.ParseQueryString(string.Empty);
-            Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GatewayID); //Should keep in gateway a list of devices
-
-
-            var EDO = Gateway.get_PlugExtraData_Get(Instance.host);
-            var GParts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-
-            parts["Type"] = "Modbus Device";
-            parts["GateID"] = "" + GatewayID + "";
-            parts["Gateway"] = Gateway.get_Name(Instance.host);
-            parts["RegisterType"] = "0";//MosbusAjaxReceivers.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
-            parts["SlaveId"] = "1"; //get number of slaves from gateway?
-            parts["ReturnType"] = "0";//0 = Int16, 1=Int32,2=Float32,3=Int64,4=Bool
-            parts["SignedValue"] = "false";
-            parts["ScratchpadString"] = "";
-            parts["DisplayFormatString"] = "{0}";
-            parts["ReadOnlyDevice"] = "true";
-            parts["DeviceEnabled"] = "false";
-            parts["RegisterAddress"] = "1";
-            return parts.ToString();*/
-
-        public static void ModbusTcpMasterReadInputs()
-        {
-           /* StringBuilder Printout = new StringBuilder();
-            using (TcpClient client = new TcpClient("129.82.36.221", 502))
-            {
-                ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
-                
-                // read five input values
-                ushort startAddress = 20021;
-                ushort numInputs = 32;
-                ushort[] inputs = master.ReadHoldingRegisters(startAddress, numInputs);
-         
-              
-                for (int i = 0; i < numInputs; i++)
-                {
-                   Printout.Append("Input " + inputs[i]);
-                    inputs[i] = (ushort)i;
-                }
-
-                master.WriteMultipleRegisters(startAddress-1, inputs);
-             //   master.ReadWriteMultipleRegisters(startAddress, numInputs, startAddress, inputs);
-                 inputs = master.ReadHoldingRegisters(startAddress, numInputs);
-
-
-                for (int i = 0; i < numInputs; i++)
-                {
-                    Printout.Append("Input " + inputs[i]);
-                  
-                }
-            }
-            string a = Printout.ToString();
-            int b = 1;
-            // output: 
-            // Input 100=0
-            // Input 101=0
-            // Input 102=0
-            // Input 103=0
-            // Input 104=0*/
-        }
+       
 
 
 

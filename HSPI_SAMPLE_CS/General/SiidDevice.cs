@@ -41,6 +41,20 @@ namespace HSPI_SIID.General
             return null;
         }
 
+        public static void Update(InstanceHolder I)
+        {
+            List<SiidDevice> UpdatedDevs = new List<SiidDevice>();
+            foreach (SiidDevice D in I.Devices)
+            {
+                if (I.host.DeviceExistsRef(D.Ref)) {
+                    UpdatedDevs.Add(D);
+                }
+              
+
+            }
+            I.Devices = UpdatedDevs;
+        }
+
         public void UpdateExtraData(string key, string value)
         {
            

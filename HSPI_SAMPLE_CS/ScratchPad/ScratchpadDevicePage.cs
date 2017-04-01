@@ -51,8 +51,8 @@ namespace HSPI_SIID.ScratchPad
             StringBuilder FinalString = new StringBuilder(ScratchPadString);
             foreach (int dv in Raws)
             {
-                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
+                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.Extra;
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 try
                 {
@@ -75,8 +75,8 @@ namespace HSPI_SIID.ScratchPad
             }
             foreach (int dv in Processed)
             {
-                Scheduler.Classes.DeviceClass TempDev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.get_PlugExtraData_Get(Instance.host);
+                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                var TempEDO = TempDev.Extra;
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 try
                 {
@@ -119,11 +119,11 @@ namespace HSPI_SIID.ScratchPad
             return OutValue;
         }
 
-        public void UpdateDisplay(Scheduler.Classes.DeviceClass Rule)
+        public void UpdateDisplay(SiidDevice Rule)
         {
             try
             {
-                var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+                var EDO = Rule.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GetValues(parts["ScratchPadString"]);
@@ -137,13 +137,15 @@ namespace HSPI_SIID.ScratchPad
                 
              string ValueString = String.Format(parts["DisplayString"], CalculatedString);
 
-                Instance.host.SetDeviceString(Rule.get_Ref(Instance.host), ValueString, true);
-                Instance.host.SetDeviceValueByRef(Rule.get_Ref(Instance.host), CalculatedString, true);
+                Instance.host.SetDeviceString(Rule.Ref, ValueString, true);
+                Instance.host.SetDeviceValueByRef(Rule.Ref, CalculatedString, true);
                 parts["DisplayedValue"] = ValueString;
 
                 EDO.RemoveNamed("SSIDKey");
                 EDO.AddNamed("SSIDKey", parts.ToString());
-                Rule.set_PlugExtraData_Set(Instance.host, EDO);
+     
+                Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
+                Rule.Extra = EDO;
             }
             catch (Exception e)
             {
@@ -155,19 +157,20 @@ namespace HSPI_SIID.ScratchPad
                 //String Format the value, put results in display
 
         }
-        public void Reset(Scheduler.Classes.DeviceClass Rule)
+        public void Reset(SiidDevice Rule)
         {
-            var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+            var EDO = Rule.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             parts["OldValue"] = parts["NewValue"];
             parts["DateOfLastReset"] = DateTime.Now.ToString();
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
-            Rule.set_PlugExtraData_Set(Instance.host, EDO);
+            Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
+            Rule.Extra = EDO;
         }
-        public void CheckForReset(Scheduler.Classes.DeviceClass Rule)
+        public void CheckForReset(SiidDevice Rule)
         {
-            var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+            var EDO = Rule.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             if (bool.Parse(parts["IsAccumulator"]))
             {           //Check if accumulator
@@ -223,11 +226,11 @@ namespace HSPI_SIID.ScratchPad
         {
        
             var Rules = getAllRules();
-            foreach (Scheduler.Classes.DeviceClass Rule in Rules)
+            foreach (SiidDevice Rule in Rules)
             {
                 try
                 {
-                    var EDO = Rule.get_PlugExtraData_Get(Instance.host);
+                    var EDO = Rule.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     if (bool.Parse(parts["IsEnabled"]))
                     {
@@ -302,32 +305,30 @@ namespace HSPI_SIID.ScratchPad
 
 
             newDevice.set_DeviceType_Set(Instance.host, DevINFO);
-
+            Instance.Devices.Add(new SiidDevice(Instance,newDevice));
 
 
             return "refresh";
 
         }
 
-        public List<Scheduler.Classes.DeviceClass> getAllRules()
+        public List<SiidDevice> getAllRules()
         {
-            List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+            List<SiidDevice> listOfDevices = new List<SiidDevice>();
+            SiidDevice.Update(Instance);
 
-            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
-            var Dev = DevNum.GetNext();
-            while (Dev != null)
+            foreach (SiidDevice Dev in Instance.Devices)
             {
                 try
                 {
-                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var EDO = Dev.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
                     if (parts["Type"] == "Scratchpad")
                     {
-                        if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name)) //Then it's one of ours
-                        {
+                      
                             listOfDevices.Add(Dev);
-                        }
+                        
 
 
                     }
@@ -338,7 +339,7 @@ namespace HSPI_SIID.ScratchPad
                 {
 
                 }
-                Dev = DevNum.GetNext();
+               
 
 
             }
@@ -349,8 +350,9 @@ namespace HSPI_SIID.ScratchPad
         public string BuildScratchDeviceTab(int id)
         {
             StringBuilder sb = new StringBuilder();
-            Scheduler.Classes.DeviceClass Dev = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(id);
-          
+            SiidDevice Dev = SiidDevice.GetFromListByID(Instance.Devices, id);
+
+
                 htmlBuilder ScratchBuilder = new htmlBuilder("Scratch" + Instance.ajaxName);
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
@@ -358,11 +360,11 @@ namespace HSPI_SIID.ScratchPad
                 ScratchTable.addHead(new string[] { "Rule Name", "Value", "Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
 
               
-                    int ID = Dev.get_Ref(Instance.host);
+                    int ID = Dev.Ref;
                     List<string> Row = new List<string>();
-                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var EDO = Dev.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.get_Name(Instance.host)).print());
+                    Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.Device.get_Name(Instance.host)).print());
                     Row.Add(parts["DisplayedValue"]);
                     Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
                     Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
@@ -419,7 +421,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
         }
 
 
-        public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
+     /*   public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
         {
 
 
@@ -430,7 +432,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             EDO.AddNamed("SSIDKey", parts.ToString());
             Device.set_PlugExtraData_Set(Instance.host, EDO);
 
-        }
+        }*/
 
         public string parseInstances(string data)
         {
@@ -444,15 +446,15 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             string partID = changed["id"].Split('_')[0];
             int devId = Int32.Parse(changed["id"].Split('_')[1]);
 
-            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devId);
+            SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices,devId);
             //check for gateway change, do something special
             if (partID == "Name")
             {
-                newDevice.set_Name(Instance.host, changed["value"]);
+                newDevice.Device.set_Name(Instance.host, changed["value"]);
             }
             else
             {
-                addSSIDExtraData(newDevice, partID, changed["value"]);
+                newDevice.UpdateExtraData( partID, changed["value"]);
             }
             return "True";
         }
