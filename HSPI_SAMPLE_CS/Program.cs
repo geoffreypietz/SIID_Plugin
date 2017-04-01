@@ -10,12 +10,12 @@ using HomeSeerAPI;
 using HSCF.Communication.Scs.Communication.EndPoints.Tcp;
 using HSCF.Communication.ScsServices.Client;
 using HSCF.Communication.ScsServices.Service;
-using HSPI_SIID_ModBusDemo.Modbus;
+using HSPI_SIID.Modbus;
 using HSPI_SIID.BACnet;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
 
 

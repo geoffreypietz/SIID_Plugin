@@ -1,8 +1,8 @@
 ﻿using HSPI_SIID.BACnet;
 using HSPI_SIID.General;
 using HSPI_SIID.ScratchPad;
-using HSPI_SIID_ModBusDemo;
-using HSPI_SIID_ModBusDemo.Modbus;
+using HSPI_SIID;
+using HSPI_SIID.Modbus;
 using System;
 using System.Collections.Generic;
 using System.Linq;

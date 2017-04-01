@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 //using System.Data;
 using HSPI_SIID.General;
 
-namespace HSPI_SIID_ModBusDemo.Modbus
+namespace HSPI_SIID.Modbus
 {
 
 
@@ -26,6 +26,8 @@ namespace HSPI_SIID_ModBusDemo.Modbus
        
 
         public static HashSet<string> WhoIsBeingPolled = new HashSet<string>();
+        public static HashSet<string> WhoIsBeingWritten = new HashSet<string>();
+
 
         public ModbusDevicePage(string pagename, InstanceHolder instance) : base(pagename)
         {
@@ -48,13 +50,17 @@ namespace HSPI_SIID_ModBusDemo.Modbus
             foreach (var Siid in Instance.Devices)
             {
                 var EDO = Siid.Extra;
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                string s = parts["Type"];
-                if (parts["Type"] == "Modbus Gateway")
+                try
                 {
-                    ModbusGates.Add(Siid);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string s = parts["Type"];
+                    if (parts["Type"] == "Modbus Gateway")
+                    {
+                        ModbusGates.Add(Siid);
 
+                    }
                 }
+                catch { }
             }
                 return ModbusGates;
 
@@ -277,25 +283,25 @@ public string GetReg(string instring)
         {
             var Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/MDevDisabled.png";
+            Graphic.Graphic = "/images/HomeSeer/status/off.gif";
             Graphic.Set_Value = 0;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/MDevSuccess.png";
+            Graphic.Graphic = "/images/HomeSeer/status/green.png";
             Graphic.Set_Value = 1;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/MDevTimeout.png";
+            Graphic.Graphic = "/images/HomeSeer/status/yellow.png";
             Graphic.Set_Value = 2;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/MDevFailed.png";
+            Graphic.Graphic = "/images/HomeSeer/status/red.png";
             Graphic.Set_Value = 3;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
         }
@@ -337,7 +343,7 @@ public string GetReg(string instring)
 
             var Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDDisabledPlaceholder.png";
+            Graphic.Graphic = "/images/HomeSeer/status/red.png";
             Graphic.Set_Value=0;
 
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
@@ -345,7 +351,7 @@ public string GetReg(string instring)
 
              Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDGoodPlaceholder.png";
+            Graphic.Graphic = "/images/HomeSeer/status/green.png";
             Graphic.Set_Value = 1;
 
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
@@ -353,7 +359,7 @@ public string GetReg(string instring)
 
              Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDMedPlaceholder.png";
+            Graphic.Graphic = "/images/HomeSeer/status/yellow.png";
             Graphic.Set_Value = 2;
 
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
@@ -611,7 +617,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 }
       
             
-            return "Gateway cannot be reached";
+          
 
         }
 
@@ -813,67 +819,85 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             try
             {
                 var devID = ActionIn.Ref;
-
-                var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
-                Scheduler.Classes.DeviceClass ModDev = NewDevice.Device;
-                
-                var EDO =NewDevice.Extra;
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                if (parts != null)
-                {
-                    if (parts["Type"].ToLower() == "Modbus Device".ToLower())
+                if (!WhoIsBeingWritten.Contains(devID.ToString())){
+                    lock (WhoIsBeingWritten)
                     {
-                       var Send= ActionIn.ControlValue;
-                        //Send is a double = 32 bits
-                        //Need to convert to whatever we write, depending on the thing we're writing to
-                        
-
-
-                        try
-                        {
-                            if (bool.Parse(parts["ReadOnlyDevice"])|| Convert.ToInt32(parts["RegisterType"])==0 || Convert.ToInt32(parts["RegisterType"]) == 2)//Read only or a read only type
-                            {
-                                throw new Exception("Device is set to be read only. Write commands disabled");
-                            }
-                            Console.WriteLine("         Writing to Device: " + devID);
-                            while (WhoIsBeingPolled.Contains(devID.ToString()))
-                            {
-                                Console.WriteLine("Device currently being polled, waiting for it to be free");
-                                System.Threading.Thread.Sleep(100); //Dont try to write until we aren't reading from the register
-                            }
-                            lock (WhoIsBeingPolled)
-                            {
-                                WhoIsBeingPolled.Add(devID.ToString());
-                            }
-                            Console.WriteLine("         Writing " + Send +" To device "+devID);
-                            WriteToModbusDevice(NewDevice, Send);
-
-                            Console.WriteLine("         Reading from Device: " + devID);
-                            ReadFromModbusDevice(NewDevice);
-                            ProcessCalculator(NewDevice);
-                            lock (WhoIsBeingPolled)
-                            {
-                                WhoIsBeingPolled.Remove(devID.ToString());
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("Exception: " + e.StackTrace);
-                            Instance.host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
-                            if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
-                            {
-                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
-                            }
-                            else
-                            {
-                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
-                            }
-
-
-                        }
+                        WhoIsBeingWritten.Add(devID.ToString());
                     }
+                    Instance.host.SetDeviceString(Convert.ToInt32(devID), "Sending command to device...", true);
 
 
+                    var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+                    Scheduler.Classes.DeviceClass ModDev = NewDevice.Device;
+
+                    var EDO = NewDevice.Extra;
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    if (parts != null)
+                    {
+                        if (parts["Type"].ToLower() == "Modbus Device".ToLower())
+                        {
+                            var Send = ActionIn.ControlValue;
+                            //Send is a double = 32 bits
+                            //Need to convert to whatever we write, depending on the thing we're writing to
+
+
+
+                            try
+                            {
+                                if (bool.Parse(parts["ReadOnlyDevice"]) || Convert.ToInt32(parts["RegisterType"]) == 0 || Convert.ToInt32(parts["RegisterType"]) == 2)//Read only or a read only type
+                                {
+                                    throw new Exception("Device is set to be read only. Write commands disabled");
+                                }
+                                Console.WriteLine("         Writing to Device: " + devID);
+                                while (WhoIsBeingPolled.Contains(devID.ToString()))
+                                {
+                                    Console.WriteLine("Device currently being polled, waiting for it to be free");
+                                    System.Threading.Thread.Sleep(1000); //Dont try to write until we aren't reading from the register
+                                }
+                                lock (WhoIsBeingPolled)
+                                {
+                                    WhoIsBeingPolled.Add(devID.ToString());
+                                }
+                                Console.WriteLine("         Writing " + Send + " To device " + devID);
+                                WriteToModbusDevice(NewDevice, Send);
+
+                                Console.WriteLine("         Reading from Device: " + devID);
+                                ReadFromModbusDevice(NewDevice);
+                                ProcessCalculator(NewDevice);
+
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Exception: " + e.StackTrace);
+                                Instance.host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
+                                if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
+                                {
+                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
+                                }
+                                else
+                                {
+
+                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+                                }
+
+
+                            }
+                            finally
+                            {
+                                lock (WhoIsBeingPolled)
+                                {
+
+                                    WhoIsBeingPolled.Remove(devID.ToString());
+                                    lock (WhoIsBeingWritten) {
+                                        WhoIsBeingWritten.Remove(devID.ToString());
+                                    }
+                                    
+                                }
+                            }
+                        }
+
+
+                    }
                 }
             }
             catch

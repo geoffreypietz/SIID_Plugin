@@ -6,7 +6,7 @@ using Scheduler;
 using System.Web;
 
 using System.Threading;
-using HSPI_SIID_ModBusDemo.Modbus;
+using HSPI_SIID.Modbus;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using HomeSeerAPI;
@@ -15,7 +15,7 @@ using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
 using System.Reflection;
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
     public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 

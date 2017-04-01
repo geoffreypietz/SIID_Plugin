@@ -16,7 +16,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
 	
 	static class Util
@@ -31,7 +31,7 @@ namespace HSPI_SIID_ModBusDemo
 	public const  int ERR_INIT = 2;
         //	public static HomeSeerAPI.IHSApplication hs;  //Changing Util.hs (plugin specific plugin interface) to AllInstances[instanceName].host
         //public static HomeSeerAPI.IAppCallbackAPI callback;
-        public const string IFACE_NAME = "SIID Demo - Modbus";
+        public const string IFACE_NAME = "SIID";
 	//public const string IFACE_NAME = "Sample Plugin";
 		// set when SupportMultipleInstances is TRUE
 	//public static string Instance = "";  //Changing way this is done

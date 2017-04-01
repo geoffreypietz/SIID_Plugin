@@ -10,10 +10,10 @@ using Scheduler;
 using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
-using HSPI_SIID_ModBusDemo.Modbus;
+using HSPI_SIID.Modbus;
 using System.Web;
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
     public class HSPI : IPlugInAPI
     {
@@ -628,7 +628,8 @@ namespace HSPI_SIID_ModBusDemo
             //OK, we will take this function over for modbus actions.
             foreach (CAPI.CAPIControl CC in colSend)
             {
-                Instance.modPage.ReadWriteIfMod(CC);
+                System.Threading.Tasks.Task.Factory.StartNew(() => Instance.modPage.ReadWriteIfMod(CC));
+            
 
 
             }

@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSPI_SIID_ModBusDemo", "HSPI_SAMPLE_CS\HSPI_SIID_ModBusDemo.csproj", "{3450DE70-52C9-4077-B25E-567E7BE44278}"
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSPI_SIID", "HSPI_SAMPLE_CS\HSPI_SIID.csproj", "{3450DE70-52C9-4077-B25E-567E7BE44278}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EE493B17-8185-406C-881F-1144092F01CB} = {EE493B17-8185-406C-881F-1144092F01CB}
 	EndProjectSection

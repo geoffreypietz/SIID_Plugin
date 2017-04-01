@@ -8,7 +8,7 @@ using System.Text;
 using System.Web;
 using Scheduler;
 
-namespace HSPI_SIID_ModBusDemo
+namespace HSPI_SIID
 {
     public class WebPageAddDevice : PageBuilderAndMenu.clsPageBuilder
     {
