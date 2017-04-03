@@ -212,7 +212,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public bool WriteValue(object new_value)
+        public bool WriteValue(object new_value, int writePriority = 0)
         {
             var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;
             var adr = BacnetObject.BacnetDevice.BacnetAddress;
@@ -286,7 +286,9 @@ namespace HSPI_SIID.BACnet
             //write
             try
             {
-                comm.WritePriority = (uint)Yabe.Properties.Settings.Default.DefaultWritePriority;   //TODO: let this be changeable
+                //comm.WritePriority = (uint)Yabe.Properties.Settings.Default.DefaultWritePriority;   //TODO: let this be changeable
+                //comm.WritePriority = (uint)BacnetObject.WritePriority;
+                comm.WritePriority = (uint)writePriority;
                 if (!comm.WritePropertyRequest(adr, object_id, BacnetPropertyId, b_value))
                 {
                     success = false;

@@ -179,6 +179,8 @@ namespace HSPI_SIID.BACnet
                                                                           };
 
 
+        public int WritePriority = 0;
+
 
         public BACnetDevice BacnetDevice;      //unless we have bacnetdevice inherit from this class...?
 

@@ -104,7 +104,6 @@
     <Compile Include="BACnet\Model\BACnetTreeNode.cs" />
     <Compile Include="BACnet\Model\BACnetTreeDataObject.cs" />
     <Compile Include="BACnet\Web\BACnetHomeSeerDevices.cs" />
-    <Compile Include="BACnet\Web\BACnet.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
