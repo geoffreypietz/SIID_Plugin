@@ -452,9 +452,14 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             {
                 newDevice.Device.set_Name(Instance.host, changed["value"]);
             }
+            else if (partID == "devdelete")
+            {
+                Instance.host.DeleteDevice(devId);
+                SiidDevice.removeDev(Instance.Devices,devId);
+            }
             else
             {
-                newDevice.UpdateExtraData( partID, changed["value"]);
+                newDevice.UpdateExtraData(partID, changed["value"]);
             }
             return "True";
         }

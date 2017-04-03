@@ -15,7 +15,10 @@ namespace HSPI_SIID
 
         }
 
-
+        public DeleteDeviceButton DeleteDeviceButton(string ID)
+        {
+            return new DeleteDeviceButton(ID, AjaxPostDestination);
+        }
         public selectorInput selectorInput(string[] selectorOptions, string id = "", string name = "", int def = 0)
         {
             return new selectorInput(selectorOptions, id, name, def, AjaxPostDestination);
@@ -423,13 +426,49 @@ console.log(theData);
         }
 
     }
+    public class DeleteDeviceButton : htmlObject
+    {
+        public DeleteDeviceButton(string DeviceId, string AJX)
+        {
+            AjaxPostDestination = AJX;
+            html = @"<button type = 'submit' id='devdelete_" + DeviceId + @"' name='devdelete' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' role='button' aria-disabled='false'><span class='ui-button-text'>Delete</span></button>
+       <script>
+$(function()
+        {
+$('#devdelete_" + DeviceId + @"').button({ icons: { primary: '',secondary: ''} });
+$('#devdelete_" + DeviceId + @"').click(function(e) {
+                 theform =$('#' +$(this)[0].id);
+                 theData = theform.serialize();
+                returnTrue = false;
+                theData = theData + '&id=' + this.id;
+                commonAjaxPost(theData, '" + AjaxPostDestination + @"');
+setTimeout( location.reload(),500);
+                   
+                if (returnTrue)
+                {
+
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            });
+        });
+</script>";
+        }
+         
+
+
+    }
+
     public class Qbutton : htmlObject
     {
         public Qbutton(string id, string label, string AJX)
         {
 
             AjaxPostDestination = AJX;
-            /*      string prescript = @"<script>  $(function()
+            /*      string prescript = @" < script>  $(function()
               {
            $('#" + id + @"').click(function() {
 
