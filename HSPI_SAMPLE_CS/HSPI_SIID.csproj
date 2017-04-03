@@ -91,10 +91,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BACnet\Model\BACnetCustomProperty.cs" />
     <Compile Include="BACnet\Model\BACnetCustomPropertyDescriptor.cs" />
     <Compile Include="BACnet\Model\BACnetDevice.cs" />
-    <Compile Include="BACnet\Web\BACnetDevicePage.cs" />
+    <Compile Include="BACnet\Web\BACnetDevices.cs" />
     <Compile Include="BACnet\Model\BACnetNetwork.cs" />
     <Compile Include="BACnet\Model\BACnetGlobalNetwork.cs" />
     <Compile Include="BACnet\Model\BACnetObject.cs" />
@@ -104,7 +103,8 @@
     <Compile Include="BACnet\Model\BACnetPropertyDataType.cs" />
     <Compile Include="BACnet\Model\BACnetTreeNode.cs" />
     <Compile Include="BACnet\Model\BACnetTreeDataObject.cs" />
-    <Compile Include="BACnet\Web\BACnetHomeSeerDevicePage.cs" />
+    <Compile Include="BACnet\Web\BACnetHomeSeerDevices.cs" />
+    <Compile Include="BACnet\Web\BACnet.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />

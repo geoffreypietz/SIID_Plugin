@@ -45,12 +45,6 @@ namespace HSPI_SIID.BACnet
         public BACnetNetwork BacnetNetwork { get; set; }
 
 
-        //not sure if need to store bacnet address.  This is external to device...
-
-
-        //could also store this in deviceobject.
-        //public uint DeviceId { get; set; }
-
 
 
         public uint InstanceNumber { get; set; }
@@ -60,14 +54,9 @@ namespace HSPI_SIID.BACnet
 
 
 
-        //public Dictionary<BacnetObjectId, BACnetObject> Objects = new Dictionary<BacnetObjectId, BACnetObject>();
-
-
         public List<KeyValuePair<BacnetObjectId, BACnetObject>> BacnetObjects = new List<KeyValuePair<BacnetObjectId, BACnetObject>>();
 
 
-
-        //public KeyValuePair<BacnetObjectId, BACnetObject> DeviceObject { get; set; }
 
 
 
@@ -89,12 +78,7 @@ namespace HSPI_SIID.BACnet
         
         
         
-        }      //TODO: don't really need to nest these.
-
-
-
-        //private int AsynchRequestId = 0;
-
+        }     
 
 
 

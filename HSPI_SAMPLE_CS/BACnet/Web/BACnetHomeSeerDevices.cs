@@ -12,7 +12,7 @@ using System.IO.BACnet;
 
 namespace HSPI_SIID.BACnet
 {
-   public class BACnetHomeSeerDevicePage : PageBuilderAndMenu.clsPageBuilder
+   public class BACnetHomeSeerDevices : PageBuilderAndMenu.clsPageBuilder
     {
         public InstanceHolder Instance { get; set; }
 
@@ -22,10 +22,11 @@ namespace HSPI_SIID.BACnet
         //public List<string> DiscoveredBACnetDevices { get; set; }
 
 
-        public String PageName { get; set; }
+       public static String BaseUrl = "BACnetHomeSeerDevicesView";
 
 
-        public BACnetHomeSeerDevicePage(string pagename, InstanceHolder instance)
+
+        public BACnetHomeSeerDevices(string pagename, InstanceHolder instance)
             : base(pagename)
         {
 
@@ -33,88 +34,174 @@ namespace HSPI_SIID.BACnet
             //BACnetBuilder = new htmlBuilder("BACnetObjectDataService" + Instance.ajaxName);
             //DiscoveredBACnetDevices = new List<string>();
 
-            this.PageName = pagename + instance.ajaxName;
+            //this.PageName = pagename + instance.ajaxName;
+
+            PageName = BaseUrl + instance.ajaxName;
 
         }
 
- 
+         
+
+
+        public string AllBacnetDevices()
+        {//gets list of all associated devices. 
+            //Get the collection of these devices which are bacnet
+            //build Devices table with the appropriate data displays
+
+            StringBuilder sb = new StringBuilder();
+            htmlBuilder BACnetBuilder = new htmlBuilder("BacnetDev" + Instance.ajaxName);
+
+            htmlTable bacnetConfHtml = BACnetBuilder.htmlTable(800);
+
+            List<Scheduler.Classes.DeviceClass> BACnetDevs = getParentBacnetDevices().ToList();
+            //HERE
 
 
 
-        //public Scheduler.Classes.DeviceClass getExistingHomeseerBacnetNode(String bacnetNodeData)      //now using 'node' to mean a bacnet device or object
-        //{
-        //    //List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+            foreach (Scheduler.Classes.DeviceClass bacnetDevice in BACnetDevs)
+            {
+                var EDO = bacnetDevice.get_PlugExtraData_Get(Instance.host);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
 
-        //    Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
-        //    var Dev = DevNum.GetNext();
-        //    while (Dev != null)
-        //    {
-        //        try
-        //        {
-        //            var EDO = Dev.get_PlugExtraData_Get(Instance.host);
-        //            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-
-        //            //TODO: strip out weird numerical thing that gets added on...
-
-        //            if ((parts["Type"] == "BACnet Device") && (parts["BacnetTreeNodeData"] == bacnetNodeData))
-        //            {
-        //                if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name)) //Then it's one of ours
-        //                {
-        //                    return Dev;
-        //                    //could probably store instance stuff in the tree as well...
-        //                    //listOfDevices.Add(Dev);
-        //                }
+                var DevRef = bacnetDevice.get_Ref(Instance.host);
 
 
-        //            }
-
-
-        //        }
-        //        catch
-        //        {
-
-        //        }
-        //        Dev = DevNum.GetNext();
-
-
-        //    }
-        //    //return Dev;
-        //    return null;    //same thing
-
-
-        //}
+                //Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
 
 
 
+                bacnetConfHtml.addDevHeader("BACnet Device");
+                bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, bacnetDevice.get_Image(Instance.host)).print() +
+                    BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
+                    + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
+                //  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
+                sb.Append(bacnetConfHtml.print());
+
+                bacnetConfHtml = BACnetBuilder.htmlTable(800);
+
+                List<Scheduler.Classes.DeviceClass> BACnetObjs = getChildBacnetDevices(bacnetNodeData["device_instance"]).ToList(); ;
+
+                if (BACnetObjs.Count == 0)
+                    continue;
+
+                
+                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
 
 
+                foreach (Scheduler.Classes.DeviceClass bacnetObject in BACnetObjs)
+                {
 
+                    var EDO2 = bacnetObject.get_PlugExtraData_Get(Instance.host);
+                    var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
 
-        //public Boolean isMatchingBacnetDevice(String bacnetNodeData, String homeseerNodeData)
-        //{
+                    bacnetConfHtml.addSubMain(BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print(),
+                           BACnetBuilder.MakeLink("/deviceutility?ref=" + bacnetObject.get_Ref(Instance.host) + "&edit=1", bacnetObject.get_Name(Instance.host)).print(),
+                           "", "", "");
+                           //Instance.modPage.GetReg(parts["RegisterType"]),
+                           //Instance.modPage.GetRet(parts["ReturnType"])
 
-        //    var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
-        //    var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
-
-        //    foreach (var nodeProp in BACnetTreeNode.DeviceNodeProperties)
-        //        if (bacnetNode[nodeProp] != homeseerNode[nodeProp])
-        //            return false;
-
-        //    return true;
-        //}
-
-
-        //public Boolean isMatchingBacnetObject(String bacnetNodeData, Scheduler.Classes.DeviceClass homeseerDevice)
-        //{
-        //    var propsToCompare = new String[] { "ip_address", "device_instance", "object_type", "object_instance" };
-
-        //    return true;
-        //}
+                }
 
 
 
 
 
+                //bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, device.get_Image(Instance.host)).print() +
+                //    BACnetBuilder.MakeLink("/deviceutility?ref=" + device.get_Ref(Instance.host)
+                //    + "&edit=1", device.get_Name(Instance.host)).print(), EDO.GetNamed("SSIDKey").ToString());
+
+            }
+            sb.Append(bacnetConfHtml.print());
+
+
+
+            return sb.ToString();
+        }
+
+
+
+
+
+
+
+
+        public List<Scheduler.Classes.DeviceClass> getParentBacnetDevices()
+        {
+            List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+            var Dev = DevNum.GetNext();
+            while (Dev != null)
+            {
+                try
+                {
+                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string s = parts["Type"];
+                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "device")
+                        listOfDevices.Add(Dev);
+                }
+                catch
+                {
+
+                }
+                Dev = DevNum.GetNext();
+
+
+            }
+            return listOfDevices;
+
+        }
+
+
+
+
+        public List<Scheduler.Classes.DeviceClass> getChildBacnetDevices(String bacnetDeviceInstance)
+        {
+            List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+
+            Scheduler.Classes.clsDeviceEnumeration DevNum = (Scheduler.Classes.clsDeviceEnumeration)Instance.host.GetDeviceEnumerator();
+            var Dev = DevNum.GetNext();
+            while (Dev != null)
+            {
+                try
+                {
+                    var EDO = Dev.get_PlugExtraData_Get(Instance.host);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string s = parts["Type"];
+                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
+                        listOfDevices.Add(Dev);
+                }
+                catch
+                {
+
+                }
+                Dev = DevNum.GetNext();
+
+
+            }
+            return listOfDevices;
+
+        }
+
+
+
+
+
+        private bool belongsToThisInstance(Scheduler.Classes.DeviceClass Dev)
+        {
+            var devInterface = Dev.get_Interface(Instance.host).ToString();
+            var utilInterface = Util.IFACE_NAME.ToString();
+
+            var interfaceInstance = Dev.get_InterfaceInstance(Instance.host);
+
+            return ((devInterface == utilInterface) && (interfaceInstance == Instance.name));
+
+
+        }
 
 
 
@@ -139,10 +226,10 @@ namespace HSPI_SIID.BACnet
 
             int? dv;
 
-            dv = getExistingBacnetHomeseerDevice(bacnetNodeDataString, "device") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "device");
+            dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeDataString, "device") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "device");
 
             if (nodeType == "object")
-                dv = getExistingBacnetHomeseerDevice(bacnetNodeDataString, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "object", dv);
+                dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeDataString, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "object", dv);
 
 
 
@@ -163,7 +250,9 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private int? getExistingBacnetHomeseerDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
+
+
+        private int? getExistingHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
         {
             //List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
 
@@ -187,6 +276,8 @@ namespace HSPI_SIID.BACnet
                             //could probably store instance stuff in the tree as well...
                             //listOfDevices.Add(Dev);
                         }
+
+
                     }
 
 
@@ -210,17 +301,10 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private Boolean isMatchingHomeseerBacnetNode(String bacnetNodeData, String homeseerNodeData, String nodeType)      //we may want to fetch an existing homeseer device node based on an incoming object node
-        {
-            var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
-            var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
 
-            foreach (var nodeProp in (nodeType == "device" ? BACnetTreeNode.DeviceNodeProperties : BACnetTreeNode.ObjectNodeProperties))
-                if (bacnetNode[nodeProp] != homeseerNode[nodeProp])
-                    return false;
 
-            return true;
-        }
+
+
 
 
 
@@ -233,7 +317,7 @@ namespace HSPI_SIID.BACnet
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
 
 
-            
+
 
             newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
             newDevice.set_Location(Instance.host, "System");
@@ -294,7 +378,17 @@ namespace HSPI_SIID.BACnet
 
 
 
-       //TODO: function to actually make a new device.  return dv or the device itself.
+        private Boolean isMatchingHomeseerBacnetNode(String bacnetNodeData, String homeseerNodeData, String nodeType)      //we may want to fetch an existing homeseer device node based on an incoming object node
+        {
+            var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
+            var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
+
+            foreach (var nodeProp in (nodeType == "device" ? BACnetTreeNode.DeviceNodeProperties : BACnetTreeNode.ObjectNodeProperties))
+                if (bacnetNode[nodeProp] != homeseerNode[nodeProp])
+                    return false;
+
+            return true;
+        }
 
 
 
@@ -309,7 +403,7 @@ namespace HSPI_SIID.BACnet
 
 
             parts["BACnetNodeData"] = bacnetNodeData;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
-                //ex. ip_address=192.168.1.1&device_instance=400001
+            //ex. ip_address=192.168.1.1&device_instance=400001
 
             //within here, "node_type" indicates whether device or object...
 
@@ -331,145 +425,39 @@ namespace HSPI_SIID.BACnet
 
 
 
-
-
         //Makes status strings and associates graphics with the enw device. So we have some bacis stuff like "Device is down" or whatever
         //Can use custom images here or just use some homeseer defauilt images, whatever we ultimately decide.
         //Code below is just copied from modbus gateway placeholders, so should change
         public void MakeBACnetGraphicsAndStatus(int dv)
         {
-            VSVGPairs.VSPair StatusPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
-            StatusPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            StatusPair.Render = Enums.CAPIControlType.TextBox_String;
-            StatusPair.Value = 0;
-            StatusPair.Status = "Unreachable";
-            Instance.host.DeviceVSP_AddPair(dv, StatusPair); 
-
-            StatusPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
-            StatusPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            StatusPair.Render = Enums.CAPIControlType.TextBox_String;
-            StatusPair.Value = 1;
-            StatusPair.Status = "Available";
-            Instance.host.DeviceVSP_AddPair(dv, StatusPair);
-
-            StatusPair = new VSVGPairs.VSPair(ePairStatusControl.Status);
-            StatusPair.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            StatusPair.Render = Enums.CAPIControlType.TextBox_String;
-            StatusPair.Value = 2;
-            StatusPair.Status = "Disabled";
-            Instance.host.DeviceVSP_AddPair(dv, StatusPair);
-
             var Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDDisabledPlaceholder.png"; //Just point these images to somewhere else maybe. starting at HomeSeer HS3/html/
+            Graphic.Graphic = "/images/HomeSeer/status/off.gif";
             Graphic.Set_Value = 0;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
-
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDGoodPlaceholder.png";
+            Graphic.Graphic = "/images/HomeSeer/status/green.png";
             Graphic.Set_Value = 1;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
-
             Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
-            Graphic.Graphic = "/images/SIID/SIIDMedPlaceholder.png";
+            Graphic.Graphic = "/images/HomeSeer/status/yellow.png";
             Graphic.Set_Value = 2;
             Instance.host.DeviceVGP_AddPair(dv, Graphic);
 
-        }
-
-        
-
-
-        public string AllBacnetDevices()
-        {//gets list of all associated devices. 
-            //Get the collection of these devices which are bacnet
-            //build Devices table with the appropriate data displays
-
-            StringBuilder sb = new StringBuilder();
-            htmlBuilder BACnetBuilder = new htmlBuilder("BacnetDev" + Instance.ajaxName);
-
-            htmlTable bacnetConfHtml = BACnetBuilder.htmlTable(800);
-
-            List<Scheduler.Classes.DeviceClass> BACnetDevs = Instance.bacPage.getParentBacnetDevices().ToList();
-            //HERE
-
-
-
-            foreach (Scheduler.Classes.DeviceClass bacnetDevice in BACnetDevs)
-            {
-                var EDO = bacnetDevice.get_PlugExtraData_Get(Instance.host);
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
-
-                var DevRef = bacnetDevice.get_Ref(Instance.host);
-
-
-                //Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
-
-
-
-                bacnetConfHtml.addDevHeader("BACnet Device");
-                bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, bacnetDevice.get_Image(Instance.host)).print() +
-                    BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
-                    + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
-                //  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
-                sb.Append(bacnetConfHtml.print());
-
-                bacnetConfHtml = BACnetBuilder.htmlTable(800);
-
-                List<Scheduler.Classes.DeviceClass> BACnetObjs = Instance.bacPage.getChildBacnetDevices(bacnetNodeData["device_instance"]).ToList(); ;
-
-                if (BACnetObjs.Count == 0)
-                    continue;
-
-                
-                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
-
-
-                foreach (Scheduler.Classes.DeviceClass bacnetObject in BACnetObjs)
-                {
-
-                    var EDO2 = bacnetObject.get_PlugExtraData_Get(Instance.host);
-                    var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
-
-                    bacnetConfHtml.addSubMain(BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print(),
-                           BACnetBuilder.MakeLink("/deviceutility?ref=" + bacnetObject.get_Ref(Instance.host) + "&edit=1", bacnetObject.get_Name(Instance.host)).print(),
-                           "", "", "");
-                           //Instance.modPage.GetReg(parts["RegisterType"]),
-                           //Instance.modPage.GetRet(parts["ReturnType"])
-
-                }
-
-
-
-
-
-                //bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, device.get_Image(Instance.host)).print() +
-                //    BACnetBuilder.MakeLink("/deviceutility?ref=" + device.get_Ref(Instance.host)
-                //    + "&edit=1", device.get_Name(Instance.host)).print(), EDO.GetNamed("SSIDKey").ToString());
-
-            }
-            sb.Append(bacnetConfHtml.print());
-
-
-
-            return sb.ToString();
+            Graphic = new VSVGPairs.VGPair();
+            Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
+            Graphic.Graphic = "/images/HomeSeer/status/red.png";
+            Graphic.Set_Value = 3;
+            Instance.host.DeviceVGP_AddPair(dv, Graphic);
         }
 
 
 
 
-
-       
-    
-
-
-
-        
 
 
 

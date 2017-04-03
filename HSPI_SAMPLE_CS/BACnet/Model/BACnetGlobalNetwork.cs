@@ -101,30 +101,6 @@ namespace HSPI_SIID.BACnet
 
 
 
-        //[Serializable]
-        //public class TreeNode : BACnetTreeNode
-        //{
-        //    public TreeNode() //: base(parent)
-        //    {
-        //        title = "All networks";
-
-        //        folder = true;
-
-        //        lazy = true;
-
-        //        data["is_global_network"] = true;
-        //        //data["is_root"] = true;
-        //    }
-        //}
-
-
-
-        //TODO: maybe have separate method for filter/discover/etc.
-
-
-
-
-
         public List<BACnetTreeNode> GetChildNodes()     //this one only works from within the application...or on discover/refresh button?
         {
             Discover();     //don't need to get child networks until data requested?  This is a general pattern for these objects.

@@ -16,16 +16,20 @@ namespace HSPI_SIID.BACnet
    public class BACnetDataService : PageBuilderAndMenu.clsPageBuilder
     {
         public InstanceHolder Instance { get; set; }
-        public htmlBuilder BACnetBuilder { get; set; }
+        //public htmlBuilder BACnetBuilder { get; set; }
 
         private static readonly String emptyResult = "[]";
+
+        private BACnetGlobalNetwork bacnetGlobalNetwork = null;     //still only one per instance
 
         //private JavaScriptSerializer jss = new JavaScriptSerializer();
 
         //public List<string> DiscoveredBACnetDevices { get; set; }
 
-        public String PageName { get; set; }
+        //public String PageName { get; set; }
 
+
+        public static String BaseUrl = "BACnetDataService";
 
         public BACnetDataService(string pagename, InstanceHolder instance)
             : base(pagename)
@@ -47,14 +51,14 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public BACnetGlobalNetwork GetBacnetGlobalNetwork(NameValueCollection nodeData, Boolean refresh = false)     //any time this is called, shouldn't we refresh filters?  Maybe not.....
+        private BACnetGlobalNetwork GetBacnetGlobalNetwork(NameValueCollection nodeData, Boolean refresh = false)     //any time this is called, shouldn't we refresh filters?  Maybe not.....
         {
             //always refresh if calling from data service, but if calling internally to create Homeseer object, no need to refresh everything
 
 
-            if (Instance.bacnetGlobalNetwork == null || refresh)    //if they re-filtered
+            if (bacnetGlobalNetwork == null || refresh)    //if they re-filtered
             {
-                Instance.bacnetGlobalNetwork = new BACnetGlobalNetwork(
+                bacnetGlobalNetwork = new BACnetGlobalNetwork(
                     this.Instance,
                     Boolean.Parse(nodeData["filter_ip_address"] ?? "false"),
                     nodeData["selected_ip_address"],
@@ -62,10 +66,10 @@ namespace HSPI_SIID.BACnet
                     Boolean.Parse(nodeData["filter_device_instance"] ?? "false"),
                     Int32.Parse(nodeData["device_instance_min"] ?? "0"),
                     Int32.Parse(nodeData["device_instance_max"] ?? "4194303"));
-                Instance.bacnetGlobalNetwork.Discover();
+                bacnetGlobalNetwork.Discover();
             }
 
-            return Instance.bacnetGlobalNetwork;
+            return bacnetGlobalNetwork;
 
         }
 
@@ -114,6 +118,39 @@ namespace HSPI_SIID.BACnet
 
             var bacnetObject = bacnetDevice.GetBacnetObject(bacnetObjectId);
             return bacnetObject;
+
+        }
+
+
+
+
+        public BACnetObject GetBacnetObjectOrDeviceObject(NameValueCollection bacnetNodeData)
+        {
+
+            try
+            {
+                BACnetObject bno = null;
+                if (bacnetNodeData["node_type"] == "device")
+                {
+                    var d = GetBacnetDevice(bacnetNodeData, true);  //still bug in this, somehow...
+                    bno = d.DeviceObject;
+                }
+                else
+                {
+                    bno = GetBacnetObject(bacnetNodeData, true);
+                }
+
+                return bno;
+
+
+            }
+
+            catch (Exception ex)
+            {
+                return null;
+
+                //ModbusConfHtml.add("Error: ", "Could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
+            }
 
         }
 

@@ -634,36 +634,6 @@ namespace HSPI_SIID
             
         }
 
-        public string AllBacnetDevices()
-        {//gets list of all associated devices. 
-         //Get the collection of these devices which are bacnet
-         //build Devices table with the appropriate data displays
-        
-            StringBuilder sb = new StringBuilder();
-            htmlBuilder BACnetBuilder = new htmlBuilder("BacnetDev" + Instance.ajaxName);
-
-            htmlTable ModbusConfHtml = BACnetBuilder.htmlTable(800);
-
-            List<Scheduler.Classes.DeviceClass> BACnetDevs = Instance.bacPage.getAllBacnetDevices().ToList();
-        
-
-            foreach (Scheduler.Classes.DeviceClass device in BACnetDevs)
-            {
-                var EDO = device.get_PlugExtraData_Get(Instance.host);
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-
-                ModbusConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, device.get_Image(Instance.host)).print() +
-                    BACnetBuilder.MakeLink("/deviceutility?ref=" + device.get_Ref(Instance.host)
-                    + "&edit=1", device.get_Name(Instance.host)).print(), EDO.GetNamed("SSIDKey").ToString());
-              
-
-            }
-            sb.Append(ModbusConfHtml.print());
-
-
-            
-            return sb.ToString();
-        }
 
 
         public string AllModbusDevices()
@@ -947,12 +917,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
 
-
-
-
-
-
-
                  tab = new clsJQuery.Tab();
                 tab.tabTitle = "Homeseer BACnet devices";
                 tab.tabDIVID = "bacNetDevTab";
@@ -961,41 +925,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 //have the ModBus Add device button
                 //Also list all associated modbus devices
 
-                DeviceTab.Append(Instance.bacnetHomeSeerDevicePage.AllBacnetDevices());
+                DeviceTab.Append(Instance.bacnetHomeSeerDevices.AllBacnetDevices());
 
                 tab.tabContent = DeviceTab.ToString();
 
                 jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
-
-
-
-
-                //tab.tabTitle = "Devices";
-                //tab.tabDIVID = "modBusDevTab";
-
-                ////have the ModBus Add device button
-                ////Also list all associated modbus devices
-                //htmlBuilder AddModbusDevBuilder = new htmlBuilder("AddModbusGate" + Instance.ajaxName);
-                //StringBuilder ModbusDevPage = new StringBuilder();
-                //ModbusDevPage.Append("<br><br><div style='display:block;'>");
-                //ModbusDevPage.Append(AddModbusDevBuilder.Gobutton("addModGateway", "Add Modbus IP Gateway").print());
-                //ModbusDevPage.Append("</div><br>");
-                //ModbusDevPage.Append(AllModbusDevices());
-                //tab.tabContent = ModbusDevPage.ToString();
-
-                //jqtabs.postOnTabClick = true;
-                //jqtabs.tabs.Add(tab);
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1093,19 +1028,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
 
-                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivStart("bacnetButtonFooter", "style='height:70px; width: 100%; float:left; '"));
-                //htmlBuilder DiscoverBACNET = new htmlBuilder("discoverBACnetDevices" + Instance.ajaxName);
-                //DiscoverTab.Append(DiscoverBACNET.Gobutton("discoverBACnetDevices", "Refresh devices/objects").print());//Gobutton redirects to a new page, not a postback thing
-                //DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
-
-
-                //var ftPath = System.Web.Hosting.HostingEnvironment.MapPath("~/jquery.fancytree-all.min.js");
-
-                //var ftPath = HttpContext.Current.Server.MapPath("~/jquery.fancytree-all.min.js");
-                //DiscoverTab.Append(String.Format("<script src='{0}' />", ftPath));
-                //var 
-
-
                 string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
 
@@ -1121,7 +1043,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 DiscoverTab.Append("<script>" + ftJs + "</script>");
 
                 DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName));
-                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevicePage.PageName)); 
+                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevices.PageName)); 
                 //BacNet discovery needs to know this - this is where tree gets its data from
 
                 String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
@@ -1132,45 +1054,10 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
 
-
-                htmlTable BACnetTable = BacnetBuilder.htmlTable();
-                if (Instance.bacPage.DiscoveredBACnetDevices.Count > 0)
-                {
-                    BACnetTable.add(" BACnet Devices on network:");
-                    htmlBuilder addBACnet = new htmlBuilder("addBACnetDevice" + Instance.ajaxName);
-                   int count = 0;
-                    foreach (string entry in Instance.bacPage.DiscoveredBACnetDevices)
-                    {
-                      
-                        BACnetTable.addDevMain(entry, addBACnet.Qbutton("B_"+count, "Add this BACnet device to Homeseer").print());
-                        count++;
-                    }
-
-                }
-                DiscoverTab.Append(BACnetTable.print());
-                //Here is placeholder
-                //Button to run discover program
-                //Do BACnet stuff, then populates the list here with the results I guess?
-
-                //Discover button
-
-                //Placeholder of discovered devices
-                //button to add Homeseer device of selected discovered devices
-                // bacPage.DiscoveredBACnetDevices is the list of all discovered devices (in some format, maybe jquery)
                 tab.tabContent = DiscoverTab.ToString();
 
                jqtabs.postOnTabClick = false;
                 jqtabs.tabs.Add(tab);
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1206,15 +1093,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 //tab.tabContent = ConfigTab.ToString();
                 //jqtabs.postOnTabClick = false;
                 //jqtabs.tabs.Add(tab);
-
-
-
-
-
-
-
-
-
 
 
 

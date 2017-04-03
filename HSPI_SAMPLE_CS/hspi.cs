@@ -11,6 +11,7 @@ using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
 using HSPI_SIID.Modbus;
+using HSPI_SIID.BACnet;
 using System.Web;
 
 namespace HSPI_SIID
@@ -268,16 +269,15 @@ namespace HSPI_SIID
                 Instance.host.RegisterPage("AddModbusDevice" , Util.IFACE_NAME, Instance.name);
 
 
-                Instance.host.RegisterPage("BACnet", Util.IFACE_NAME, Instance.name); //Ajax calls from BACnet builder
-                Instance.host.RegisterPage("discoverBACnetDevices", Util.IFACE_NAME, Instance.name);//Redirect from the Gobutton for discoverBACnetDevices
-                Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage("BACnet", Util.IFACE_NAME, Instance.name); //Ajax calls from BACnet builder
+                //Instance.host.RegisterPage("discoverBACnetDevices", Util.IFACE_NAME, Instance.name);//Redirect from the Gobutton for discoverBACnetDevices
+                //Instance.host.RegisterPage("addBACnetDevice", Util.IFACE_NAME, Instance.name);
 
-                Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
-                Instance.host.RegisterPage("BACnetDevTab", Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage(BACnetDataService.BaseUrl, Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage(BACnetDevices.BaseUrl, Util.IFACE_NAME, Instance.name);
+                Instance.host.RegisterPage(BACnetHomeSeerDevices.BaseUrl, Util.IFACE_NAME, Instance.name);
 
-
-
-                Instance.host.RegisterPage("BACnetHomeSeerDevicePage", Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage("BACnetHomeSeerDevicesEdit", Util.IFACE_NAME, Instance.name);
 
 
                 Instance.host.RegisterPage("file", Util.IFACE_NAME, Instance.name);
@@ -374,7 +374,7 @@ namespace HSPI_SIID
                     }
                 case ("BACnet Device")://????
                     {
-                        return Instance.bacPage.BuildBACnetDeviceTab(dvRef);
+                        return Instance.bacnetDevices.BuildBACnetDeviceTab(dvRef);
                     }
                 case ("Scratchpad")://????
                     {
@@ -474,18 +474,10 @@ namespace HSPI_SIID
 
             }
 
-
-            //else if (pageName == "discoverBACnetDevices")
-            //{
-            //    return Instance.bacPage.DiscoverDevicesRedirect(pageName, user, userRights, queryString);
-
-            //}
-
-
-            else if (pageName == Instance.bacnetHomeSeerDevicePage.PageName)
+            else if (pageName == Instance.bacnetHomeSeerDevices.PageName)
             {
 
-                return Instance.bacnetHomeSeerDevicePage.addOrEditBacnetHomeseerDevice(queryString);
+                return Instance.bacnetHomeSeerDevices.addOrEditBacnetHomeseerDevice(queryString);
 
 
                 //TODO: check if device already exists in homeseer.  If so, fine, just point to device config page anyway.
@@ -561,24 +553,24 @@ namespace HSPI_SIID
             }
 
 
-            else if (pageName == "BACnetDevTab" + Instance.ajaxName)
+            else if (pageName == Instance.bacnetDevices.PageName)
             {
 
                 //TODO: should really add a separate page for this, since separate post URL, but...
 
                 //return "";
 
-                return Instance.bacPage.parseBacnetDeviceTab(data);
+                return Instance.bacnetDevices.parseBacnetDeviceTab(data);
 
             }
 
 
 
 
-            else if (pageName == Instance.bacnetHomeSeerDevicePage.PageName)
+            else if (pageName == Instance.bacnetHomeSeerDevices.PageName)
             {
 
-                return Instance.bacnetHomeSeerDevicePage.addOrEditBacnetHomeseerDevice(data);
+                return Instance.bacnetHomeSeerDevices.addOrEditBacnetHomeseerDevice(data);
 
 
                 //TODO: check if device already exists in homeseer.  If so, fine, just point to device config page anyway.
