@@ -7,140 +7,14 @@ using System.IO.BACnet;
 using Utilities;
 using System.ComponentModel;
 
+using HSPI_SIID.BACnet.Model;   //namespaces got screwed up by arranging things into folders...
+
+
 namespace HSPI_SIID.BACnet
 {
     [DataContract]
     public class BACnetProperty
     {
-
-
-    //    private string m_name = string.Empty;
-    //    private bool m_readonly = false;
-    //    private object m_old_value = null;
-    //    private object m_value = null;
-    //    private Type m_type;
-    //    private object m_tag;
-    //    private DynamicEnum m_options;
-    //    private string m_category;
-    //    // Modif FC : change type
-    //    private BacnetApplicationTags? m_description;
-
-    //    // Modif FC : constructor
-    //    public BACnetProperty(string name, object value, Type type, bool read_only, string category = "", BacnetApplicationTags? description = null, DynamicEnum options = null, object tag = null)
-    //    {
-    //        this.m_name = name;
-    //        this.m_old_value = value;
-    //        this.m_value = value;
-    //        this.m_type = type;
-    //        this.m_readonly = read_only;
-    //        this.m_tag = tag;
-    //        this.m_options = options;
-    //        this.m_category = "BacnetProperty";
-    //        this.m_description = description;
-    //    }
-
-    //    public DynamicEnum Options
-    //    {
-    //        get { return m_options; }
-    //    }
-
-    //    public Type Type
-    //    {
-    //        get { return m_type; }
-    //    }
-
-    //    public string Category
-    //    {
-    //        get { return m_category; }
-    //    }
-
-    //    // Modif FC
-    //    public string Description
-    //    {
-    //        get { return m_description == null ? null : m_description.ToString(); }
-    //    }
-
-    //    // Modif FC : added
-    //    public BacnetApplicationTags? bacnetApplicationTags
-    //    {
-    //        get { return m_description; }
-    //    }
-
-    //    public bool ReadOnly
-    //    {
-    //        get
-    //        {
-    //            return m_readonly;
-    //        }
-    //    }
-
-    //    public string Name
-    //    {
-    //        get
-    //        {
-    //            return m_name;
-    //        }
-    //    }
-
-    //    public bool Visible
-    //    {
-    //        get
-    //        {
-    //            return true;
-    //        }
-    //    }
-
-    //    public object Value
-    //    {
-    //        get
-    //        {
-    //            return m_value;
-    //        }
-    //        set
-    //        {
-    //            m_value = value;
-    //        }
-    //    }
-
-    //    public object Tag
-    //    {
-    //        get { return m_tag; }
-    //    }
-
-    //    public void Reset()
-    //    {
-    //        m_value = m_old_value;
-    //    }
-    //}
-
-
-        //public static readonly Dictionary<BacnetPropertyIds, BACnetPropertyDataType> PropertyDataTypes = new Dictionary<BacnetPropertyIds, BACnetPropertyDataType>(){
-
-        //                                                                  {BacnetPropertyIds.PROP_OBJECT_IDENTIFIER,    
-        //                                                                  BacnetPropertyIds.PROP_OBJECT_NAME,
-        //                                                                  BacnetPropertyIds.PROP_OBJECT_TYPE, 
-        //                                                                  BacnetPropertyIds.PROP_PRESENT_VALUE, 
-        //                                                                  BacnetPropertyIds.PROP_DESCRIPTION, 
-        //                                                                  BacnetPropertyIds.PROP_DEVICE_TYPE, 
-        //                                                                  BacnetPropertyIds.PROP_STATUS_FLAGS, 
-        //                                                                  BacnetPropertyIds.PROP_EVENT_STATE, 
-        //                                                                  BacnetPropertyIds.PROP_OUT_OF_SERVICE, 
-        //                                                                  BacnetPropertyIds.PROP_UPDATE_INTERVAL, 
-        //                                                                  BacnetPropertyIds.PROP_UNITS, 
-        //                                                                  BacnetPropertyIds.PROP_MIN_PRES_VALUE, 
-        //                                                                  BacnetPropertyIds.PROP_MAX_PRES_VALUE, 
-        //                                                                  BacnetPropertyIds.PROP_RESOLUTION, 
-        //                                                                  BacnetPropertyIds.PROP_COV_INCREMENT, 
-        //                                                                  BacnetPropertyIds.PROP_NOTIFICATION_CLASS,
-        //                                                                  BacnetPropertyIds.PROP_HIGH_LIMIT,
-        //                                                                  BacnetPropertyIds.PROP_LOW_LIMIT,
-        //                                                                  BacnetPropertyIds.PROP_DEADBAND,
-        //                                                                  BacnetPropertyIds.PROP_LIMIT_ENABLE,
-        //                                                                  BacnetPropertyIds.PROP_EVENT_ENABLE,
-        //                                                                  BacnetPropertyIds.PROP_NOTIFY_TYPE,
-
-        //};
-
 
 
 
@@ -176,9 +50,6 @@ namespace HSPI_SIID.BACnet
             ParseValue();
 
         }
-
-
-
 
 
 
@@ -249,60 +120,15 @@ namespace HSPI_SIID.BACnet
                     break;
             }
 
-            this.PropertyData = new Utilities.CustomProperty(propName, value, propType, readOnly, "", appTag, null, propRef); 
+            this.CustomProperty = new Utilities.CustomProperty(propName, value, propType, readOnly, "", appTag, null, propRef);
+
+            this.PropertyDescriptor = new BACnetCustomPropertyDescriptor(ref this.CustomProperty, new Attribute[] { });
+            //this.
+
+
 
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
-        //    : this(bno, property_id, new BacnetValue(null), array_index)
-        //{
-
-
-        //    //if (property_value = null)
-        //    //    ReadProperty();
-        //}
-
-
-
-        //public BACnetProperty(BACnetObject bno, BacnetPropertyIds property_id, BacnetValue property_value, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) //this(bno, property_id, array_index)
-        //{
-
-        //    this.BacnetObject = bno;
-        //    this.BacnetPropertyId = property_id;
-
-        //    this.Id = (Int32)property_id;
-
-        //    //this.BacnetPropertyId = 
-
-        //    SetName();
-
-
-        //    this.arrayIndex = array_index;
-
-
-        //    if (property_value.Value == null)
-        //        ReadProperty();
-        //    else
-        //        this.BacnetValue = property_value;
-        //}
-
-
-
-
-        //TODO: still not sure what to store in property object.
 
 
 
@@ -368,8 +194,10 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public Utilities.CustomProperty PropertyData = null;
+        public Utilities.CustomProperty CustomProperty = null;
 
+
+        public BACnetCustomPropertyDescriptor PropertyDescriptor = null;
 
 
         public IList<BacnetValue> BacnetValues;  //not sure how this works yet...
@@ -384,11 +212,6 @@ namespace HSPI_SIID.BACnet
 
 
 
-
-        //TODO: method to get value from HTML.  If we know what ID we assigned it to on page, will be easy....
-
-
-
         public bool WriteValue(object new_value)
         {
             var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;
@@ -399,7 +222,7 @@ namespace HSPI_SIID.BACnet
             var success = false;
 
 
-            var customProperty = this.PropertyData;  //customProperty
+            var customProperty = this.CustomProperty;  //customProperty
 
             //fetch property
 
@@ -490,14 +313,6 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public string GetHtml()     //maybe do a read to be safe?  Or, again, rather than embedding value, just give the controls the ability to get the data.
-        {
-            return "";
-
-
-        }
-
-
 
         public string ValueString()
         {
@@ -553,36 +368,6 @@ namespace HSPI_SIID.BACnet
         }
 
 
-
-
-
-
-
-        //private bool ReadProperty(ref IList<BacnetPropertyValue> values, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
-        //{
-
-
-        //    var comm = BacnetObject.  bacnetDevice.BacnetNetwork.BacnetClient;
-        //    var adr = bacnetDevice.BacnetAddress;
-        //    var bobj_id = BacnetObjectId;
-
-
-        //    BacnetPropertyValue new_entry = new BacnetPropertyValue();
-        //    new_entry.property = new BacnetPropertyReference((uint)property_id, array_index);   //don't need this.  Already have.
-        //    IList<BacnetValue> value;
-        //    try
-        //    {
-        //        if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value, 0, array_index))
-        //            return false;     //ignore
-        //    }
-        //    catch
-        //    {
-        //        return false;         //ignore
-        //    }
-        //    new_entry.value = value;
-        //    values.Add(new_entry);
-        //    return true;
-        //}
 
 
 

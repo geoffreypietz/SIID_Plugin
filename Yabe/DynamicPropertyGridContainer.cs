@@ -34,6 +34,7 @@ using System.Windows.Forms.Design;
 using System.Windows.Forms;
 using System.Drawing.Design;
 
+
 namespace Utilities
 {
     /// <summary>
@@ -955,9 +956,9 @@ namespace Utilities
     // In order to give a readable list instead of a bitstring
     public class BacnetBitStringToEnumListDisplay : UITypeEditor
     {
-        IWindowsFormsEditorService editorService;
+        //IWindowsFormsEditorService editorService;
 
-        ListBox ObjetList;
+        //ListBox ObjetList;
 
         bool LinearEnum;
         Enum currentPropertyEnum;
@@ -969,10 +970,10 @@ namespace Utilities
             currentPropertyEnum = e; 
             this.LinearEnum = LinearEnum;
 
-            if (DisplayAll == true)
-                ObjetList = new CheckedListBox();
-            else
-                ObjetList = new ListBox();
+            //if (DisplayAll == true)
+            //    ObjetList = new CheckedListBox();
+            //else
+            //    ObjetList = new ListBox();
         }
 
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -993,41 +994,64 @@ namespace Utilities
             return name;
         }
 
-        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+
+        public List<string> GetFlagNames()
         {
-            if (provider != null)
+            var namesList = new List<string>();      //key: enum value       //String: display string
+
+
+            var enumType = currentPropertyEnum.GetType();
+            String[] names = Enum.GetNames(enumType);
+            for (int i = 0; i < names.Length; i++)
             {
-                this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+                if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
+                    break; // One property with some content not usefull
+
+                var enumName = names[i];
+                namesList.Add(GetNiceName(enumName));
             }
-            if (this.editorService != null)
-            {
-                String bbs = value.ToString();
 
-                for (int i=0;i<bbs.Length;i++)
-                {
-                    try
-                    {
-                        String Text;
-                        if (LinearEnum==true)
-                            Text = Enum.GetName(currentPropertyEnum.GetType(), i); // for 'classic' Enum like 0,1,2,3 ...
-                        else
-                            Text = Enum.GetName(currentPropertyEnum.GetType(), 1 << i); // for 2^n shift Enum like 1,2,4,8, ...
-
-                        if ((bbs[i] == '1') && !(ObjetList is CheckedListBox))
-                            ObjetList.Items.Add(GetNiceName(Text));
-                        if (ObjetList is CheckedListBox)
-                            (ObjetList as CheckedListBox).Items.Add(GetNiceName(Text), bbs[i] == '1');
-                    }
-                    catch { }
-                }
-
-                if (ObjetList.Items.Count == 0) // when bitstring is only 00000...
-                    ObjetList.Items.Add("... Nothing");
-                // shows the list
-                this.editorService.DropDownControl(ObjetList);
-            }
-            return value; // do not allows any change
+            return namesList;
         }
+
+
+
+    //    public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+    //    {
+    //        if (provider != null)
+    //        {
+    //            this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+    //        }
+    //        if (this.editorService != null)
+    //        {
+    //            String bbs = value.ToString();
+
+    //            for (int i=0;i<bbs.Length;i++)
+    //            {
+    //                try
+    //                {
+    //                    String Text;
+    //                    if (LinearEnum==true)
+    //                        Text = Enum.GetName(currentPropertyEnum.GetType(), i); // for 'classic' Enum like 0,1,2,3 ...
+    //                    else
+    //                        Text = Enum.GetName(currentPropertyEnum.GetType(), 1 << i); // for 2^n shift Enum like 1,2,4,8, ...
+
+    //                    if ((bbs[i] == '1') && !(ObjetList is CheckedListBox))
+    //                        ObjetList.Items.Add(GetNiceName(Text));
+    //                    if (ObjetList is CheckedListBox)
+    //                        (ObjetList as CheckedListBox).Items.Add(GetNiceName(Text), bbs[i] == '1');
+    //                }
+    //                catch { }
+    //            }
+
+    //            if (ObjetList.Items.Count == 0) // when bitstring is only 00000...
+    //                ObjetList.Items.Add("... Nothing");
+    //            // shows the list
+    //            this.editorService.DropDownControl(ObjetList);
+    //        }
+    //        return value; // do not allows any change
+    //    }
+
     }
 
     // In order to remove the default PriorityArray editor which is a problem
@@ -1041,8 +1065,8 @@ namespace Utilities
     // In order to give a readable name to classic enums
     public class BacnetEnumValueDisplay : UITypeEditor
     {
-        ListBox EnumList;
-        IWindowsFormsEditorService editorService;
+        //ListBox EnumList;
+        //IWindowsFormsEditorService editorService;
 
         Enum currentPropertyEnum;
 
@@ -1074,45 +1098,72 @@ namespace Utilities
             return name;
         }
 
-        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
-        {            
-            if (provider != null)
-            {
-                this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
-            }
-            if (this.editorService != null)
-            {
-                int InitialIdx = (int)(uint)value;
+        //public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        //{            
+        //    if (provider != null)
+        //    {
+        //        this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+        //    }
+        //    if (this.editorService != null)
+        //    {
+        //        int InitialIdx = (int)(uint)value;
 
-                if (EnumList == null)
-                {
-                    EnumList = new ListBox();
-                    EnumList.Click += new EventHandler(EnumList_Click);
-                    // get all the Enum values string
-                    String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
-                    for (int i = 0; i < sl.Length; i++)
-                    {
-                        if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
-                            break; // One property with some content not usefull
-                        EnumList.Items.Add(i.ToString() + " : " + GetNiceName(sl[i])); // add to the list
-                    }
-                    if (InitialIdx<EnumList.Items.Count)
-                        EnumList.SelectedIndex = InitialIdx; // select the current item if any
-                }
-                this.editorService.DropDownControl(EnumList); // shows the list
+        //        if (EnumList == null)
+        //        {
+        //            EnumList = new ListBox();
+        //            EnumList.Click += new EventHandler(EnumList_Click);
+        //            // get all the Enum values string
+        //            String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
+        //            for (int i = 0; i < sl.Length; i++)
+        //            {
+        //                if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
+        //                    break; // One property with some content not usefull
+        //                EnumList.Items.Add(i.ToString() + " : " + GetNiceName(sl[i])); // add to the list
+        //            }
+        //            if (InitialIdx<EnumList.Items.Count)
+        //                EnumList.SelectedIndex = InitialIdx; // select the current item if any
+        //        }
+        //        this.editorService.DropDownControl(EnumList); // shows the list
 
-                if ((EnumList.SelectedIndex!=InitialIdx)&&(InitialIdx<EnumList.Items.Count))
-                    return (uint)EnumList.SelectedIndex; // change the value if required
-            }
-            return value;
-        }
+        //        if ((EnumList.SelectedIndex!=InitialIdx)&&(InitialIdx<EnumList.Items.Count))
+        //            return (uint)EnumList.SelectedIndex; // change the value if required
+        //    }
+        //    return value;
+        //}
 
-        void EnumList_Click(object sender, EventArgs e)
+
+
+        public List<KeyValuePair<int, string>> GetValues()   
         {
-            if (this.editorService != null)
-                this.editorService.CloseDropDown();
+            var valsList = new List<KeyValuePair<int, string>>();      //key: enum value       //String: display string
 
+
+            var enumType = currentPropertyEnum.GetType();
+            String[] names = Enum.GetNames(enumType);
+            for (int i = 0; i < names.Length; i++)
+            {
+                if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
+                    break; // One property with some content not usefull
+                
+                var enumName = names[i];
+                var enumValue = (int)Enum.Parse(enumType, enumName);
+
+                valsList.Add(new KeyValuePair<int, string>(enumValue, GetNiceName(enumName) + " (" + enumValue + ")"));
+            }
+
+            return valsList;
         }
+
+
+
+        //void EnumList_Click(object sender, EventArgs e)
+        //{
+        //    if (this.editorService != null)
+        //        this.editorService.CloseDropDown();
+
+        //}
+
+
     }
     // used for BacnetTime (without Date, but stored in a DateTime struct)
     public class BacnetEnumValueConverter : TypeConverter

@@ -62,18 +62,19 @@ namespace HSPI_SIID
             callback = ClientCallback;
             host = Host;
             Devices = GetDevices(this);
+
+
             modPage = new ModbusDevicePage("ModbusDevicePage", this);
             scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
             modAjax = new MosbusAjaxReceivers(this);
-            bacPage = new BACnetDevicePage("BACnetDevicePage", this);
+
             siidPage = new SIID_Page("SIIDPage", this);
 
-            bacnetDataService = new BACnetDataService("BACnetDataService", this);
-            bacnetGlobalNetwork = new BACnetGlobalNetwork(this);
-            bacnetHomeSeerDevicePage = new BACnetHomeSeerDevicePage("BACnetHomeSeerDevicePage", this);
+            bacnetDevices = new BACnetDevices(BACnetDevices.BaseUrl, this);
+            bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl, this);
+            bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl, this);
             //CPU use is high, so try to minimize iterating through devices
             //Also minimize calls to and from the device's plugin extra data store. Keep parallel copy, maybe only update when change
-            //bacnetGlobalNetwork = new BACnetGlobalNetwork(this);      //will be instantiated when user first gets data.
 
 
         }
@@ -107,11 +108,13 @@ namespace HSPI_SIID
         public ModbusDevicePage modPage;
         public SIID_Page siidPage;
         public MosbusAjaxReceivers modAjax;
-        public BACnetDevicePage bacPage;
+
         public ScratchpadDevicePage scrPage;
+
+        public BACnetDevices bacnetDevices;
         public BACnetDataService bacnetDataService;
-        public BACnetHomeSeerDevicePage bacnetHomeSeerDevicePage;
-        public BACnetGlobalNetwork bacnetGlobalNetwork;
+        public BACnetHomeSeerDevices bacnetHomeSeerDevices;
+
 
     }
  
