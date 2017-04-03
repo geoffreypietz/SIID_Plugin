@@ -205,12 +205,14 @@ namespace HSPI_SIID.BACnet
             //}
 
 
-            foreach (var bacnetProperty in BacnetProperties)
+            foreach (var item in BacnetProperties)
             {
+                var bacnetProperty =item.Value;
+
                 propertiesData.Add(new {
-                    ID = bacnetProperty.Value.Id,
-                    Name = bacnetProperty.Value.Name,
-                    Value = bacnetProperty.Value.BacnetValue.ToString()
+                    ID = bacnetProperty.Id,
+                    Name = bacnetProperty.Name,
+                    Value = bacnetProperty.ValueString()
                 });
             }
 

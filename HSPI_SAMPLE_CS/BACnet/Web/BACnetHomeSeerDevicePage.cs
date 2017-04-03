@@ -418,13 +418,16 @@ namespace HSPI_SIID.BACnet
                     + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
                 //  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
                 sb.Append(bacnetConfHtml.print());
+
                 bacnetConfHtml = BACnetBuilder.htmlTable(800);
-                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
-
-
 
                 List<Scheduler.Classes.DeviceClass> BACnetObjs = Instance.bacPage.getChildBacnetDevices(bacnetNodeData["device_instance"]).ToList(); ;
 
+                if (BACnetObjs.Count == 0)
+                    continue;
+
+                
+                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
 
 
                 foreach (Scheduler.Classes.DeviceClass bacnetObject in BACnetObjs)

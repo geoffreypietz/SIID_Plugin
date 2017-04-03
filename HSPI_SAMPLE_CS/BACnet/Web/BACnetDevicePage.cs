@@ -435,12 +435,21 @@ namespace HSPI_SIID.BACnet
             changed = System.Web.HttpUtility.ParseQueryString(data);
 
 
-            string partID = changed["id"].Split(new string[] { "__" }, StringSplitOptions.None)[1];
-            int devId = Int32.Parse(changed["id"].Split(new string[] { "__" }, StringSplitOptions.None)[0]);
+
+            var idKeys = changed["id"].Split(new string[] { "__" }, StringSplitOptions.None); //[1];
+
+            string propIdKeys = idKeys[1];
+
+            string[] propIdSubKeys = propIdKeys.Split(new string[] { "_" }, StringSplitOptions.None);
+            string propIdString = propIdSubKeys[0];
+
+
+            int devId = Int32.Parse(idKeys[0]);
+
             Scheduler.Classes.DeviceClass device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(devId);
             var newVal = changed["value"];
 
-            if (newVal == null)
+            if (newVal == null)                     //in most cases the value is put into the query string with the key corresponding to the HTML element ID
                 newVal = changed[changed["id"]];
 
 
@@ -450,7 +459,7 @@ namespace HSPI_SIID.BACnet
             var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
 
-            if (bacnetNodeData[partID] != null)
+            if (bacnetNodeData[propIdKeys] != null)
             {
 
                 //updateBacnetNodeData(device, partID, newVal);     probably don't let them edit this....
@@ -468,7 +477,9 @@ namespace HSPI_SIID.BACnet
                     bno.FetchProperties();      //expensive, but have to make sure property exists...
 
                 //property can be identified uniquely by its ID...don't need to generate a string.
-                var propId = (BacnetPropertyIds)(Int32.Parse(partID));
+
+
+                var propId = (BacnetPropertyIds)(Int32.Parse(propIdString));
 
                 var prop = bno.GetBacnetProperty(propId);
 
@@ -490,9 +501,43 @@ namespace HSPI_SIID.BACnet
                         prop.WriteValue(isSet);
                         break;
                     case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
-                        var numVal = Single.Parse(newVal);
-                        prop.WriteValue(numVal);
+                        var singleVal = Single.Parse(newVal);
+                        prop.WriteValue(singleVal);
                         break;
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+                        //var intVal = Int32.Parse(newVal);
+                        var uintVal = Convert.ToUInt32(newVal);
+                        prop.WriteValue(uintVal);
+                        break;
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
+
+                        var changedFlagIndex = Int32.Parse(propIdSubKeys[1]);
+
+                        var existingBitChars = ((BacnetBitString)vals[0].Value).ToString().ToCharArray();
+
+
+                        var newBitString = "";
+
+                        for (int i = 0; i < existingBitChars.Length; i++)
+                        {
+                            var bitChar = existingBitChars[i];
+
+
+                            if (i == changedFlagIndex)
+                                bitChar = (newVal == "checked") ? '1' : '0';
+
+
+                            newBitString += bitChar.ToString();
+                        }
+
+
+
+
+                        var bitString = BacnetBitString.Parse(newBitString);
+                        prop.WriteValue(bitString);
+                        break;
+
+
                     default:
                         prop.WriteValue(newVal);
                         break;
@@ -669,6 +714,13 @@ namespace HSPI_SIID.BACnet
                     String propElemId = dv1 + "__" + propIdNum;
 
 
+
+                    //var enumString = prop.PropertyDescriptor.Converter.ConvertTo((uint)prop_val, typeof(System.String));  //use this later...
+                    //
+
+
+
+
                     String propElem;
                     switch (propTag)
                     {
@@ -680,6 +732,86 @@ namespace HSPI_SIID.BACnet
                                 CB1.@checked = true;
 
                                 propElem = CB1.Build();
+                            break;
+
+
+                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+
+
+                            //if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)     //will happen for Binary input - active/inactive
+                            //{
+
+                            //}
+
+
+
+
+                            //not sure if status flags will comei na
+
+
+                            clsJQuery.jqDropList DL = new clsJQuery.jqDropList(propElemId, "BACnetDevTab", false);
+
+
+                            var editor = (Utilities.BacnetEnumValueDisplay)(prop.PropertyDescriptor.GetEditor());
+                            var valsList = editor.GetValues();
+
+                            foreach (var item in valsList)
+                            {
+                                var value = item.Key;
+                                var displayString = item.Value;
+                                var isSelected = (value == Convert.ToInt32(prop_val));
+
+                                DL.AddItem(displayString, value.ToString(), isSelected);
+                            }
+
+
+                            
+
+                            propElem = DL.Build();
+
+                            break;
+
+
+
+
+                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:       //this does work if you just let it default to string...but not very user-friendly
+
+
+                            //if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)     //will happen for Binary input - active/inactive
+                            //{
+
+                            //}
+
+
+                            var flagsDiv = "<div>";
+
+
+                            var editor2 = (Utilities.BacnetBitStringToEnumListDisplay)(prop.PropertyDescriptor.GetEditor());
+                            var flagsList = editor2.GetFlagNames();
+
+
+
+                            String bitString = ((BacnetBitString)prop_val).ToString();  //TODO: check that this is the type it comes in as...or can be parsed to.
+
+
+                            for (int i = 0; i < flagsList.Count; i++)
+                            {
+                                var flagName = flagsList[i];
+                                var bitStringChar = bitString.ToCharArray()[i];
+                                var isFlagSet = (bitStringChar == '1');
+
+                                clsJQuery.jqCheckBox CB = new clsJQuery.jqCheckBox(propElemId + "_" + i, flagName, "BACnetDevTab", true, false);
+                                if (isFlagSet)
+                                    CB.@checked = true;
+
+                                flagsDiv += CB.Build() + "<br />";        
+                            }
+
+                            flagsDiv += "</div>";
+
+
+                            propElem = flagsDiv;
+
                             break;
 
                         default:
@@ -866,7 +998,12 @@ namespace HSPI_SIID.BACnet
 
             private bool belongsToThisInstance(Scheduler.Classes.DeviceClass Dev)
             {
-                return ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name));
+                var devInterface = Dev.get_Interface(Instance.host).ToString();
+                var utilInterface = Util.IFACE_NAME.ToString();
+
+                var interfaceInstance = Dev.get_InterfaceInstance(Instance.host);
+
+                return ((devInterface == utilInterface) && (interfaceInstance == Instance.name));
 
 
             }

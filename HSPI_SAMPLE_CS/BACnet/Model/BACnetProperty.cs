@@ -7,6 +7,9 @@ using System.IO.BACnet;
 using Utilities;
 using System.ComponentModel;
 
+using HSPI_SIID.BACnet.Model;   //namespaces got screwed up by arranging things into folders...
+
+
 namespace HSPI_SIID.BACnet
 {
     [DataContract]
@@ -249,7 +252,12 @@ namespace HSPI_SIID.BACnet
                     break;
             }
 
-            this.PropertyData = new Utilities.CustomProperty(propName, value, propType, readOnly, "", appTag, null, propRef); 
+            this.CustomProperty = new Utilities.CustomProperty(propName, value, propType, readOnly, "", appTag, null, propRef);
+
+            this.PropertyDescriptor = new BACnetCustomPropertyDescriptor(ref this.CustomProperty, new Attribute[] { });
+            //this.
+
+
 
         }
 
@@ -368,8 +376,10 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public Utilities.CustomProperty PropertyData = null;
+        public Utilities.CustomProperty CustomProperty = null;
 
+
+        public BACnetCustomPropertyDescriptor PropertyDescriptor = null;
 
 
         public IList<BacnetValue> BacnetValues;  //not sure how this works yet...
@@ -399,7 +409,7 @@ namespace HSPI_SIID.BACnet
             var success = false;
 
 
-            var customProperty = this.PropertyData;  //customProperty
+            var customProperty = this.CustomProperty;  //customProperty
 
             //fetch property
 

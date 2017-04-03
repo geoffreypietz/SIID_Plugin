@@ -91,6 +91,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BACnet\Model\BACnetCustomProperty.cs" />
+    <Compile Include="BACnet\Model\BACnetCustomPropertyDescriptor.cs" />
     <Compile Include="BACnet\Model\BACnetDevice.cs" />
     <Compile Include="BACnet\Web\BACnetDevicePage.cs" />
     <Compile Include="BACnet\Model\BACnetNetwork.cs" />

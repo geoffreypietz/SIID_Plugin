@@ -1506,6 +1506,18 @@ namespace System.IO.BACnet
         {
             return property.ToString();
         }
+
+        public string ValueString()
+        {
+            var valString = "";
+            foreach (var val in value)
+                valString += val + ", ";
+
+            valString.TrimEnd(", ".ToCharArray());
+
+            return valString;
+        }
+
     }
 
     public struct BacnetGenericTime
