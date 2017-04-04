@@ -647,6 +647,9 @@ console.log(theData);
         public static string footer = "</tbody></table>";
         public  string header = "<table border='0' cellpadding='0' cellspacing='0' width='1000'><tbody>";
         public StringBuilder body = new StringBuilder();
+        public String tableClass = "";
+        //public int labelColumnWidth = -1;
+
 
         public  htmlTable(string aj, int width=1000)
         {
@@ -714,6 +717,8 @@ console.log(theData);
         {
             addRow("<td class=\"tableroweven\" width='80%'>" + Item1 + "</td> <td class=\"tableroweven\" >" + Item2 + "</td>");
         }
+
+
         public void add(string title, string value ="")
         {
             StringBuilder row = new StringBuilder();
@@ -721,8 +726,18 @@ console.log(theData);
          
             if(value != "")
             {
-                row.Append("<td class='tablecell' width='30 % '>" + title + "</ td >");
-                row.Append("<td class='tableroweven' width='70 % '>" + value + "</ td >");
+
+                if (tableClass == "")   
+                {
+                    row.Append("<td class='tablecell' width='30 % '>" + title + "</ td >");
+                    row.Append("<td class='tableroweven' width='70 % '>" + value + "</ td >");
+                }
+                else
+                {
+                    //Kinda hacky, but the basic logic is that if the class was explicitly specified, then the styling (including cell width) will be controlled elsewhere
+                    row.Append("<td class='tablecell' >" + title + "</ td >");
+                    row.Append("<td class='tableroweven' >" + value + "</ td >");
+                }
 
             }
             else
@@ -733,9 +748,35 @@ console.log(theData);
             addRow(row.ToString());
 
 
-
-
         }
+
+
+
+        //public void add(int width, string title, string value = "")
+        //{
+        //    StringBuilder row = new StringBuilder();
+
+
+        //    if (value != "")
+        //    {
+        //        row.Append("<td class='tablecell' width='" + width.ToString() + "' >" + title + "</ td >");
+        //        row.Append("<td class='tableroweven' width='70 % '>" + value + "</ td >");
+
+        //    }
+        //    else
+        //    {
+        //        row.Append("<td class='columnheader' width='30 % '>" + title + "</ td >");
+
+        //    }
+        //    addRow(row.ToString());
+
+
+        //}
+
+
+
+
+
         public void addDev(string title, string value = "", bool isPicture = false)
         {
         StringBuilder row = new StringBuilder();

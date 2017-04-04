@@ -24,6 +24,11 @@ namespace HSPI_SIID.BACnet
 
         public static string BaseUrl = "BACnetDevices";
 
+
+        private static int tableWidth = 980;
+
+        private static string tableClass = "hsBacnetDevice";
+
         public BACnetDevices(string pagename, InstanceHolder instance) : base(pagename)
         {
 
@@ -67,6 +72,228 @@ namespace HSPI_SIID.BACnet
 
 
 
+        public string BuildHomeseerDeviceProperties(int dv1, NameValueCollection bacnetNodeData)
+        {
+
+            StringBuilder stb = new StringBuilder();
+            htmlBuilder builder = new htmlBuilder(this.PageName);
+            htmlTable confHtml = builder.htmlTable();
+            confHtml.tableClass = tableClass;
+            confHtml.header = "<table border='0' cellpadding='0' cellspacing='0' width='" + tableWidth + "' class='" + tableClass + "' style='margin-bottom: 10px;'><tbody>";
+
+            //First just generate display fields based on node data.
+
+            var bacNodeTyp = (bacnetNodeData["node_type"] == "device" ? "Device" : "Object");
+            confHtml.addT("Associated BACnet " + bacNodeTyp + ":");
+            confHtml.add("IP Address: ", builder.stringInput(dv1 + "__ip_address", bacnetNodeData["ip_address"]).print());
+            confHtml.add("Device Instance: ", builder.numberInput(dv1 + "__device_instance", Int32.Parse(bacnetNodeData["device_instance"])).print());
+
+
+            if (bacnetNodeData["node_type"] == "object")
+            {
+                confHtml.add("Object Type: ", builder.stringInput(dv1 + "__object_type", ((BacnetObjectTypes)Int32.Parse(bacnetNodeData["object_type"])).ToString()).print());
+                confHtml.add("Object Instance: ", builder.numberInput(dv1 + "__object_instance", Int32.Parse(bacnetNodeData["object_instance"])).print());
+            }
+
+
+            //confHtml.add("Polling interval (ms): ", builder.numberInput(dv1 + "__polling_interval", Int32.Parse(bacnetNodeData["polling_interval"] ?? "5000")).print());
+            var pollingInterval = bacnetNodeData["polling_interval"] ?? "5000";
+            confHtml.add("Polling interval (ms): ", new clsJQuery.jqTextBox(dv1 + "__polling_interval", "number", pollingInterval,
+                this.PageName, 16, false).Build());
+
+
+
+
+
+            clsJQuery.jqDropList priorityList = new clsJQuery.jqDropList(dv1 + "__write_priority", this.PageName, false);
+            var selectedPriority = Int32.Parse(bacnetNodeData["write_priority"] ?? "0");
+            //foreach (var priorityNum in new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 })
+            //    priorityList.AddItem(priorityNum.ToString(), priorityNum.ToString(), priorityNum == selectedPriority);
+            foreach (var item in new Utilities.BacnetEnumValueDisplay(new BacnetWritePriority()).GetValues())
+                priorityList.AddItem(item.Value, item.Key.ToString(), item.Key == selectedPriority);
+            confHtml.add("Write Priority: ", priorityList.Build());
+
+
+
+            stb.Append(confHtml.print());
+
+
+            var readOnlyProperties = new String[] { "ip_address", "device_instance", "object_instance", "object_type" };      //should probably make this constant somewhere
+            foreach (var nodeDataProp in readOnlyProperties)
+            {
+                stb.Append(String.Format("<script>$('#{0}__{1}').prop('disabled', true);</script>", dv1, nodeDataProp));
+            }
+
+
+
+            return "<div id='homeseerDeviceProperties'>" + stb.ToString() + "</div>";
+        }
+
+
+
+        public string BuildBACnetObjectProperties(int dv1, NameValueCollection bacnetNodeData)
+        {
+
+            StringBuilder stb = new StringBuilder();
+            htmlBuilder builder = new htmlBuilder(this.PageName);
+            htmlTable confHtml = builder.htmlTable();
+            confHtml.tableClass = tableClass;
+            confHtml.header = "<table border='0' cellpadding='0' cellspacing='0' width='" + tableWidth + "' class='" + tableClass + "'><tbody>";
+            //confHtml.labelColumnWidth = 100;
+
+            confHtml.addT("BACnet Object Properties: ");
+
+
+
+            BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+            if (bno == null)
+            {
+                confHtml.add("", "Error: could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
+            }
+
+            else
+            {
+                bno.FetchProperties();
+
+
+                foreach (var bacnetProperty in bno.BacnetProperties)
+                {
+                    BacnetPropertyIds propId = bacnetProperty.Key;
+
+                    if (propId == BacnetPropertyIds.PROP_OBJECT_IDENTIFIER || propId == BacnetPropertyIds.PROP_OBJECT_TYPE)     //don't list these; they are displayed in device/object details above
+                        continue;
+
+                    var propIdNum = (int)propId;
+                    BACnetProperty prop = bacnetProperty.Value;
+                    IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
+                    BacnetApplicationTags propTag = vals[0].Tag;
+
+
+                    object prop_val = vals[0].Value;
+                    Type t = prop_val.GetType();
+
+                    String propElemId = dv1 + "__" + propIdNum;
+
+                    String propElem;
+                    switch (propTag)
+                    {
+                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
+
+                            clsJQuery.jqCheckBox CB1 = new clsJQuery.jqCheckBox(propElemId, "", Instance.bacnetDevices.PageName, true, false);
+
+                            if ((Boolean)prop_val)
+                                CB1.@checked = true;
+
+                            propElem = CB1.Build();
+                            break;
+
+
+                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+
+                            clsJQuery.jqDropList DL = new clsJQuery.jqDropList(propElemId, Instance.bacnetDevices.PageName, false);
+
+                            var editor = (Utilities.BacnetEnumValueDisplay)(prop.PropertyDescriptor.GetEditor());
+                            var valsList = editor.GetValues();
+
+                            foreach (var item in valsList)
+                            {
+                                var value = item.Key;
+                                var displayString = item.Value;
+                                var isSelected = (value == Convert.ToInt32(prop_val));
+
+                                DL.AddItem(displayString, value.ToString(), isSelected);
+                            }
+
+                            propElem = DL.Build();
+
+                            break;
+
+
+
+
+                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:       //this does work if you just let it default to string...but not very user-friendly
+
+
+                            var flagsDiv = "<div>";
+
+
+                            var editor2 = (Utilities.BacnetBitStringToEnumListDisplay)(prop.PropertyDescriptor.GetEditor());
+                            var flagsList = editor2.GetFlagNames();
+
+
+
+                            String bitString = ((BacnetBitString)prop_val).ToString();  //TODO: check that this is the type it comes in as...or can be parsed to.
+
+
+                            for (int i = 0; i < flagsList.Count; i++)
+                            {
+                                var flagName = flagsList[i];
+                                var bitStringChar = bitString.ToCharArray()[i];
+                                var isFlagSet = (bitStringChar == '1');
+
+                                clsJQuery.jqCheckBox CB = new clsJQuery.jqCheckBox(propElemId + "_" + i, flagName, this.PageName, true, false);
+                                if (isFlagSet)
+                                    CB.@checked = true;
+
+                                flagsDiv += CB.Build() + "<br />";
+                            }
+
+                            flagsDiv += "</div>";
+
+
+                            propElem = flagsDiv;
+
+                            break;
+
+                        default:
+
+
+                            clsJQuery.jqTextBox TB = new clsJQuery.jqTextBox(propElemId, "string", prop.ValueString(), this.PageName, 16, false);
+                            propElem = TB.Build();
+
+                            break;
+
+                    }
+
+
+                    confHtml.add(prop.Name + ": ", propElem);
+
+
+                }
+
+            }
+
+            stb.Append(confHtml.print());
+
+
+
+            var pollingInterval = bacnetNodeData["polling_interval"] ?? "5000";
+
+
+            var refreshScript = @"<script>
+                setTimeout(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '" + this.PageName + @"',
+                        data: {hs_device_id: " + dv1 + @"},
+                        success: function (objectPropertiesHtml) {
+                            //redirect to HomeSeer device edit page (whether new or existing device)
+                            console.log(objectPropertiesHtml);
+                            $('#bacnetObjectProperties').replaceWith(objectPropertiesHtml);
+                        }//,
+                    });
+                }, " + pollingInterval + @"); </script>";
+
+
+            stb.Append(refreshScript);
+
+
+            return "<div id='bacnetObjectProperties'>" + stb.ToString() + "</div>";
+        }
+
+
+
+
             public string BuildBACnetDeviceTab(int dv1)
             {
 
@@ -84,196 +311,34 @@ namespace HSPI_SIID.BACnet
 
 
                 StringBuilder stb = new StringBuilder();
-                htmlBuilder builder = new htmlBuilder(this.PageName);
-                htmlTable confHtml = builder.htmlTable();
-
-
-                //First just generate display fields based on node data.
-
-                var bacNodeTyp = (bacnetNodeData["node_type"] == "device" ? "Device" : "Object");
-                confHtml.addT("Associated BACnet " + bacNodeTyp + ":");
-                confHtml.add("IP Address: ", builder.stringInput(dv1 + "__ip_address", bacnetNodeData["ip_address"]).print());
-                confHtml.add("Device Instance: ", builder.numberInput(dv1 + "__device_instance", Int32.Parse(bacnetNodeData["device_instance"])).print());
-
-
-                if (bacnetNodeData["node_type"] == "object")
-                {
-                    confHtml.add("Object Type: ", builder.stringInput(dv1 + "__object_type", ((BacnetObjectTypes)Int32.Parse(bacnetNodeData["object_type"])).ToString()).print());
-                    confHtml.add("Object Instance: ", builder.numberInput(dv1 + "__object_instance", Int32.Parse(bacnetNodeData["object_instance"])).print());
-                }
-
-
-                //confHtml.add("Polling interval (ms): ", builder.numberInput(dv1 + "__polling_interval", Int32.Parse(bacnetNodeData["polling_interval"] ?? "5000")).print());
-                var pollingInterval = bacnetNodeData["polling_interval"] ?? "5000";
-                confHtml.add("Polling interval (ms): ", new clsJQuery.jqTextBox(dv1 + "__polling_interval", "number", pollingInterval,
-                    this.PageName, 16, false).Build());
+                stb.Append(BuildHomeseerDeviceProperties(dv1, bacnetNodeData));
+                stb.Append(BuildBACnetObjectProperties(dv1, bacnetNodeData));
 
 
 
-
-
-                clsJQuery.jqDropList priorityList = new clsJQuery.jqDropList(dv1 + "__write_priority", this.PageName, false);
-                var selectedPriority = Int32.Parse(bacnetNodeData["write_priority"] ?? "0");
-                //foreach (var priorityNum in new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 })
-                //    priorityList.AddItem(priorityNum.ToString(), priorityNum.ToString(), priorityNum == selectedPriority);
-                foreach (var item in new Utilities.BacnetEnumValueDisplay(new BacnetWritePriority()).GetValues())
-                    priorityList.AddItem(item.Value, item.Key.ToString(), item.Key == selectedPriority);
-                confHtml.add("Write Priority: ", priorityList.Build());
-
-
-
-                //stb.Append("<script> setTimeout(function() { location.reload(); }, " + pollingInterval + "); </script>");
-
-
+                stb.Append(@"<style>
                 
+/* table.hsBacnetDevice {table-layout:fixed; width:90px;}Setting the table width is important! */
+table." + tableClass + @" td {overflow:hidden;}/*Hide text outside the cell.*/
+table." + tableClass + @" td:nth-of-type(1) {width:200px;}/*Setting the width of column 1.*/
+table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of column 2.*/
+                
+                    </style>");
+
+
+//                stb.Append(@"<style>
+//
+//                                #homeseerDeviceProperties td:first-child { 
+//                                    width: 230px;
+//                                }
+//
+//                                #bacnetObjectProperties td:first-child { 
+//                                    width: 230px;
+//                                }
+//
+//                            </style>");
 
 
-                confHtml.addT("BACnet Object Properties: ");
-
-
-
-                BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
-                if (bno == null)
-                {
-                    confHtml.add("", "Error: could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
-                }
-
-                else
-                {
-                    bno.FetchProperties();
-
-
-                    foreach (var bacnetProperty in bno.BacnetProperties)
-                    {
-                        BacnetPropertyIds propId = bacnetProperty.Key;
-
-                        if (propId == BacnetPropertyIds.PROP_OBJECT_IDENTIFIER || propId == BacnetPropertyIds.PROP_OBJECT_TYPE)     //don't list these; they are displayed in device/object details above
-                            continue;
-
-                        var propIdNum = (int)propId;
-                        BACnetProperty prop = bacnetProperty.Value;
-                        IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
-                        BacnetApplicationTags propTag = vals[0].Tag;
-
-
-                        object prop_val = vals[0].Value;
-                        Type t = prop_val.GetType();
-
-                        String propElemId = dv1 + "__" + propIdNum;
-
-                        String propElem;
-                        switch (propTag)
-                        {
-                            case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
-
-                                clsJQuery.jqCheckBox CB1 = new clsJQuery.jqCheckBox(propElemId, "", Instance.bacnetDevices.PageName, true, false);
-
-                                if ((Boolean)prop_val)
-                                    CB1.@checked = true;
-
-                                propElem = CB1.Build();
-                                break;
-
-
-                            case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
-
-                                clsJQuery.jqDropList DL = new clsJQuery.jqDropList(propElemId, Instance.bacnetDevices.PageName, false);
-
-                                var editor = (Utilities.BacnetEnumValueDisplay)(prop.PropertyDescriptor.GetEditor());
-                                var valsList = editor.GetValues();
-
-                                foreach (var item in valsList)
-                                {
-                                    var value = item.Key;
-                                    var displayString = item.Value;
-                                    var isSelected = (value == Convert.ToInt32(prop_val));
-
-                                    DL.AddItem(displayString, value.ToString(), isSelected);
-                                }
-
-                                propElem = DL.Build();
-
-                                break;
-
-
-
-
-                            case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:       //this does work if you just let it default to string...but not very user-friendly
-
-
-                                var flagsDiv = "<div>";
-
-
-                                var editor2 = (Utilities.BacnetBitStringToEnumListDisplay)(prop.PropertyDescriptor.GetEditor());
-                                var flagsList = editor2.GetFlagNames();
-
-
-
-                                String bitString = ((BacnetBitString)prop_val).ToString();  //TODO: check that this is the type it comes in as...or can be parsed to.
-
-
-                                for (int i = 0; i < flagsList.Count; i++)
-                                {
-                                    var flagName = flagsList[i];
-                                    var bitStringChar = bitString.ToCharArray()[i];
-                                    var isFlagSet = (bitStringChar == '1');
-
-                                    clsJQuery.jqCheckBox CB = new clsJQuery.jqCheckBox(propElemId + "_" + i, flagName, this.PageName, true, false);
-                                    if (isFlagSet)
-                                        CB.@checked = true;
-
-                                    flagsDiv += CB.Build() + "<br />";
-                                }
-
-                                flagsDiv += "</div>";
-
-
-                                propElem = flagsDiv;
-
-                                break;
-
-                            default:
-
-
-                                clsJQuery.jqTextBox TB = new clsJQuery.jqTextBox(propElemId, "string", prop.ValueString(), this.PageName, 8, false);
-                                propElem = TB.Build();
-
-                                break;
-
-                        }
-
-
-                        confHtml.add(prop.Name + ": ", propElem);
-
-
-                    }
-
-                }
-
-                stb.Append(confHtml.print());
-
-
-
-                var readOnlyProperties = new String[] { "ip_address", "device_instance", "object_instance", "object_type" };      //should probably make this constant somewhere
-                foreach (var nodeDataProp in readOnlyProperties)
-                {
-                    stb.Append(String.Format("<script>$('#{0}__{1}').prop('disabled', true);</script>", dv1, nodeDataProp));
-
-                }
-
-
-                //string dv = "" + dv1 + "";
-
-                //StringBuilder stb = new StringBuilder();
-                //stb.Append("SO HERE WE CAN PUT BACNET SPECIFIC STUFF<br>");
-                //stb.Append("Generate it as HTML<br> THE CURRENT QUERY STRING IS:");
-
-
-
-
-                //TODO: Go and find the object in the network...then connect to it and get its properties.  Should live connection be necessary?  Should it retain knowledge of properties from last time?
-
-                //stb.Append(parts.ToString());
                 return stb.ToString();
 
             }
@@ -282,7 +347,15 @@ namespace HSPI_SIID.BACnet
 
 
 
+            public NameValueCollection getBacnetNodeData(Scheduler.Classes.DeviceClass device)
+            {
+                var EDO = device.get_PlugExtraData_Get(Instance.host);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var bacnetNodeDataString = parts["BACnetNodeData"];
+                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
+                return bacnetNodeData;
+            }
 
 
 
@@ -297,6 +370,19 @@ namespace HSPI_SIID.BACnet
 
                 System.Collections.Specialized.NameValueCollection changed = null;
                 changed = System.Web.HttpUtility.ParseQueryString(data);
+
+
+                if (changed["hs_device_id"] != null)       //when this key is present, we are not editing any data but instead refreshing the displayed properties...
+                {
+                    var deviceId = Int32.Parse(changed["hs_device_id"]);
+                    Scheduler.Classes.DeviceClass hsDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(deviceId);
+                    var hsBacnetNodeData = getBacnetNodeData(hsDevice);
+
+                    var html = BuildBACnetObjectProperties(deviceId, hsBacnetNodeData);
+
+                    return html;
+                }
+
 
 
                 String idKey = changed["id"] ?? changed.Keys[0];    //for jqTextBox the id is just that of the HTML element
@@ -317,10 +403,11 @@ namespace HSPI_SIID.BACnet
                 //    newVal = changed[changed["id"]];
 
 
-                var EDO = device.get_PlugExtraData_Get(Instance.host);
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                var bacnetNodeDataString = parts["BACnetNodeData"];
-                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+                //var EDO = device.get_PlugExtraData_Get(Instance.host);
+                //var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                //var bacnetNodeDataString = parts["BACnetNodeData"];
+                //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+                var bacnetNodeData = getBacnetNodeData(device);
 
 
                 var writePriority = Int32.Parse(bacnetNodeData["write_priority"] ?? "0");   //is this a good default?
@@ -441,9 +528,9 @@ namespace HSPI_SIID.BACnet
                 bacnetNodeData[Key] = value;
                 parts["BACnetNodeData"] = bacnetNodeData.ToString();
 
-                parts[Key] = value;
+                //parts[Key] = value;
 
-                if (Key == "write_priority")
+                //if (Key == "write_priority")
 
 
 
