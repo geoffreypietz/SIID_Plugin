@@ -40,6 +40,11 @@ namespace HSPI_SIID.General
             }
             return null;
         }
+        public static void removeDev(List<SiidDevice> li, int R)
+        {
+            li.Remove(GetFromListByID(li, R));
+            
+        }
 
         public static void Update(InstanceHolder I)
         {
@@ -65,6 +70,7 @@ namespace HSPI_SIID.General
             Device.set_PlugExtraData_Set(Instance.host, Extra);
 
         }
+    
 
 
     }

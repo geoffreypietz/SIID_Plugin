@@ -785,7 +785,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
 
-                    
+                    Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
+
                     ScratchTable.addArrayRow(Row.ToArray());
                 }
 
