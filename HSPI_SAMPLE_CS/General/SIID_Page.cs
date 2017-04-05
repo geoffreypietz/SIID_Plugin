@@ -1049,7 +1049,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
                 DiscoverTab.Append("<script>" + tableJs + "</script>");
 
-                String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
+                String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js")).Replace("source: []",
+                    "source: " + this.Instance.bacnetDataService.GetTreeData("node_type=root"));
                 DiscoverTab.Append("<script>" + bacnetDiscoveryJs + "</script>");
 
 

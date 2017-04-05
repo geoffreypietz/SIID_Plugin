@@ -3,11 +3,16 @@
 var selectedTreeNode = null;
 
 $('#bacnetDiscoveryTree').fancytree({
-		source: {
-			url: bacnetDataServiceUrl, 
-			data: {node_type: 'root'},
-			cache: false
-		},
+
+
+		//source: {
+		//	url: bacnetDataServiceUrl, 
+		//	data: {node_type: 'root'},
+		//	cache: false
+    //},
+
+
+        source: [],
 	
 
 		click: function(event, data){

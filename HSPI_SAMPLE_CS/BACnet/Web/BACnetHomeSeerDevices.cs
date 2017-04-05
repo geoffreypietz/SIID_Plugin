@@ -308,7 +308,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
+        private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeDataString, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
         {
 
             var dv = Instance.host.NewDeviceRef("BACnet Device");   //TODO: do I need to name it something else?  Maybe at least differentiate between device and object?
@@ -326,8 +326,15 @@ namespace HSPI_SIID.BACnet
 
 
 
-            if (nodeType == "device")
+            if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
+
+                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+                bacnetNodeData["node_type"] = "device";
+                bacnetNodeData["object_type"] = "8";
+                bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
+                bacnetNodeDataString = bacnetNodeData.ToString();
+
                 newDevice.set_Name(Instance.host, "BACnet Device " + dv); //Can include ID in the name cause why not
                 newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
             }
@@ -357,7 +364,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeDataString)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
@@ -394,7 +401,7 @@ namespace HSPI_SIID.BACnet
 
         //Generates the plugin extra data stuff for BACnet Devices
         //Really only thing I want these to have at minimum is type, rawvalue,processedvalue
-        public string siidDeviceData(string bacnetNodeData)
+        public string siidDeviceData(String bacnetNodeDataString)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
 
@@ -402,7 +409,7 @@ namespace HSPI_SIID.BACnet
             //...
 
 
-            parts["BACnetNodeData"] = bacnetNodeData;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
+            parts["BACnetNodeData"] = bacnetNodeDataString;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
             //ex. ip_address=192.168.1.1&device_instance=400001
 
             //within here, "node_type" indicates whether device or object...

@@ -278,7 +278,7 @@ namespace HSPI_SIID.BACnet
                         data: {hs_device_id: " + dv1 + @"},
                         success: function (objectPropertiesHtml) {
                             //redirect to HomeSeer device edit page (whether new or existing device)
-                            console.log(objectPropertiesHtml);
+                            //console.log(objectPropertiesHtml);
                             $('#bacnetObjectProperties').replaceWith(objectPropertiesHtml);
                         }//,
                     });
