@@ -317,7 +317,31 @@ namespace HSPI_SIID.BACnet
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
 
+            var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
+
+            if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
+            {
+                bacnetNodeData["node_type"] = "device";       //now done in calling function
+                bacnetNodeData["object_type"] = "8";
+                bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
+                bacnetNodeDataString = bacnetNodeData.ToString();
+            }
+            else
+            {
+                bacnetNodeData["parent_hs_device"] = parentDv.ToString();
+            }
+            bacnetNodeDataString = bacnetNodeData.ToString();
+
+
+
+            var bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+            if (!bacnetObject.AllPropertiesFetched)
+                bacnetObject.FetchProperties();
+
+            var nameProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
+            IList<BacnetValue> vals = nameProp.BacnetPropertyValue.Value.value;
+            var objectName = vals[0].ToString();
 
 
             newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
@@ -326,28 +350,34 @@ namespace HSPI_SIID.BACnet
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
 
 
+            
 
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
-
-                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
-                bacnetNodeData["node_type"] = "device";
-                bacnetNodeData["object_type"] = "8";
-                bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
-                bacnetNodeDataString = bacnetNodeData.ToString();
-
-                newDevice.set_Name(Instance.host, "BACnet Device " + dv); //Can include ID in the name cause why not
-                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+                newDevice.set_Name(Instance.host, "BACnet Device - " + objectName); //Can include ID in the name cause why not
             }
             else
             {
-                newDevice.set_Name(Instance.host, "BACnet Object " + dv); //Can include ID in the name cause why not
-                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
-                var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef((int)parentDv);
+                var parentDevId = (int)parentDv;
+                var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
+
                 parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
+                parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+
+                newDevice.AssociatedDevice_Add(Instance.host, parentDevId);
+                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
+
+
+                newDevice.set_Name(Instance.host, "BACnet Object - " + objectName); //Can include ID in the name cause why not
+                 
+
+
+                //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.);
 
                 newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
             }
+
+            
 
             //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
             //Can do:

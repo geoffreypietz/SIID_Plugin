@@ -135,6 +135,42 @@ namespace HSPI_SIID.BACnet
 
 
 
+        private void setDeviceStatus(Scheduler.Classes.DeviceClass device, int devId, int status, NameValueCollection bacnetNodeData)
+        {
+
+            //if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
+            //{
+
+            var statusString = "";
+            switch(status)
+            {
+                case 1:
+                    statusString = "Connected";
+                    break;
+                case 2:
+                    statusString = "Connection interrupted";
+                    break;
+                case 3:
+                    statusString = "Not connected";
+                    break;
+            }
+
+
+            Instance.host.SetDeviceValueByRef(devId, status, true);
+            Instance.host.SetDeviceString(devId, statusString, true);
+
+
+            if (bacnetNodeData["parent_hs_device"] != null)
+            {
+                int parentDevId = int.Parse(bacnetNodeData["parent_hs_device"]);
+                Instance.host.SetDeviceValueByRef(parentDevId, status, true);
+                Instance.host.SetDeviceString(parentDevId, statusString, true);
+            }
+
+
+        }
+
+
         public string BuildBACnetObjectProperties(int dv1, NameValueCollection bacnetNodeData)
         {
 
@@ -148,15 +184,30 @@ namespace HSPI_SIID.BACnet
             confHtml.addT("BACnet Object Properties: ");
 
 
+            Scheduler.Classes.DeviceClass device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
+
+
+
+
 
             BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
             if (bno == null)
             {
                 confHtml.add("", "Error: could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
+                
+
+
+                if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
+                    setDeviceStatus(device, dv1, 2, bacnetNodeData);
+                else
+                    setDeviceStatus(device, dv1, 3, bacnetNodeData);
+
             }
 
             else
             {
+                setDeviceStatus(device, dv1, 1, bacnetNodeData);
+
                 bno.FetchProperties();
 
 
@@ -167,10 +218,26 @@ namespace HSPI_SIID.BACnet
                     if (propId == BacnetPropertyIds.PROP_OBJECT_IDENTIFIER || propId == BacnetPropertyIds.PROP_OBJECT_TYPE)     //don't list these; they are displayed in device/object details above
                         continue;
 
+
+
                     var propIdNum = (int)propId;
                     BACnetProperty prop = bacnetProperty.Value;
                     IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
                     BacnetApplicationTags propTag = vals[0].Tag;
+
+
+
+                    //if (propId == BacnetPropertyIds.PROP_OBJECT_NAME)
+                    //{
+                    //    var devName = device.get_Name(Instance.host);
+                    //    if (devName.EndsWith(dv1.ToString()))   //replace with object name...
+                    //    {
+                    //        devName = devName.Replace(dv1.ToString(), vals[0].ToString());
+                    //        device.set_Name(Instance.host, devName);
+                    //    }
+
+                    //}
+
 
 
                     object prop_val = vals[0].Value;
@@ -320,6 +387,10 @@ namespace HSPI_SIID.BACnet
 
 
 
+                
+
+
+
                 stb.Append(@"<style>
                 
 /* table.hsBacnetDevice {table-layout:fixed; width:90px;}Setting the table width is important! */
@@ -450,9 +521,20 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                     var prop = bno.GetBacnetProperty(propId);
 
 
+
+
+
                     IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
 
                     BacnetApplicationTags propTag = vals[0].Tag;
+
+
+                    if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                    {
+                        UpdateExtraData(device, "RawValue", vals[0].ToString());
+                        UpdateExtraData(device, "ProcessedValue", vals[0].ToString());
+                    }
+
 
 
                     //object valToWrite;        // = vals[0].Value;
@@ -517,6 +599,19 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
             }
 
+
+
+            public void UpdateExtraData(Scheduler.Classes.DeviceClass Device, string key, string value)
+            {
+                var EDO = Device.get_PlugExtraData_Get(Instance.host);
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+
+                parts[key] = value;
+                EDO.RemoveNamed("SSIDKey");
+                EDO.AddNamed("SSIDKey", parts.ToString());
+                Device.set_PlugExtraData_Set(Instance.host, EDO);
+
+            }
 
 
 
