@@ -276,6 +276,28 @@ namespace HSPI_SIID
                 Instance.host.RegisterPage(BACnetDataService.BaseUrl, Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage(BACnetDevices.BaseUrl, Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage(BACnetHomeSeerDevices.BaseUrl, Util.IFACE_NAME, Instance.name);
+                //so don't register page with the instance ajax name.  But the request URL's need it in order for it to be routed to the correct plugin instance
+
+
+
+                //Instance.host.RegisterPage(Instance.bacnetDataService.PageName, Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage(Instance.bacnetDevices.PageName, Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage(Instance.bacnetHomeSeerDevices.PageName, Util.IFACE_NAME, Instance.name);
+
+
+                //Instance.host.RegisterPage(BACnetDataService.BaseUrl + Instance.ajaxName.Replace(":", "_"), Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage(BACnetDevices.BaseUrl + Instance.ajaxName.Replace(":", "_"), Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage(BACnetHomeSeerDevices.BaseUrl + Instance.ajaxName.Replace(":", "_"), Util.IFACE_NAME, Instance.name);
+
+
+
+
+                //Instance.host.RegisterPage("BACnetDataService", Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage("BACnetDevices", Util.IFACE_NAME, Instance.name);
+                //Instance.host.RegisterPage("BACnetHomeSeerDevices", Util.IFACE_NAME, Instance.name);
+
+
+
 
                 //Instance.host.RegisterPage("BACnetHomeSeerDevicesEdit", Util.IFACE_NAME, Instance.name);
 
@@ -498,7 +520,7 @@ namespace HSPI_SIID
 
             //}
 
-            else if (pageName == Instance.bacnetDataService.PageName)
+            else if (pageName == "BACnetDataService")
             {
 
                 return Instance.bacnetDataService.GetTreeData(queryString);
@@ -583,7 +605,7 @@ namespace HSPI_SIID
             }
 
             
-            else if (pageName == Instance.bacnetDataService.PageName)
+            else if (pageName == "BACnetDataService")
             {
 
                 return Instance.bacnetDataService.GetTreeData(data);

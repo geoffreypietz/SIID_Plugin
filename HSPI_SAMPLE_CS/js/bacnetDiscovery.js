@@ -5,14 +5,14 @@ var selectedTreeNode = null;
 $('#bacnetDiscoveryTree').fancytree({
 
 
-		//source: {
-		//	url: bacnetDataServiceUrl, 
-		//	data: {node_type: 'root'},
-		//	cache: false
-    //},
+		source: {
+			url: bacnetDataServiceUrl, 
+			data: {node_type: 'root'},
+			cache: false
+    },
 
 
-        source: [],
+        //source: [],
 	
 
 		click: function(event, data){
@@ -52,8 +52,10 @@ $('#bacnetDiscoveryTree').fancytree({
 		    $('#bacnetPropertiesTable').empty();
 		    if (nodeType == "object") {
 
+		        console.log(bacnetDataServiceUrl);
+
 		        $.ajax({
-		            type: "POST",
+		            type: "GET",
 		            url: bacnetDataServiceUrl,
 		            data: selectedTreeNode.data,
 		            success: function (returnData) {

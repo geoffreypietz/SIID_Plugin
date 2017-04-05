@@ -1042,15 +1042,16 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 String ftJs = File.ReadAllText(Path.Combine(basePath, "js", "jquery.fancytree-all.min.js"));
                 DiscoverTab.Append("<script>" + ftJs + "</script>");
 
-                DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = '{0}';</script>", Instance.bacnetDataService.PageName));
-                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = '{0}';</script>", Instance.bacnetHomeSeerDevices.PageName)); 
+                DiscoverTab.Append(String.Format("<script>var bacnetDataServiceUrl = location.protocol + '//' + location.host + '/' + '{0}'; console.log(bacnetDataServiceUrl);</script>", Instance.bacnetDataService.PageName));
+                DiscoverTab.Append(String.Format("<script>var bacnetHomeSeerDevicePageUrl = location.protocol + '//' + location.host + '/' + '{0}'; console.log(bacnetHomeSeerDevicePageUrl);</script>", Instance.bacnetHomeSeerDevices.PageName)); 
                 //BacNet discovery needs to know this - this is where tree gets its data from
 
                 String tableJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetPropertiesTable.js"));
                 DiscoverTab.Append("<script>" + tableJs + "</script>");
 
-                String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js")).Replace("source: []",
-                    "source: " + this.Instance.bacnetDataService.GetTreeData("node_type=root"));
+                String bacnetDiscoveryJs = File.ReadAllText(Path.Combine(basePath, "js", "bacnetDiscovery.js"));
+                    //.Replace("source: []",
+                    //"source: " + this.Instance.bacnetDataService.GetTreeData("node_type=root"));
                 DiscoverTab.Append("<script>" + bacnetDiscoveryJs + "</script>");
 
 

@@ -39,7 +39,12 @@ namespace HSPI_SIID.BACnet
             //BACnetBuilder = new htmlBuilder("BACnetObjectDataService" + Instance.ajaxName);
             //DiscoveredBACnetDevices = new List<string>();
 
+
             this.PageName = pagename + instance.ajaxName;
+
+            //this.PageName = 
+
+            //this.PageName = BaseUrl + instance.ajaxName.Replace(":", "_");
 
         }
 

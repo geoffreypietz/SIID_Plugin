@@ -25,6 +25,8 @@ namespace HSPI_SIID.BACnet
         public static string BaseUrl = "BACnetDevices";
 
 
+        //public String PageName { get; set; }
+
         private static int tableWidth = 980;
 
         private static string tableClass = "hsBacnetDevice";
@@ -36,7 +38,9 @@ namespace HSPI_SIID.BACnet
             //BACnetBuilder = new htmlBuilder("BACnetPage" + Instance.ajaxName);
             //DiscoveredBACnetDevices = new List<string>();
 
-            PageName = BaseUrl + Instance.ajaxName;
+            this.PageName = pagename + instance.ajaxName;
+
+            //PageName = BaseUrl + Instance.ajaxName.Replace(":", "_");
         }
 
  
@@ -274,7 +278,7 @@ namespace HSPI_SIID.BACnet
                 setTimeout(function() {
                     $.ajax({
                         type: 'POST',
-                        url: '" + this.PageName + @"',
+                        url: location.protocol + '//' + location.host + '/' + '" + this.PageName + @"',
                         data: {hs_device_id: " + dv1 + @"},
                         success: function (objectPropertiesHtml) {
                             //redirect to HomeSeer device edit page (whether new or existing device)

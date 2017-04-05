@@ -70,9 +70,15 @@ namespace HSPI_SIID
 
             siidPage = new SIID_Page("SIIDPage", this);
 
+            //bacnetDevices = new BACnetDevices(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);
+            //bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);
+            //bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl + this.ajaxName.Replace(":", "_"), this);
+
             bacnetDevices = new BACnetDevices(BACnetDevices.BaseUrl, this);
             bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl, this);
             bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl, this);
+
+
             //CPU use is high, so try to minimize iterating through devices
             //Also minimize calls to and from the device's plugin extra data store. Keep parallel copy, maybe only update when change
 

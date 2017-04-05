@@ -25,6 +25,7 @@ namespace HSPI_SIID.BACnet
        public static String BaseUrl = "BACnetHomeSeerDevicesView";
 
 
+       //public String PageName { get; set; }
 
         public BACnetHomeSeerDevices(string pagename, InstanceHolder instance)
             : base(pagename)
@@ -34,9 +35,9 @@ namespace HSPI_SIID.BACnet
             //BACnetBuilder = new htmlBuilder("BACnetObjectDataService" + Instance.ajaxName);
             //DiscoveredBACnetDevices = new List<string>();
 
-            //this.PageName = pagename + instance.ajaxName;
+            this.PageName = pagename + instance.ajaxName;
 
-            PageName = BaseUrl + instance.ajaxName;
+            //PageName = BaseUrl +instance.ajaxName.Replace(":", "_"); ;
 
         }
 
