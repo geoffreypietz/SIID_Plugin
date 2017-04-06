@@ -1301,10 +1301,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             if(bool.Parse(partsGate["ZeroB"])){
                 Offset = -1;
             }
-            if (Int32.Parse(parts["RegisterType"]) < 3)
-            {
+           // if (Int32.Parse(parts["RegisterType"]) < 3)
+         //   {
                 Offset-=1; //Seems to be a bug where coil are offset by 1 (i.e. coil 1 tries to write to register 2)
-            }
+           // }
             ushort[] OffsetArray =new ushort[] { 10000, 0, 30000, 40000 };
 
             // int Taddress = Int32.Parse(parts["RegisterAddress"]) + Offset + OffsetArray[Int32.Parse(parts["RegisterType"])];
