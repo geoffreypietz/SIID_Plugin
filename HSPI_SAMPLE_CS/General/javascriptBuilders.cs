@@ -709,9 +709,12 @@ console.log(theData);
         public void addHead(string[] HeadArray)
         {
             StringBuilder row = new StringBuilder();
+            var index = 0;
             foreach (string head in HeadArray)
             {
-                row.Append("<td class=\"columnheader\"> "+ head + "</td>");
+                var classAttr = (index == 0 && head == "") ? " " : " class='columnheader' ";
+                var colSpanAttr = (head == "BACnet Device" ? " colspan='2' " : " ");
+                row.Append("<td " + classAttr + colSpanAttr + "> "+ head + "</td>");
             }
             addRow(row.ToString());
 
@@ -751,6 +754,31 @@ console.log(theData);
             addRow(row.ToString());
 
         }
+
+
+        public void addSub(string[] HeadArray)
+        {
+
+            StringBuilder row = new StringBuilder();
+            foreach (string head in HeadArray)
+            {
+                row.Append("<td  class ='tableroweven'> " + head + "</td>");
+            }
+            addRow(row.ToString());
+
+
+            //StringBuilder row = new StringBuilder();
+            //row.Append("<td width = '2%' ></td>");
+            //row.Append("<td class ='tableroweven' width='5%'>" + I1 + "</td>");
+            //row.Append("<td class ='tableroweven' >" + I2 + "</td>");
+            //row.Append("<td class ='tablecell' width='100px' >" + I3 + "</td>");
+            //row.Append("<td class ='tablecell' width='15%'>" + I4 + "</td>");
+            //row.Append("<td class ='tablecell'>" + I5 + "</td>");
+            //addRow(row.ToString());
+
+        }
+
+
 
         public void addDevMain(string Item1, string Item2)
         {
@@ -849,7 +877,7 @@ console.log(theData);
 
         }
 
-        private void addRow(string rowstring)
+        public void addRow(string rowstring)
         {
 
             body.Append("<tr>"+rowstring+"</tr>");

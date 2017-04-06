@@ -76,7 +76,8 @@ namespace HSPI_SIID.BACnet
 
         public List<Object> GetProperties()
         {
-            FetchProperties();
+            //if (!AllPropertiesFetched)
+                FetchProperties();              //still want to refresh, in case properties are changing
 
             var propertiesData = new List<Object>();
 
@@ -247,16 +248,21 @@ namespace HSPI_SIID.BACnet
             AddProperty(BacnetPropertyIds.PROP_OBJECT_NAME);    //not known, so it will get.
 
 
-
+            SetName();
 
             //Name = RequiredProperties[BacnetPropertyIds.PROP_OBJECT_NAME].BacnetValue.Value.ToString();
 
 
+        }
 
-            BacnetPropertyValue namePropVal = (BacnetPropertyValue)GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME).BacnetPropertyValue;
+
+
+        private void SetName()      //don't call in the middle of FetchProperties...        actually, now it's fine because of bypass refresh
+        {
+            BacnetPropertyValue namePropVal = (BacnetPropertyValue)GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME, true).BacnetPropertyValue;
+            //careful - don't call GetBacnetProperty internally, or else it will keep trying to refresh properties since AllPropertiesFetched is still false
 
             Name = namePropVal.value[0].ToString();   //BacnetValue.Value.ToString();
-
 
         }
 
@@ -281,8 +287,12 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public BACnetProperty GetBacnetProperty(BacnetPropertyIds bpi)
+        public BACnetProperty GetBacnetProperty(BacnetPropertyIds bpi, Boolean bypassRefresh = false)
         {
+
+            if (!AllPropertiesFetched && !bypassRefresh)
+                FetchProperties();
+
             foreach (var kvp in BacnetProperties)
             {
                 BacnetPropertyIds thisPropId = kvp.Key;
@@ -397,6 +407,8 @@ namespace HSPI_SIID.BACnet
             BacnetProperties.Clear();
 
 
+            AllPropertiesFetched = false;
+
 
             //TODO: if this is a structured view or object group, handle differently
             //A structured view has no Present Value prooperty
@@ -469,7 +481,15 @@ namespace HSPI_SIID.BACnet
                 //return; //?
             }
 
+
+
+
+
+            
+
             AllPropertiesFetched = true;
+
+            SetName();
 
         }
 

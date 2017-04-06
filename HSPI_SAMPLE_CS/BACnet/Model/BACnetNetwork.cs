@@ -35,6 +35,8 @@ namespace HSPI_SIID.BACnet
         public Dictionary<uint, BACnetDevice> BacnetDevices = new Dictionary<uint, BACnetDevice>();
 
 
+        public Boolean DevicesDiscovered = false;
+
 
 
         //can be multiple devices...just need one client to communicate on one IP endpoint
@@ -93,6 +95,8 @@ namespace HSPI_SIID.BACnet
 
         public void Discover()
         {
+            DevicesDiscovered = false;
+
             int udpPort = int.Parse(BacnetGlobalNetwork.UdpPort, System.Globalization.NumberStyles.HexNumber);
             //String adr = Properties.Settings.Default.DefaultUdpIp;
             if (IpAddress.Contains(':'))
@@ -105,6 +109,8 @@ namespace HSPI_SIID.BACnet
             GetDevices();
 
             System.Threading.Thread.Sleep(1000);    //wait for OnIam's...
+
+            DevicesDiscovered = true;
         }
 
 
@@ -279,6 +285,40 @@ namespace HSPI_SIID.BACnet
                 }
             }
         }
+
+
+
+        public BACnetDevice GetBacnetDevice(uint deviceInstance)
+        {
+            //foreach (var kvp in BacnetObjects)
+            //{
+            //    if (kvp.Key.Equals(boi))
+            //        return kvp.Value;
+
+            //}
+            //return null;
+
+
+            if (!DevicesDiscovered)
+                Discover();
+
+            foreach (var kvp in BacnetDevices)
+            {
+                uint thisDeviceInstance = kvp.Key;
+                if (thisDeviceInstance.Equals(deviceInstance))
+                    return kvp.Value;
+
+            }
+
+            return null;
+
+
+        }
+
+
+
+
+
 
     }
 

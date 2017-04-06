@@ -64,6 +64,7 @@ namespace HSPI_SIID.BACnet
         public static List<BacnetObjectDescription> objectsDescriptionExternal, objectsDescriptionDefault;
 
 
+        public Boolean NetworksDiscovered = false;
 
 
 
@@ -156,6 +157,9 @@ namespace HSPI_SIID.BACnet
 
         {
 
+            NetworksDiscovered = false;
+
+
             ipAddresses = BACnetGlobalNetwork.GetAvailableIps();    //This doesn't depend on user filters, so don't need to call this method per instance.
 
             BacnetNetworks = new Dictionary<string, BACnetNetwork>();
@@ -165,6 +169,36 @@ namespace HSPI_SIID.BACnet
                 if (!FilterIpAddress || (ipAddress == SelectedIpAddress))
                     BacnetNetworks.Add(ipAddress, new BACnetNetwork(this, ipAddress));
             }
+
+
+            NetworksDiscovered = true;
+
+        }
+
+
+        public BACnetNetwork GetBacnetNetwork(String ipAddress)
+        {
+            //foreach (var kvp in BacnetObjects)
+            //{
+            //    if (kvp.Key.Equals(boi))
+            //        return kvp.Value;
+
+            //}
+            //return null;
+
+
+            if (!NetworksDiscovered)
+                Discover();
+
+            foreach (var kvp in BacnetNetworks)
+            {
+                String thisIpAddress = kvp.Key;
+                if (thisIpAddress.Equals(ipAddress))
+                    return kvp.Value;
+
+            }
+
+            return null;
 
 
         }

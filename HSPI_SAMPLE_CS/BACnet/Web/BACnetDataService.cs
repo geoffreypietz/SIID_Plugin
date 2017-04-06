@@ -87,9 +87,10 @@ namespace HSPI_SIID.BACnet
             if (refresh)    //if calling from API, children won't exist yet.
                 bacnetGlobalNetwork.Discover();
 
-            BACnetNetwork bacnetNetwork; // = null;
-            bacnetGlobalNetwork.BacnetNetworks.TryGetValue(nodeData["ip_address"], out bacnetNetwork);  //sometimes BacnetNetwork can be null, if discovery not initiated.
-            return bacnetNetwork;
+            //BACnetNetwork bacnetNetwork; // = null;
+            //bacnetGlobalNetwork.BacnetNetworks.TryGetValue(nodeData["ip_address"], out bacnetNetwork);  //sometimes BacnetNetwork can be null, if discovery not initiated.
+            //return bacnetNetwork;
+            return bacnetGlobalNetwork.GetBacnetNetwork(nodeData["ip_address"]);
         }
 
 
@@ -102,10 +103,10 @@ namespace HSPI_SIID.BACnet
             if (refresh)
                 bacnetNetwork.Discover();
 
-            BACnetDevice bacnetDevice;
-            bacnetNetwork.BacnetDevices.TryGetValue(uint.Parse(nodeData["device_instance"]), out bacnetDevice);
-            return bacnetDevice;
-
+            //BACnetDevice bacnetDevice;
+            //bacnetNetwork.BacnetDevices.TryGetValue(uint.Parse(nodeData["device_instance"]), out bacnetDevice);
+            //return bacnetDevice;
+            return bacnetNetwork.GetBacnetDevice(uint.Parse(nodeData["device_instance"]));
         }
 
 
@@ -137,12 +138,14 @@ namespace HSPI_SIID.BACnet
                 BACnetObject bno = null;
                 if (bacnetNodeData["node_type"] == "device")
                 {
-                    var d = GetBacnetDevice(bacnetNodeData, true);  //still bug in this, somehow...
+                    var d = GetBacnetDevice(bacnetNodeData);//, true);  //still bug in this, somehow...
                     bno = d.DeviceObject;
+
+                    //for now, just have to refresh when getting anything device or above...since network, globalnetwork may be null
                 }
                 else
                 {
-                    bno = GetBacnetObject(bacnetNodeData, true);
+                    bno = GetBacnetObject(bacnetNodeData);//, true);
                 }
 
                 return bno;

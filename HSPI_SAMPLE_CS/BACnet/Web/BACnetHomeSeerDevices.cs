@@ -59,35 +59,105 @@ namespace HSPI_SIID.BACnet
 
 
 
-            foreach (Scheduler.Classes.DeviceClass bacnetDevice in BACnetDevs)
+            foreach (Scheduler.Classes.DeviceClass hsBacnetDevice in BACnetDevs)
             {
-                var EDO = bacnetDevice.get_PlugExtraData_Get(Instance.host);
+                var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
 
-                var DevRef = bacnetDevice.get_Ref(Instance.host);
+                var DevRef = hsBacnetDevice.get_Ref(Instance.host);
+
+
+                //var bacnetDevice = this.Instance.bacnetDataService.GetBacnetDevice(bacnetNodeData);       //shouldn't need this - everything kept in nodeData
 
 
                 //Scheduler.Classes.DeviceClass Gateway = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(GateRef);
 
 
+                //var bn = this.Instance.bacnetDataService.GetBacnetNetwork(bacnetNodeData); //, true);
 
-                bacnetConfHtml.addDevHeader("BACnet Device");
-                bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, bacnetDevice.get_Image(Instance.host)).print() +
-                    BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
-                    + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
-                //  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
-                sb.Append(bacnetConfHtml.print());
 
-                bacnetConfHtml = BACnetBuilder.htmlTable(800);
+                //var bd = this.Instance.bacnetDataService.GetBacnetDevice(bacnetNodeData);
+
+
+                //bacnetConfHtml.addDevHeader("BACnet Device");
+                //bacnetConfHtml.addDevMain(BACnetBuilder.MakeImage(16, 16, bacnetDevice.get_Image(Instance.host)).print() +
+                //    BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
+                //    + "&edit=1", bacnetDevice.get_Name(Instance.host)).print(), "");        //not sure what should go in place of "Add device" button
+                ////  BACnetBuilder.Qbutton("BACnetDevice_" + GateRef, "Add Device").print()
+
+
+                //bacnetConfHtml.addHead(new string[] { " ", "BACnet Device", "Instance No.", "IP Address", "UDP Port", "BACnet Name", "BACnet Object Identifier" });
+
+
+                var tdString = "<td {0} {1} >{2}</td>";
+
+                StringBuilder row = new StringBuilder();
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "colspan='2'", "BACnet Device"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "IP Address"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "UDP Port"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Object Type"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Instance No."));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Object Name"));
+                //row.Append(String.Format(tdString, "class='columnheader'", "", "BACnet Object Identifier"));
+                bacnetConfHtml.addRow(row.ToString());
+
+
+
+            //foreach (string head in HeadArray)
+            //{
+            //    var classAttr = (index == 0 && head == "") ? " " : " class='columnheader' ";
+            //    var colSpanAttr = (head == "BACnet Device" ? " colspan='2' " : " ");
+            //    row.Append("<td " + classAttr + colSpanAttr + "> "+ head + "</td>");
+            //}
+            //addRow(row.ToString());
+
+
+
+                var deviceImage = BACnetBuilder.MakeImage(16, 16, hsBacnetDevice.get_Image(Instance.host)).print();
+
+                var deviceLink = BACnetBuilder.MakeLink("/deviceutility?ref=" + DevRef
+                    + "&edit=1", hsBacnetDevice.get_Name(Instance.host)).print();
+
+
+                row = new StringBuilder();
+                row.Append(String.Format(tdString, "class='tableroweven'", "", deviceImage));
+                row.Append(String.Format(tdString, "class='tableroweven'", "colspan='2'", deviceLink));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_ip_address"]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_udp_port"]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_identifier"].Split(":".ToCharArray())[0]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_instance"]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_name"]));
+                //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
+                bacnetConfHtml.addRow(row.ToString());
+
+
+                //sb.Append(bacnetConfHtml.print());
+                //bacnetConfHtml = BACnetBuilder.htmlTable(800);
 
                 List<Scheduler.Classes.DeviceClass> BACnetObjs = getChildBacnetDevices(bacnetNodeData["device_instance"]).ToList(); ;
 
                 if (BACnetObjs.Count == 0)
                     continue;
 
-                
-                bacnetConfHtml.addSubHeader("Enabled", "BACnet Object", "", "", "");  //, "Type", "Format");     //maybe put in, i.e. object identifier?
+
+                //bacnetConfHtml.addHead(new string[]{"", "Enabled", "BACnet Object", "", "", "", "BACnet Name", "BACnet Object Identifier"});  //, "Type", "Format");     //maybe put in, i.e. object identifier?
+
+
+                row = new StringBuilder();
+                row.Append(String.Format(tdString, "", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Enabled"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "BACnet Object"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                bacnetConfHtml.addRow(row.ToString());
+
+
+
 
 
                 foreach (Scheduler.Classes.DeviceClass bacnetObject in BACnetObjs)
@@ -95,10 +165,42 @@ namespace HSPI_SIID.BACnet
 
                     var EDO2 = bacnetObject.get_PlugExtraData_Get(Instance.host);
                     var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+                    var bacnetNodeData2 = HttpUtility.ParseQueryString(parts2["BACnetNodeData"]);
+                    var subDeviceRef = bacnetObject.get_Ref(Instance.host);
 
-                    bacnetConfHtml.addSubMain(BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print(),
-                           BACnetBuilder.MakeLink("/deviceutility?ref=" + bacnetObject.get_Ref(Instance.host) + "&edit=1", bacnetObject.get_Name(Instance.host)).print(),
-                           "", "", "");
+
+                    var subDeviceImage = BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print();
+
+                    
+
+                    var subDeviceLink = BACnetBuilder.MakeLink("/deviceutility?ref=" + subDeviceRef
+                        + "&edit=1", bacnetObject.get_Name(Instance.host)).print();
+
+
+
+
+                    row = new StringBuilder();
+                    row.Append(String.Format(tdString, "", "", ""));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", subDeviceImage));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", subDeviceLink));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", ""));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", ""));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_identifier"].Split(":".ToCharArray())[0]));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_instance"]));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_name"]));
+                    //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
+                    bacnetConfHtml.addRow(row.ToString());
+
+
+
+
+
+                    //bacnetConfHtml.addSubMain(subDeviceImage, subDeviceLink, "", bacnetNodeData2["object_name"], bacnetNodeData2["object_identifier"]);
+
+
+                    //bacnetConfHtml.addSubMain(BACnetBuilder.MakeImage(16, 16, bacnetObject.get_Image(Instance.host)).print(),
+                    //       BACnetBuilder.MakeLink("/deviceutility?ref=" + bacnetObject.get_Ref(Instance.host) + "&edit=1", bacnetObject.get_Name(Instance.host)).print(),
+                    //       "", "", "");
                            //Instance.modPage.GetReg(parts["RegisterType"]),
                            //Instance.modPage.GetRet(parts["ReturnType"])
 
@@ -320,28 +422,60 @@ namespace HSPI_SIID.BACnet
             var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
 
+
+            BACnetObject bacnetObject; // = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+            //if (!bacnetObject.AllPropertiesFetched)
+            //    bacnetObject.FetchProperties();
+
+
+
+
+
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
                 bacnetNodeData["node_type"] = "device";       //now done in calling function
                 bacnetNodeData["object_type"] = "8";
                 bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
-                bacnetNodeDataString = bacnetNodeData.ToString();
+
+                bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+                var bacnetDevice = bacnetObject.BacnetDevice;   //here bacnetObject is the device object
+
+                var addressParts = bacnetDevice.BacnetAddress.ToString().Split(":".ToCharArray());
+                var ipAddress = addressParts[0];
+                var udpPort = addressParts[1];
+
+                bacnetNodeData["device_ip_address"] = ipAddress;
+                bacnetNodeData["device_udp_port"] = udpPort;
+                
+                
+
+
+                //bacnetNodeDataString = bacnetNodeData.ToString();
             }
             else
             {
+                bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
                 bacnetNodeData["parent_hs_device"] = parentDv.ToString();
             }
+
+
+            var nameProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
+            var objectName = nameProp.BacnetPropertyValue.Value.value[0].ToString();
+
+            var idProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER);
+            var objectId = idProp.BacnetPropertyValue.Value.value[0].ToString();
+
+
+
+
+            bacnetNodeData["object_name"] = objectName;
+            bacnetNodeData["object_identifier"] = objectId;     //want this whether device or object
+
             bacnetNodeDataString = bacnetNodeData.ToString();
 
 
 
-            var bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
-            if (!bacnetObject.AllPropertiesFetched)
-                bacnetObject.FetchProperties();
 
-            var nameProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
-            IList<BacnetValue> vals = nameProp.BacnetPropertyValue.Value.value;
-            var objectName = vals[0].ToString();
 
 
             newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want

@@ -56,7 +56,7 @@ namespace HSPI_SIID.BACnet
 
         public List<KeyValuePair<BacnetObjectId, BACnetObject>> BacnetObjects = new List<KeyValuePair<BacnetObjectId, BACnetObject>>();
 
-
+        public Boolean ObjectsFetched = false;
 
 
 
@@ -99,7 +99,8 @@ namespace HSPI_SIID.BACnet
         //only need to define this function for lazy loaded nodes.
         public List<BACnetTreeNode> GetChildNodes()
         {
-            GetObjects();   //when this node is expanded, need to know all of its objects
+            if (!ObjectsFetched)
+                GetObjects();   //when this node is expanded, need to know all of its objects
 
             var bacnetObjectTypeGroups = BACnetObjectTypeGroup.OrganizeBacnetObjects(BacnetObjects);
 
@@ -140,7 +141,7 @@ namespace HSPI_SIID.BACnet
         {
             DeviceObject = null;
             BacnetObjects.Clear();
-
+            ObjectsFetched = false;
 
             //AsynchRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree     
 
@@ -219,6 +220,8 @@ namespace HSPI_SIID.BACnet
                     //this.Cursor = Cursors.Default;
                     //m_DataGrid.SelectedObject = null;
                 }
+
+                ObjectsFetched = true;
             }
 
 
@@ -264,6 +267,10 @@ namespace HSPI_SIID.BACnet
                 
             //}
             //return null;
+
+            if (!ObjectsFetched)
+                GetObjects();
+
 
             foreach (var kvp in BacnetObjects)
             {
