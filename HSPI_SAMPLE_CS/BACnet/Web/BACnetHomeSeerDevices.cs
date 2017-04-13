@@ -126,7 +126,7 @@ namespace HSPI_SIID.BACnet
                 row.Append(String.Format(tdString, "class='tableroweven'", "colspan='2'", deviceLink));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_ip_address"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_udp_port"]));
-                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_identifier"].Split(":".ToCharArray())[0]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_type_string"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_instance"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_name"]));
                 //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
@@ -185,7 +185,7 @@ namespace HSPI_SIID.BACnet
                     row.Append(String.Format(tdString, "class='tableroweven'", "", subDeviceLink));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", ""));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", ""));
-                    row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_identifier"].Split(":".ToCharArray())[0]));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_type_string"]));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_instance"]));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_name"]));
                     //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
@@ -275,7 +275,7 @@ namespace HSPI_SIID.BACnet
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
                     var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
-                    if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
+                    if (parts["Type"] == "BACnet Object" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
                         listOfDevices.Add(Dev);
                 }
                 catch
@@ -315,7 +315,7 @@ namespace HSPI_SIID.BACnet
         //Modeling off the the way I did it for Modbus, A button on SIID page goes to an empty webpage as a trigger that we want to make a BACnet device
         //Makes the device here, then redirects the viewer to the new device's configuration page
         //Probably a better way to do this somewhere -mark
-        public string addOrEditBacnetHomeseerDevice(string bacnetNodeDataString)   //remember BacnetTreeNodeData is as query string, not JSON object
+        public string addOrEditBacnetHomeseerDevice(string bacnetNodeDataString, bool import = false)   //remember BacnetTreeNodeData is as query string, not JSON object
         {
             // queryString contains nodeData of tree node from which to make device
             //remember BacnetTreeNodeData is as query string, not JSON object
@@ -355,7 +355,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private int? getExistingHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
+        public int? getExistingHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
         {
             //List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
 
@@ -369,8 +369,9 @@ namespace HSPI_SIID.BACnet
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
                     //TODO: strip out weird numerical thing that gets added on...
+                    var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
 
-                    if (parts["Type"] == "BACnet Device")   //parts["BacnetTreeNodeData"]
+                    if (parts["Type"] == bacnetTypeString)   //parts["BacnetTreeNodeData"]
                     {
                         if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name)) //Then it's one of ours
                         {
@@ -414,49 +415,36 @@ namespace HSPI_SIID.BACnet
         private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeDataString, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
         {
 
-            var dv = Instance.host.NewDeviceRef("BACnet Device");   //TODO: do I need to name it something else?  Maybe at least differentiate between device and object?
+            var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
+
+            var dv = Instance.host.NewDeviceRef(bacnetTypeString);  
             MakeBACnetGraphicsAndStatus(dv);
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
 
             var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
-
-
-
-            BACnetObject bacnetObject; // = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
-            //if (!bacnetObject.AllPropertiesFetched)
-            //    bacnetObject.FetchProperties();
-
-
-
-
-
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
                 bacnetNodeData["node_type"] = "device";       //now done in calling function
                 bacnetNodeData["object_type"] = "8";
                 bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
-
-                bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
-                var bacnetDevice = bacnetObject.BacnetDevice;   //here bacnetObject is the device object
-
-                var addressParts = bacnetDevice.BacnetAddress.ToString().Split(":".ToCharArray());
-                var ipAddress = addressParts[0];
-                var udpPort = addressParts[1];
-
-                bacnetNodeData["device_ip_address"] = ipAddress;
-                bacnetNodeData["device_udp_port"] = udpPort;
-                
-                
-
-
-                //bacnetNodeDataString = bacnetNodeData.ToString();
             }
-            else
-            {
-                bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
-                bacnetNodeData["parent_hs_device"] = parentDv.ToString();
-            }
+
+
+
+            //TODO: the below will fail if we are importing, and the device is not actually on the network.  Still create in HomeSeer?
+
+            BACnetObject bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+            var bacnetDevice = bacnetObject.BacnetDevice;
+
+
+            var addressParts = bacnetDevice.BacnetAddress.ToString().Split(":".ToCharArray());
+            var ipAddress = addressParts[0];
+            var udpPort = addressParts[1];
+
+            bacnetNodeData["device_ip_address"] = ipAddress;
+            bacnetNodeData["device_udp_port"] = udpPort;
+
 
 
             var nameProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
@@ -465,33 +453,28 @@ namespace HSPI_SIID.BACnet
             var idProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER);
             var objectId = idProp.BacnetPropertyValue.Value.value[0].ToString();
 
-
-
-
             bacnetNodeData["object_name"] = objectName;
             bacnetNodeData["object_identifier"] = objectId;     //want this whether device or object
+            bacnetNodeData["object_type_string"] = objectId.Split(":".ToCharArray())[0];
 
-            bacnetNodeDataString = bacnetNodeData.ToString();
-
-
-
-
+            bacnetNodeData["polling_interval"] = "5000";    //default
+            bacnetNodeData["write_priority"] = "0";         //not really a persistent parameter; just useful when on config page, writing to properties
 
 
-            newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
-            newDevice.set_Location(Instance.host, "System");
-
-            newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
-
-
-            
 
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
-                newDevice.set_Name(Instance.host, "BACnet Device - " + objectName); //Can include ID in the name cause why not
+
+                //newDevice.set_Name(Instance.host, "BACnet Device - " + objectName); //Can include ID in the name cause why not
+
+                //bacnetNodeDataString = bacnetNodeData.ToString();
             }
             else
             {
+                //bacnetNodeData["parent_hs_device"] = parentDv.ToString();
+
+
+
                 var parentDevId = (int)parentDv;
                 var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
 
@@ -502,16 +485,27 @@ namespace HSPI_SIID.BACnet
                 newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
 
 
-                newDevice.set_Name(Instance.host, "BACnet Object - " + objectName); //Can include ID in the name cause why not
-                 
+                //newDevice.set_Name(Instance.host, "BACnet Object - " + objectName); //Can include ID in the name cause why not
+
 
 
                 //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.);
 
                 newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
+
             }
 
-            
+
+
+            newDevice.set_Name(Instance.host, bacnetTypeString + " - " + objectName);
+
+
+            newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
+            newDevice.set_Location(Instance.host, "System");
+
+            newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+
+
 
             //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
             //Can do:
@@ -529,7 +523,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeDataString)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString())); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
@@ -540,6 +534,9 @@ namespace HSPI_SIID.BACnet
             DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;  //Necessary for having the ability to control the device from the devices page using a defined action
             //may be useful later when we want to try actually writing to devices, however we decide to do it 
             newDevice.set_DeviceType_Set(Instance.host, DevINFO);
+
+
+            Instance.Devices.Add(new SiidDevice(Instance, newDevice));
 
             return dv;
 
@@ -570,7 +567,12 @@ namespace HSPI_SIID.BACnet
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
 
-            parts["Type"] = "BACnet Device";
+
+            var bacnetTypeString = (parts["node_type"] == "device" ? "BACnet Device" : "BACnet Object");
+
+
+
+            parts["Type"] = bacnetTypeString;
             //...
 
 

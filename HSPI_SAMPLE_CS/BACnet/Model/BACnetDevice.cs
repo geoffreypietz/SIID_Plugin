@@ -25,20 +25,44 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public static string[] Attributes = new string[]{
-               "Type",
-       "BACnetString",
+       // public static string[] Attributes = new string[]{
+       //        "Type",
+       //"BACnetString",
 
-       //From design doc
-       "InstanceNumber",
-       "NetworkNumber",
-       "UDPPort",
-            "IPAddress",
-            "PollInterval",
-            "BACnetName",
+       ////From design doc
+       //"InstanceNumber",
+       //"NetworkNumber",
+       //"UDPPort",
+       //     "IPAddress",
+       //     "PollInterval",
+       //     "BACnetName",
 
-            "RawValue",
-            "ProcessedValue"};
+       //     "RawValue",
+       //     "ProcessedValue"};
+
+
+
+
+       // public static string[] Attributes = new string[]{
+       //        "Type",
+       //"BACnetString",
+
+       ////From design doc
+       //"InstanceNumber",
+       //"NetworkNumber",
+       //"UDPPort",
+       //     "IPAddress",
+       //     "PollInterval",
+       //     "BACnetName",
+
+       //     "RawValue",
+       //     "ProcessedValue"};
+
+
+        //TODO: how to re-create parent/child stuff?
+        //will probably have to go back through devices AFTER creating.
+
+
 
 
 

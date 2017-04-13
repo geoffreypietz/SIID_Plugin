@@ -49,7 +49,7 @@ namespace HSPI_SIID.General
         public static void Update(InstanceHolder I)
         {
             List<SiidDevice> UpdatedDevs = new List<SiidDevice>();
-            foreach (SiidDevice D in I.Devices)
+            foreach (SiidDevice D in I.Devices.ToList())
             {
                 if (I.host.DeviceExistsRef(D.Ref)) {
                     UpdatedDevs.Add(D);

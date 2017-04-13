@@ -14,6 +14,7 @@ using Microsoft.VisualBasic.FileIO;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
 using System.Reflection;
+using System.IO.BACnet;
 
 namespace HSPI_SIID
 {
@@ -260,8 +261,43 @@ namespace HSPI_SIID
                                     HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
                                     switch (CodeLookup["type"])
                                     {
-                                        case ("BACnet"):
+                                        case ("BACnet Device") : case ("BACnet Object"):
                                             {
+                                                var dv = newDevice.get_Ref(Instance.host);
+                                                Instance.bacnetHomeSeerDevices.MakeBACnetGraphicsAndStatus(dv);
+
+                                                var parts = HttpUtility.ParseQueryString(string.Empty);
+
+                                                parts["Type"] = CodeLookup["type"];    //unless we've already set this?
+
+                                                var bacnetNodeData = HttpUtility.ParseQueryString(string.Empty);
+
+
+                                                bacnetNodeData["node_type"] = CodeLookup["type"].Split(" ".ToCharArray())[1].ToLower();
+
+                                                bacnetNodeData["ip_address"] = FetchAttribute(CodeLookup, "NetworkIPAddress");
+
+                                                bacnetNodeData["device_ip_address"] = FetchAttribute(CodeLookup, "DeviceIPAddress");    //do these matter?  Just for export later...
+                                                bacnetNodeData["device_udp_port"] = FetchAttribute(CodeLookup, "DeviceUDPPort");
+
+                                                bacnetNodeData["device_instance"] = FetchAttribute(CodeLookup, "DeviceInstance");
+
+                                                bacnetNodeData["object_type_string"] = FetchAttribute(CodeLookup, "ObjectType");
+                                                bacnetNodeData["object_type"] = ((Int32)(Enum.Parse(typeof(BacnetObjectTypes), bacnetNodeData["object_type_string"]))).ToString();
+                                                bacnetNodeData["object_instance"] = FetchAttribute(CodeLookup, "ObjectInstance");
+                                                bacnetNodeData["object_name"] = FetchAttribute(CodeLookup, "ObjectName");
+                                                bacnetNodeData["polling_interval"] = FetchAttribute(CodeLookup, "PollInterval");
+                                                
+
+                                                parts["BACnetNodeData"] = bacnetNodeData.ToString();
+
+
+                                                parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");            //not much point importing these, but...
+                                                parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
+
+
+                                                EDO.AddNamed("SSIDKey", parts.ToString());
+
 
                                                 break;
                                             }
@@ -462,7 +498,7 @@ namespace HSPI_SIID
                
                         switch (parts["Type"])
                         {
-                            case ("BACnet Device"):
+                            case ("BACnet Device") : case ("BACnet Object"):
                                 {
                                     BackNetDevices.Add(Dev);
                                     break;
@@ -501,7 +537,7 @@ namespace HSPI_SIID
                 }
                 catch(Exception e)
                 {
-                   
+                    var s = 2;
                 }
               
 

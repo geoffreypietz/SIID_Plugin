@@ -46,6 +46,39 @@ namespace HSPI_SIID.BACnet
 
 
 
+        public static string[] Attributes = new string[]{
+       //        "Type",
+       //"BACnetString",    //what are these?
+
+
+       "Type",
+
+       "NetworkIPAddress",
+
+
+       "DeviceIPAddress",
+
+       "DeviceUDPPort",
+
+
+       "DeviceInstance",
+
+       "ObjectType",
+
+       "ObjectInstance",
+
+       "ObjectName",
+
+            "PollInterval",
+
+            "RawValue",
+
+            "ProcessedValue"
+        
+        };
+
+
+
 
 
         public BACnetTreeNode GetTreeNode()

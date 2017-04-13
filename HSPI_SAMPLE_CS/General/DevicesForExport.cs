@@ -173,10 +173,86 @@ namespace HSPI_SIID
                         Orderlist = ModbusDevice.Attributes;
                         break;
                     }
-                case ("BACnet Device"):
+                case ("BACnet Device") : case ("BACnet Object"):
                     {
-                        Orderlist = BACnetDevice.Attributes;
-                        break;
+
+                        //Need to export everything that we would need in order to import.  All of bacnetNodeData, essentially.
+                        //To this end, maybe it would be easiest to also store device-level stuff in object nodes - i.e. device IP address
+
+
+
+                        Orderlist = BACnetObject.Attributes;
+
+
+                        System.Collections.Specialized.NameValueCollection bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+
+
+
+                        foreach (var Ent in Orderlist)
+                        {
+                            listOfAttributes.Add(Ent);
+
+
+
+                            switch (Ent)
+                            {
+                                case "Type":
+                                    Values[Ent] = parts[Ent];
+                                    break;
+
+
+                                case "NetworkIPAddress":
+                                    Values[Ent] = bacnetNodeData["ip_address"];
+                                    break;
+
+                                case "DeviceIPAddress":
+                                    Values[Ent] = bacnetNodeData["device_ip_address"];
+                                    break;
+
+                                case "DeviceUDPPort":
+                                    Values[Ent] = bacnetNodeData["device_udp_port"];
+                                    break;
+
+
+                                case "DeviceInstance":
+                                    Values[Ent] = bacnetNodeData["device_instance"];
+                                    break;
+
+
+                                case "ObjectType":
+                                    Values[Ent] = bacnetNodeData["object_type_string"];
+                                    break;
+
+
+                                case "ObjectInstance":
+                                    Values[Ent] = bacnetNodeData["object_instance"];
+                                    break;
+
+
+                                case "ObjectName":
+                                    Values[Ent] = bacnetNodeData["object_name"];
+                                    break;
+
+
+                                case "PollInterval":
+                                    Values[Ent] = bacnetNodeData["polling_interval"];
+                                    break;
+
+
+                                case "RawValue":
+                                case "ProcessedValue":
+                                    Values[Ent] = parts[Ent];
+                                    break;
+
+
+                            }
+                        }
+
+
+                        return;
+                        //Orderlist = BACnetDevice.Attributes;
+                        //break;
+
                     }
                 case ("Scratchpad"):
                     {

@@ -394,7 +394,7 @@ namespace HSPI_SIID
                        
                         return Instance.modPage.BuildModbusDeviceTab(dvRef);
                     }
-                case ("BACnet Device")://????
+                case ("BACnet Device") : case ("BACnet Object"):
                     {
                         return Instance.bacnetDevices.BuildBACnetDeviceTab(dvRef);
                     }

@@ -706,19 +706,32 @@ console.log(theData);
             addRow("<td class=\"columnheader\" colspan=\"4\">"+title+"</td>");
 
     }
+        //public void addHead(string[] HeadArray)
+        //{
+        //    StringBuilder row = new StringBuilder();
+        //    var index = 0;
+        //    foreach (string head in HeadArray)
+        //    {
+        //        var classAttr = (index == 0 && head == "") ? " " : " class='columnheader' ";
+        //        var colSpanAttr = (head == "BACnet Device" ? " colspan='2' " : " ");
+        //        row.Append("<td " + classAttr + colSpanAttr + "> "+ head + "</td>");
+        //    }
+        //    addRow(row.ToString());
+
+        //}
+
+
         public void addHead(string[] HeadArray)
         {
             StringBuilder row = new StringBuilder();
-            var index = 0;
             foreach (string head in HeadArray)
             {
-                var classAttr = (index == 0 && head == "") ? " " : " class='columnheader' ";
-                var colSpanAttr = (head == "BACnet Device" ? " colspan='2' " : " ");
-                row.Append("<td " + classAttr + colSpanAttr + "> "+ head + "</td>");
+                row.Append("<td class=\"columnheader\"> " + head + "</td>");
             }
             addRow(row.ToString());
 
         }
+
         public void addArrayRow(string[] HeadArray)
         {
             StringBuilder row = new StringBuilder();

@@ -135,7 +135,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private void setDeviceStatus(Scheduler.Classes.DeviceClass device, int devId, int status, NameValueCollection bacnetNodeData)
+        private void setDeviceStatus(int devId, int status, int? parentDevId = null)
         {
 
             //if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
@@ -160,11 +160,10 @@ namespace HSPI_SIID.BACnet
             Instance.host.SetDeviceString(devId, statusString, true);
 
 
-            if (bacnetNodeData["parent_hs_device"] != null)
+            if (parentDevId != null)
             {
-                int parentDevId = int.Parse(bacnetNodeData["parent_hs_device"]);
-                Instance.host.SetDeviceValueByRef(parentDevId, status, true);
-                Instance.host.SetDeviceString(parentDevId, statusString, true);
+                Instance.host.SetDeviceValueByRef((int)parentDevId, status, true);
+                Instance.host.SetDeviceString((int)parentDevId, statusString, true);
             }
 
 
@@ -187,7 +186,11 @@ namespace HSPI_SIID.BACnet
             Scheduler.Classes.DeviceClass device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv1);
 
 
+            var nodeType = bacnetNodeData["node_type"];
+            int? parentDeviceRef = null;
 
+            if (nodeType == "object")
+                parentDeviceRef = Instance.bacnetHomeSeerDevices.getExistingHomeseerBacnetNodeDevice(bacnetNodeData.ToString(), "device");
 
 
             BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
@@ -196,19 +199,18 @@ namespace HSPI_SIID.BACnet
                 confHtml.add("", "Error: could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
                 
 
-
                 if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
-                    setDeviceStatus(device, dv1, 2, bacnetNodeData);
+                    setDeviceStatus(dv1, 2, parentDeviceRef);
                 else
-                    setDeviceStatus(device, dv1, 3, bacnetNodeData);
+                    setDeviceStatus(dv1, 3, parentDeviceRef);
 
             }
 
             else
             {
-                setDeviceStatus(device, dv1, 1, bacnetNodeData);
+                setDeviceStatus(dv1, 1, parentDeviceRef);
 
-                bno.FetchProperties();
+                bno.FetchProperties();  //force refresh, even if already fetched
 
 
                 foreach (var bacnetProperty in bno.BacnetProperties)
