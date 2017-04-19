@@ -137,7 +137,7 @@ namespace HSPI_SIID
             }
             AllInstances[InstanceName].hspi.ShutdownIO();
             AllInstances[InstanceName].client.Disconnect();
-            //  AllInstances[InstanceName].callback.Disconnect();
+            //AllInstances[InstanceName].callback.Disconnect();
             AllInstances.Remove(InstanceName);
 
 
@@ -245,11 +245,17 @@ namespace HSPI_SIID
                         System.Threading.Thread.Sleep(1000); 
                     } while (client.CommunicationState == HSCF.Communication.Scs.Communication.CommunicationStates.Connected & !HSPI.bShutDown);
                     Console.WriteLine("Connection lost, exiting");
+
                     // disconnect from server for good here
-                    client.Disconnect();
-                    clientCallback.Disconnect();
-                    wait(2);
-                    System.Environment.Exit(0);
+                    // 
+                    // clientCallback.Disconnect();
+                    //wait(2);
+                    if (AllInstances.Count == 0)
+                    {
+                        client.Disconnect();
+                        wait(2);
+                        System.Environment.Exit(0);
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -336,7 +336,7 @@ namespace HSPI_SIID
 
                   if (!string.IsNullOrEmpty(Instance.name))
                   {
-                wpd.link = "SIIDPage" + "?instance=" + Instance.name;
+                    wpd.link = "SIIDPage";// + "?instance=" + Instance.name;
                     wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Instance.name;
                 }
                 else
