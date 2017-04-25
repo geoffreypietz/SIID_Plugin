@@ -659,7 +659,31 @@ namespace HSPI_SIID
             //OK, we will take this function over for modbus actions.
             foreach (CAPI.CAPIControl CC in colSend)
             {
-                System.Threading.Tasks.Task.Factory.StartNew(() => Instance.modPage.ReadWriteIfMod(CC));
+
+                var devID = CC.Ref;
+                try
+                {
+                    var NewDevice = HSPI_SIID.General.SiidDevice.GetFromListByID(Instance.Devices, devID);
+                    var EDO = NewDevice.Extra;
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    switch (parts["type"]) {
+                        case "Scratchpad":
+                            {
+                                System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.eatAction(CC));
+                                break;
+                            }
+                        case "Modbus Device":
+                            {
+                                System.Threading.Tasks.Task.Factory.StartNew(() => Instance.modPage.ReadWriteIfMod(CC));
+                                break;
+                            }
+
+                    }
+
+                    
+                }
+                catch { }
+                
             
 
 

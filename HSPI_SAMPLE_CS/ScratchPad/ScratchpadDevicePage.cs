@@ -291,7 +291,8 @@ namespace HSPI_SIID.ScratchPad
             newDevice.set_Relationship(Instance.host, Enums.eRelationship.Not_Set);
 
             newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG);
-            newDevice.MISC_Set(Instance.host, Enums.dvMISC.HIDDEN);
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
+            // newDevice.MISC_Set(Instance.host, Enums.dvMISC.HIDDEN);
             HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
 
             // EDO = newDevice.get_PlugExtraData_Get(Instance.host);
@@ -307,10 +308,26 @@ namespace HSPI_SIID.ScratchPad
             newDevice.set_DeviceType_Set(Instance.host, DevINFO);
             Instance.Devices.Add(new SiidDevice(Instance,newDevice));
 
+            MakeStewardVSP(dv);
+
 
             return "refresh";
 
         }
+
+
+        void MakeStewardVSP(int deviceID) {
+        
+
+            var Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
+            Control.PairType = VSVGPairs.VSVGPairType.Range;
+            Control.RangeStart = -100;
+            Control.RangeEnd = 1000;
+          var IS =  Instance.host.DeviceVSP_AddPair(deviceID, Control);
+          
+
+        }
+
 
         public List<SiidDevice> getAllRules()
         {
@@ -421,18 +438,39 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
         }
 
 
-     /*   public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
+        /*   public void addSSIDExtraData(Scheduler.Classes.DeviceClass Device, string Key, string value)
+           {
+
+
+               var EDO = Device.get_PlugExtraData_Get(Instance.host);
+               var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+               parts[Key] = value;
+               EDO.RemoveNamed("SSIDKey");
+               EDO.AddNamed("SSIDKey", parts.ToString());
+               Device.set_PlugExtraData_Set(Instance.host, EDO);
+
+           }*/
+
+
+        public void eatAction(CAPI.CAPIControl ActionIn)
         {
+            var devID = ActionIn.Ref;
+            var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+            
 
+            if (ActionIn.ControlValue < 0){
+                Reset(newDevice);
 
-            var EDO = Device.get_PlugExtraData_Get(Instance.host);
-            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-            parts[Key] = value;
-            EDO.RemoveNamed("SSIDKey");
-            EDO.AddNamed("SSIDKey", parts.ToString());
-            Device.set_PlugExtraData_Set(Instance.host, EDO);
+            }
+            else { //Set to monthly, accumulator, active, with date as value
+                newDevice.UpdateExtraData("IsEnabled", "True");
+                newDevice.UpdateExtraData("IsAccumulator", "True");
+                newDevice.UpdateExtraData("ResetType", "3");
+                newDevice.UpdateExtraData("DayOfMonth", ""+ActionIn.ControlValue+"");
+            }
 
-        }*/
+        }
+
 
         public string parseInstances(string data)
         {
