@@ -2,11 +2,125 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Web;
 
 namespace HSPI_SIID.General
 {
     class GeneralHelperFunctions
     {
+
+
+        public static string GetValues(InstanceHolder Instance, string ScratchPadString)
+        {
+            List<int> Raws = new List<int>();
+            List<int> Processed = new List<int>();
+            Match m = Regex.Match(ScratchPadString, @"(\$\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Raws.Contains(int.Parse(m.Groups[2].ToString())))
+                {
+
+                    Raws.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+            m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
+            while (m.Success)
+            {
+                if (!Processed.Contains(int.Parse(m.Groups[2].ToString())))
+                {
+                    Processed.Add(int.Parse(m.Groups[2].ToString()));
+                }
+                m = m.NextMatch();
+            }
+            StringBuilder FinalString = new StringBuilder(ScratchPadString);
+            foreach (int dv in Raws)
+            {
+                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                if (TempDev != null)
+                {
+                    var TempEDO = TempDev.Extra;
+                    var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
+                    try
+                    {
+                        string Rep = Tempparts["RawValue"];
+                        FinalString.Replace("$(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            FinalString.Replace("$(" + dv + ")", Rep);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+                else //Not an SIID device, use the device value
+                {
+
+                    try
+                    {
+                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        FinalString.Replace("$(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+
+                    }
+
+                }
+
+            }
+            foreach (int dv in Processed)
+            {
+                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+                if (TempDev != null)
+                {
+                    var TempEDO = TempDev.Extra;
+                    var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
+                    try
+                    {
+                        string Rep = Tempparts["ProcessedValue"];
+                        FinalString.Replace("#(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            FinalString.Replace("#(" + dv + ")", Rep);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        FinalString.Replace("#(" + dv + ")", Rep);
+                    }
+                    catch
+                    {
+
+                    }
+
+                }
+            }
+
+            return FinalString.ToString();
+
+        }
+
+
 
         public static string[] DaysOfWeek = new string[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 

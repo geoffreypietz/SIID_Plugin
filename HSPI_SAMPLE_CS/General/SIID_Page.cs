@@ -331,6 +331,11 @@ namespace HSPI_SIID
                                                 parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
                                                 parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
                                                 EDO.AddNamed("SSIDKey", parts.ToString());
+
+                                                var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+                                                DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
+                                                Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                
                                                 break;
                                             }
                                         case ("Modbus Gateway"):

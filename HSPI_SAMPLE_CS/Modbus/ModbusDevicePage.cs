@@ -916,7 +916,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             var EDO = NewDevice.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string ScratchPadString = parts["ScratchpadString"];
-
+           StringBuilder FinalString= new StringBuilder(GeneralHelperFunctions.GetValues(Instance, parts["ScratchPadString"]));
+            /*
             //OK scratchpad rules
             //All variables are numbers
             //The result will be a number, output formatting can happen from the format string stuff and there we can add $ for money or Kw/H or whatever
@@ -973,7 +974,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                 string Rep = Tempparts["ProcessedValue"];
                 FinalString.Replace("$(" + dv + ")", Rep);
-            }
+            }*/
             string OutValue = "NAN";
             try
             {

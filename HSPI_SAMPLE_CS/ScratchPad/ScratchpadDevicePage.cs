@@ -25,81 +25,7 @@ namespace HSPI_SIID.ScratchPad
 
 
 
-        private string GetValues(string ScratchPadString)
-        {
-            List<int> Raws = new List<int>();
-            List<int> Processed = new List<int>();
-            Match m = Regex.Match(ScratchPadString, @"(\$\()+(\d+)(\))+");
-            while (m.Success)
-            {
-                if (!Raws.Contains(int.Parse(m.Groups[2].ToString())))
-                {
-
-                    Raws.Add(int.Parse(m.Groups[2].ToString()));
-                }
-                m = m.NextMatch();
-            }
-            m = Regex.Match(ScratchPadString, @"(\#\()+(\d+)(\))+");
-            while (m.Success)
-            {
-                if (!Processed.Contains(int.Parse(m.Groups[2].ToString())))
-                {
-                    Processed.Add(int.Parse(m.Groups[2].ToString()));
-                }
-                m = m.NextMatch();
-            }
-            StringBuilder FinalString = new StringBuilder(ScratchPadString);
-            foreach (int dv in Raws)
-            {
-                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.Extra;
-                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
-                try
-                {
-                    string Rep = Tempparts["RawValue"];
-                    FinalString.Replace("$(" + dv + ")", Rep);
-                }
-                catch
-                {
-                    try
-                    {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
-                        FinalString.Replace("$(" + dv + ")", Rep);
-                    }
-                    catch
-                    {
-                       
-                    }
-                }
-
-            }
-            foreach (int dv in Processed)
-            {
-                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
-                var TempEDO = TempDev.Extra;
-                var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
-                try
-                {
-                    string Rep = Tempparts["ProcessedValue"];
-                    FinalString.Replace("$(" + dv + ")", Rep);
-                }
-                catch
-                {
-                    try
-                    {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
-                        FinalString.Replace("$(" + dv + ")", Rep);
-                    }
-                    catch
-                    {
-                    
-                    }
-                }
-            }
-
-            return FinalString.ToString();
-
-        }
+       
         private double CalculateString(string FinalString)
         {
             double OutValue = 0;
@@ -126,7 +52,7 @@ namespace HSPI_SIID.ScratchPad
                 var EDO = Rule.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 //Do the calculator string parse to get the new value
-                string RawNumberString = GetValues(parts["ScratchPadString"]);
+                string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
                 double CalculatedString = CalculateString(RawNumberString);
                 parts["NewValue"] = CalculatedString.ToString();
                 if (bool.Parse(parts["IsAccumulator"]))
@@ -316,7 +242,7 @@ namespace HSPI_SIID.ScratchPad
         }
 
 
-        void MakeStewardVSP(int deviceID) {
+       public void MakeStewardVSP(int deviceID) {
         
 
             var Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
