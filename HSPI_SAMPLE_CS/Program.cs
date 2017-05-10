@@ -68,15 +68,19 @@ namespace HSPI_SIID
             scrPage = new ScratchpadDevicePage("ScratchpadPage", this);
             modAjax = new MosbusAjaxReceivers(this);
 
+
+            bacnetDevices = new BACnetDevices(BACnetDevices.BaseUrl, this);
+            bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl, this);
+            bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl, this);
+
+
             siidPage = new SIID_Page("SIIDPage", this);
 
             //bacnetDevices = new BACnetDevices(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);
             //bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);
             //bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl + this.ajaxName.Replace(":", "_"), this);
 
-            bacnetDevices = new BACnetDevices(BACnetDevices.BaseUrl, this);
-            bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl, this);
-            bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl, this);
+
 
 
             //CPU use is high, so try to minimize iterating through devices

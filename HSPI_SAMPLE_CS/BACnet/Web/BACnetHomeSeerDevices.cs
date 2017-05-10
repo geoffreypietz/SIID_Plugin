@@ -292,6 +292,53 @@ namespace HSPI_SIID.BACnet
 
 
 
+        public List<int> getChildBacnetDevices2(String bacnetDeviceInstance)
+        {
+
+
+            List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
+            List<int> devIds = new List<int>();
+
+            //TODO: collection was modified, enumeration may not execute
+
+
+            foreach (SiidDevice Dev in Instance.Devices)
+            {
+                var hsBacnetDevice = Dev.Device;
+
+                try
+                {
+                    var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string s = parts["Type"];
+                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    if (parts["Type"] == "BACnet Object" && belongsToThisInstance(hsBacnetDevice) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
+                        //listOfDevices.Add(hsBacnetDevice);
+                        devIds.Add(Dev.Ref);
+                }
+                catch
+                {
+
+                }
+
+            }
+
+            //return listOfDevices;
+            return devIds;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         private bool belongsToThisInstance(Scheduler.Classes.DeviceClass Dev)
@@ -405,7 +452,240 @@ namespace HSPI_SIID.BACnet
 
 
 
+        private int bacnetObjectWritePriorityDevice(int deviceDv, int objDv, NameValueCollection bacnetNodeData, String name)      //parentDv is for the device device
+        {
+            var dv = Instance.host.NewDeviceRef("BACnet Object (write priority)");
 
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+            newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+
+
+
+
+            //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+            //if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
+            //{
+            //    bacnetNodeData["node_type"] = "device";       //now done in calling function
+            //    bacnetNodeData["object_type"] = "8";
+            //    bacnetNodeData["object_instance"] = bacnetNodeData["device_instance"];
+            //}
+
+
+
+            //TODO: the below will fail if we are importing, and the device is not actually on the network.  Still create in HomeSeer?
+
+            //BACnetObject bacnetObject = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
+            //var bacnetDevice = bacnetObject.BacnetDevice;
+
+
+            //var addressParts = bacnetDevice.BacnetAddress.ToString().Split(":".ToCharArray());
+            //var ipAddress = addressParts[0];
+            //var udpPort = addressParts[1];
+
+            //bacnetNodeData["device_ip_address"] = ipAddress;
+            //bacnetNodeData["device_udp_port"] = udpPort;
+
+
+
+            //var nameProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME);
+            //var objectName = nameProp.BacnetPropertyValue.Value.value[0].ToString();
+
+            //var idProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_IDENTIFIER);
+            //var objectId = idProp.BacnetPropertyValue.Value.value[0].ToString();
+
+            //bacnetNodeData["object_name"] = objectName;
+            //bacnetNodeData["object_identifier"] = objectId;     //want this whether device or object
+            //bacnetNodeData["object_type_string"] = objectId.Split(":".ToCharArray())[0];
+
+
+            ////bacnetNodeData["write_priority"] = "0";         //not really a persistent parameter; just useful when on config page, writing to properties
+
+
+
+            //if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
+            //{
+
+            //    //newDevice.set_Name(Instance.host, "BACnet Device - " + objectName); //Can include ID in the name cause why not
+
+            //    //bacnetNodeDataString = bacnetNodeData.ToString();
+
+
+
+            //    //TODO: set default polling interval here
+
+
+            //    //leave this alone.  Store polling interval in config...
+
+            //    MakeBACnetGraphicsAndStatus(dv);
+
+
+
+            //    bacnetNodeData["polling_interval"] = "5000";    //default
+
+
+            //    //Instance.bacnetDevices.updateDevicePollTimer(dv, 5000);
+
+
+
+            //    //TODO: just for testing, so we can see pres. value.
+
+            //    //var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+            //    //Control.PairType = VSVGPairs.VSVGPairType.Range;
+            //    //Control.RangeStart = 0;
+            //    //Control.RangeEnd = 100000;
+            //    //Control.Render = Enums.CAPIControlType.TextBox_Number;
+            //    //var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+            //    //TODO: so now the object HS device has to look at the present value of 
+
+
+
+            //}
+            //else
+            //{
+            //    //bacnetNodeData["parent_hs_device"] = parentDv.ToString();
+
+
+
+                var parentDevId = (int)deviceDv;   //parent is the BACnet object device, not the BACnet device device
+                var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
+
+                parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
+                parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+
+                newDevice.AssociatedDevice_Add(Instance.host, parentDevId);
+                newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
+
+
+
+                bacnetNodeData["bacnet_object_hs_device"] = objDv.ToString();     //on change, can then go and change nodeData in that object.
+
+
+                //bacnetNodeData[""]
+
+
+                //newDevice.set_Name(Instance.host, "BACnet Object - " + objectName); //Can include ID in the name cause why not
+
+
+
+                //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.);
+
+                newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
+
+
+                Instance.host.SetDeviceValueByRef(dv, 0, false);
+                Instance.host.SetDeviceString(dv, "0", false);
+
+                //but shouldn't it update when you change?
+
+
+                //TODO: add the different write priorities here.
+
+
+                //I//nstance.hspi.
+
+
+
+
+
+
+
+
+
+
+                var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                Control.PairType = VSVGPairs.VSVGPairType.Range;
+
+
+                //Control.
+
+
+                //Control.Value = 2.0;
+
+                Control.RangeStart = 0;
+                Control.RangeEnd = 16;
+
+                //Control.
+
+                //Control.
+
+                //Control.Value = 2;
+
+
+
+                //Control.Render = Enums.CAPIControlType.TextBox_Number;
+                Control.Render = Enums.CAPIControlType.ValuesRange;
+                var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+            //Instance.host.
+
+            //newDevice.
+
+
+            //Instance.host.
+
+
+
+            //}
+
+
+
+            newDevice.set_Name(Instance.host,  name + " (write priority)");
+
+
+            newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
+            newDevice.set_Location(Instance.host, "System");
+
+            newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+
+
+
+            //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
+            //Can do:
+            /* Not_Set = 0,
+            Indeterminate = 1,
+            Parent_Root = 2,
+            Standalone = 3,
+            Child = 4
+            */
+
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG); //Basically do we want this to log or not log somewhere, I haven't done any plugin specific logging stuff yet'
+            //but this may be homeseer log stuff
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
+            HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
+
+
+
+            
+
+
+            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString(), true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            //Could be BACnet device or object, but either way turns into a HomeSeer device
+
+
+            newDevice.set_PlugExtraData_Set(Instance.host, EDO);
+
+
+            var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+            DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;  //Necessary for having the ability to control the device from the devices page using a defined action
+            //may be useful later when we want to try actually writing to devices, however we decide to do it 
+            newDevice.set_DeviceType_Set(Instance.host, DevINFO);
+
+
+
+
+
+            Instance.Devices.Add(new SiidDevice(Instance, newDevice));
+
+
+
+            return dv;
+
+
+
+
+        }
 
 
 
@@ -418,9 +698,12 @@ namespace HSPI_SIID.BACnet
             var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
 
             var dv = Instance.host.NewDeviceRef(bacnetTypeString);  
-            MakeBACnetGraphicsAndStatus(dv);
+            
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+
+
+
 
             var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
@@ -457,8 +740,8 @@ namespace HSPI_SIID.BACnet
             bacnetNodeData["object_identifier"] = objectId;     //want this whether device or object
             bacnetNodeData["object_type_string"] = objectId.Split(":".ToCharArray())[0];
 
-            bacnetNodeData["polling_interval"] = "5000";    //default
-            bacnetNodeData["write_priority"] = "0";         //not really a persistent parameter; just useful when on config page, writing to properties
+            
+            //bacnetNodeData["write_priority"] = "0";         //not really a persistent parameter; just useful when on config page, writing to properties
 
 
 
@@ -468,11 +751,47 @@ namespace HSPI_SIID.BACnet
                 //newDevice.set_Name(Instance.host, "BACnet Device - " + objectName); //Can include ID in the name cause why not
 
                 //bacnetNodeDataString = bacnetNodeData.ToString();
+
+
+
+                //TODO: set default polling interval here
+
+
+                //leave this alone.  Store polling interval in config...
+
+                MakeBACnetGraphicsAndStatus(dv);
+
+
+
+                bacnetNodeData["polling_interval"] = "5000";    //default
+
+
+                //Instance.bacnetDevices.updateDevicePollTimer(dv, 5000);
+
+
+
+                //TODO: just for testing, so we can see pres. value.
+
+                //var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                //Control.PairType = VSVGPairs.VSVGPairType.Range;
+                //Control.RangeStart = 0;
+                //Control.RangeEnd = 100000;
+                //Control.Render = Enums.CAPIControlType.TextBox_Number;
+                //var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+          
+
+                //TODO: so now the object HS device has to look at the present value of 
+
+
+
             }
             else
             {
                 //bacnetNodeData["parent_hs_device"] = parentDv.ToString();
 
+
+
+                bacnetNodeData["write_priority"] = "0";  
 
 
                 var parentDevId = (int)parentDv;
@@ -492,6 +811,25 @@ namespace HSPI_SIID.BACnet
                 //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.);
 
                 newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
+
+
+
+
+
+                var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                Control.PairType = VSVGPairs.VSVGPairType.Range;
+                Control.RangeStart = -100000;
+                Control.RangeEnd = 100000;
+                //Control.Render = Enums.CAPIControlType.TextBox_Number;
+                Control.Render = Enums.CAPIControlType.TextBox_String;
+                var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+
+
+
+
 
             }
 
@@ -536,7 +874,25 @@ namespace HSPI_SIID.BACnet
             newDevice.set_DeviceType_Set(Instance.host, DevINFO);
 
 
+
+
+
             Instance.Devices.Add(new SiidDevice(Instance, newDevice));
+
+
+
+
+            if (nodeType == "device")
+                Instance.bacnetDevices.updateDevicePollTimer(dv, Int32.Parse(bacnetNodeData["polling_interval"]));  //creates a new poll timer for this device
+            else
+            {
+
+
+
+                bacnetObjectWritePriorityDevice((int)parentDv, dv, bacnetNodeData, bacnetTypeString + " - " + objectName);
+
+            }
+
 
             return dv;
 
@@ -563,13 +919,17 @@ namespace HSPI_SIID.BACnet
 
         //Generates the plugin extra data stuff for BACnet Devices
         //Really only thing I want these to have at minimum is type, rawvalue,processedvalue
-        public string siidDeviceData(String bacnetNodeDataString)
+        public string siidDeviceData(String bacnetNodeDataString, Boolean isWritePriorityDev = false)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
 
+            var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
 
-            var bacnetTypeString = (parts["node_type"] == "device" ? "BACnet Device" : "BACnet Object");
+            var bacnetTypeString = (bacnetNodeData["node_type"] == "device" ? "BACnet Device" : "BACnet Object");
 
+
+            if (isWritePriorityDev)
+                bacnetTypeString += " (write priority)";
 
 
             parts["Type"] = bacnetTypeString;
@@ -604,6 +964,9 @@ namespace HSPI_SIID.BACnet
         //Code below is just copied from modbus gateway placeholders, so should change
         public void MakeBACnetGraphicsAndStatus(int dv)
         {
+            // Use these to show connection status of device.  May not be necessary/compatible with storing present value in device....
+
+
             var Graphic = new VSVGPairs.VGPair();
             Graphic.PairType = VSVGPairs.VSVGPairType.SingleValue;
             Graphic.Graphic = "/images/HomeSeer/status/off.gif";

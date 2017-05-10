@@ -43,6 +43,7 @@ namespace HSPI_SIID
            
         OurPageName=pagename;
            InitializeModbusGatewayTimers();
+           InitializeBacnetDeviceTimers();
             InitializeScratchpadTimer();
         }
 
@@ -654,7 +655,9 @@ namespace HSPI_SIID
         public void InitializeModbusGatewayTimers()
         {
             List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
-          
+
+            //ModbusGates.AddRange(Instance.bacnetDevices.getAllDevices());           //just add in bacnet devices here, since functionality is the same
+
 
             foreach (var Siid in ModbusGates)
             {
@@ -674,6 +677,43 @@ namespace HSPI_SIID
 
             
         }
+
+
+
+        public void InitializeBacnetDeviceTimers()
+        {
+            List<SiidDevice> bacnetDevices = Instance.bacnetDevices.getAllDevices();
+
+
+            foreach (var Siid in bacnetDevices)
+            {
+
+                var EDO = Siid.Extra;
+
+                var bacnetDevice = Siid.Device;
+
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+
+
+                var bacnetNodeData = Instance.bacnetDevices.getBacnetNodeData(bacnetDevice);
+
+
+                Instance.bacnetDevices.updateDevicePollTimer(Siid.Ref, Convert.ToInt32(bacnetNodeData["polling_interval"]));
+
+                //if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
+                //{
+
+                //    System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 0, Convert.ToInt32(bacnetNodeData["polling_interval"]);
+                //    Console.WriteLine("Starting Polling timer for gateway: " + Siid.Ref);
+                //    PluginTimerDictionary.Add(Siid.Ref, GateTimer);
+                //}
+            }
+
+
+        }
+
+
+
 
 
 
@@ -848,6 +888,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBus" + Instance.ajaxName);
             htmlBuilder BacnetBuilder = new htmlBuilder("BACnet" + Instance.ajaxName);
             InitializeModbusGatewayTimers();
+            InitializeBacnetDeviceTimers();
             try
             {
                 page.reset();

@@ -677,6 +677,27 @@ namespace HSPI_SIID
                                 System.Threading.Tasks.Task.Factory.StartNew(() => Instance.modPage.ReadWriteIfMod(CC));
                                 break;
                             }
+                        case "BACnet Object":
+                            {
+                                var hsDev = NewDevice.Device;
+
+                                Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlString);
+
+
+
+                                //Instance.host.SetDeviceValueByRef(devID, 0.0, true);
+                                //Instance.host.SetDeviceString(devID, "blah", true);
+                                //NewDevice.Device.
+                                //System.Threading.Tasks.Task.Factory.StartNew(() => Instance.modPage.ReadWriteIfMod(CC));
+                                break;
+                            }
+                        case "BACnet Object (write priority)":
+                            {
+
+                                Instance.bacnetDevices.ChangeWritePriority(NewDevice, CC.ControlValue);
+
+                                break;
+                            }
 
                     }
 
