@@ -106,10 +106,12 @@
     <Compile Include="BACnet\Web\BACnetHomeSeerDevices.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="General\DevicesForExport.cs" />
+    <Compile Include="General\Eval.cs" />
     <Compile Include="General\GeneralHelperFunctions.cs" />
     <Compile Include="General\javascriptBuilders.cs" />
     <Compile Include="General\SiidDevice.cs" />
     <Compile Include="General\SIID_Page.cs" />
+    <Compile Include="General\Textparser.cs" />
     <Compile Include="hspi.cs" />
     <Compile Include="Modbus\ModbusDevice.cs" />
     <Compile Include="Modbus\ModbusDevicePage.cs" />

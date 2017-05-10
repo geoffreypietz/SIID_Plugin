@@ -867,9 +867,87 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
 
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
+                    Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
 
                     ScratchTable.addArrayRow(Row.ToArray());
-                }
+
+                    var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
+                    if (ASSOCIATES != null)
+                    {
+                        foreach (string IDstr in ASSOCIATES.Split(','))
+                        {
+                            try
+                            {
+
+                                var Sub = HSPI_SIID.General.SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(IDstr));
+
+
+                                ID = Sub.Ref;
+                                Row = new List<string>();
+                        
+                                EDO = Sub.Extra;
+                                parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                                Row.Add(ScratchBuilder.stringInput("Name_" + ID, Sub.Device.get_Name(Instance.host)).print());
+                                Row.Add(parts["DisplayedValue"]);
+                                //  Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
+                                Row.Add("<div/>");
+                                // Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
+                                Row.Add("<div/>");
+                                //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
+
+                                //Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
+                                //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
+                                Row.Add("<div/>");
+
+
+                            /*    ComplexCell = new StringBuilder();
+
+                                ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+                                ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
+                                ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
+                                ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
+                                ComplexCell.Append(@"<script>
+UpdateDisplay=function(id){
+console.log('UPDATING DISPLAY '+id);
+$('#0_'+id)[0].style.display='none';
+$('#1_'+id)[0].style.display='none';
+$('#2_'+id)[0].style.display='none';
+$('#3_'+id)[0].style.display='none';
+V = $('#ResetType_'+id)[0].value;
+$('#'+V+'_'+id)[0].style.display='';
+}
+DoChange=function(){
+console.log('DoChange');
+console.log(this);
+UpdateDisplay(this.id.split('_')[1]);
+}
+UpdateDisplay(" + ID + @");
+$('#ResetType_" + ID + @"').change(DoChange); //OK HERE
+
+</script>");*/
+                                // Row.Add(ComplexCell.ToString());
+                                Row.Add("<div/>");
+
+                                Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
+                                //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+                                Row.Add("<div/>");
+
+                                Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
+                                Row.Add("<div/>");
+                                // Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
+
+                                ScratchTable.addArrayRow(Row.ToArray());
+                            }
+                            catch
+                            {
+                            }
+
+                        }
+                 
+
+                    }
+
+                    }
 
                 sb.Append(ScratchTable.print());
 

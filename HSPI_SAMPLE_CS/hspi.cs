@@ -485,6 +485,12 @@ namespace HSPI_SIID
                 Console.WriteLine("IN SIID PAGE");
                 return (Instance.siidPage.GetPagePlugin(pageName, user, userRights, queryString));
             }
+            else if (pageName == "Scratch" + Instance.ajaxName)
+            {
+
+                return Instance.scrPage.addSubrule(queryString);
+
+            }
             else if (pageName == "AddModbusGate")
             {
                 return Instance.modPage.MakeGatewayRedirect(pageName, user, userRights, queryString);
@@ -669,7 +675,18 @@ namespace HSPI_SIID
                     switch (parts["type"]) {
                         case "Scratchpad":
                             {
-                                System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.eatAction(CC));
+                                if (NewDevice.Device.get_Location2(Instance.host) == "ScratchpadSubRule")
+                                {
+
+                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.setValue(CC));
+                                }
+                                else
+                                {
+
+                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.eatAction(CC));
+                                }
+
+
                                 break;
                             }
                         case "Modbus Device":
