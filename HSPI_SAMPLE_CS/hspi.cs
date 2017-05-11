@@ -551,6 +551,7 @@ namespace HSPI_SIID
 	{
             //If you have more than one web page, use pageName to route it to the proper postBackProc
             Console.WriteLine("PostBackProc pageName: " + pageName);
+            
             if (pageName == "SIIDPage"+Instance.ajaxName)
             {
                 
@@ -569,12 +570,13 @@ namespace HSPI_SIID
             }
             else if (pageName == "ModBusDevTab" + Instance.ajaxName)
             {
-
+                data = data.Replace("+", "%2B");
                 return Instance.modPage.parseModbusDeviceTab(data);
 
             }
            else if(pageName == "Scratch" + Instance.ajaxName)
             {
+                data = data.Replace("+", "%2B");
 
                 return Instance.scrPage.parseInstances(data);
 
