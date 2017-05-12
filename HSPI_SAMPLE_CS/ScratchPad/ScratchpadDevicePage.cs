@@ -91,10 +91,16 @@ namespace HSPI_SIID.ScratchPad
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             parts["OldValue"] = parts["NewValue"];
             parts["DateOfLastReset"] = DateTime.Now.ToString();
+           
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
             Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
-            Rule.Extra = EDO;
+            string userNote=Rule.Device.get_UserNote(Instance.host);
+            userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
+            userNote += parts.ToString();
+            Rule.Device.set_UserNote(Instance.host, userNote);
+            
+           Rule.Extra = EDO;
         }
         public void CheckForReset(SiidDevice Rule)
         {
@@ -227,7 +233,15 @@ namespace HSPI_SIID.ScratchPad
 
             // EDO = newDevice.get_PlugExtraData_Get(Instance.host);
 
-            EDO.AddNamed("SSIDKey", makeNewRules());
+            string ruleString = makeNewRules();
+
+
+            string userNote = newDevice.get_UserNote(Instance.host);
+            userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
+            userNote += ruleString.ToString();
+            newDevice.set_UserNote(Instance.host, userNote);
+
+            EDO.AddNamed("SSIDKey", ruleString);
             newDevice.set_PlugExtraData_Set(Instance.host, EDO);
         
             // newDevice.set_Device_Type_String(Instance.host, makeNewModbusGateway());
@@ -239,7 +253,6 @@ namespace HSPI_SIID.ScratchPad
             Instance.Devices.Add(new SiidDevice(Instance,newDevice));
 
             MakeStewardVSP(dv);
-
 
             return "refresh";
 
@@ -439,7 +452,16 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
             // EDO = newDevice.get_PlugExtraData_Get(Instance.host);
 
-            EDO.AddNamed("SSIDKey", makeNewRules());
+
+            string ruleString = makeNewRules();
+
+
+            string userNote = newDevice.get_UserNote(Instance.host);
+            userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
+            userNote += ruleString.ToString();
+            newDevice.set_UserNote(Instance.host, userNote);
+
+            EDO.AddNamed("SSIDKey", ruleString);
             newDevice.set_PlugExtraData_Set(Instance.host, EDO);
 
             // newDevice.set_Device_Type_String(Instance.host, makeNewModbusGateway());
