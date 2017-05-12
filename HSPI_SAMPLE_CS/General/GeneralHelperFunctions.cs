@@ -54,7 +54,7 @@ namespace HSPI_SIID.General
                     {
                         try
                         {
-                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            string Rep = Instance.host.DeviceValueEx(dv).ToString(); //Problem, device values return as int
                             if (Rep == null)
                                 throw new Exception();
                             FinalString.Replace("$(" + dv + ")", Rep);
@@ -70,10 +70,10 @@ namespace HSPI_SIID.General
 
                     try
                     {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        string Rep = Instance.host.DeviceValueEx(dv).ToString(); //OK this is not working correctly.
                         if (Rep == null)
                             throw new Exception();
-                        FinalString.Replace("$(" + dv + ")", Rep);
+                        FinalString.Replace("$(" + dv + ")", Rep); 
                     }
                     catch
                     {
@@ -101,7 +101,7 @@ namespace HSPI_SIID.General
                     {
                         try
                         {
-                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            string Rep = Instance.host.DeviceValueEx(dv).ToString();
                             if (Rep == null)
                                 throw new Exception();
                             FinalString.Replace("#(" + dv + ")", Rep);
@@ -116,7 +116,7 @@ namespace HSPI_SIID.General
                 {
                     try
                     {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
+                        string Rep = Instance.host.DeviceValueEx(dv).ToString();
                         if (Rep != null)
                             FinalString.Replace("#(" + dv + ")", Rep);
                     }

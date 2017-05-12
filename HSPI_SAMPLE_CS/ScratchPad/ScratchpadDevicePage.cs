@@ -464,7 +464,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             SiidDevice GateWay = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(GatewayID));
             Scheduler.Classes.DeviceClass Gateway = GateWay.Device; //Should keep in gateway a list of devices
      
-            Gateway.AssociatedDevice_Add(Instance.host, dv);
+            Gateway.AssociatedDevice_Add(Instance.host, dv); //This is totally working actually
 
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
             //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
