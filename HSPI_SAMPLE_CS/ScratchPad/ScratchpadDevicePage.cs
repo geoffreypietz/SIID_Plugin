@@ -213,8 +213,8 @@ namespace HSPI_SIID.ScratchPad
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
             newDevice.set_Name(Instance.host, "Scratchpad Rule " + dv);
-            newDevice.set_Location2(Instance.host, "ScratchpadRule");
-            newDevice.set_Location(Instance.host, "System");
+            //newDevice.set_Location2(Instance.host, "ScratchpadRule");
+            newDevice.set_Location(Instance.host, "ScratchpadRule");
             //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
                                                                      //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
@@ -425,8 +425,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
             newDevice.set_Name(Instance.host, "Scratchpad Sub Rule " + dv);
-            newDevice.set_Location2(Instance.host, "ScratchpadSubRule");
-            newDevice.set_Location(Instance.host, "System");
+         //   newDevice.set_Location2(Instance.host, "ScratchpadSubRule");
+            newDevice.set_Location(Instance.host, "SubScratchpadRule"); //Maybe do a search
             //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
                                                                      //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
