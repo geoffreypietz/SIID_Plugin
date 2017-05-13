@@ -192,6 +192,7 @@ namespace HSPI_SIID.BACnet
                                                                           BacnetPropertyIds.PROP_OBJECT_NAME,
                                                                           BacnetPropertyIds.PROP_OBJECT_TYPE, 
                                                                           BacnetPropertyIds.PROP_PRESENT_VALUE, 
+                                                                          BacnetPropertyIds.PROP_PRIORITY_ARRAY,
                                                                           BacnetPropertyIds.PROP_DESCRIPTION, 
                                                                           BacnetPropertyIds.PROP_DEVICE_TYPE, 
                                                                           BacnetPropertyIds.PROP_STATUS_FLAGS, 
@@ -425,104 +426,110 @@ namespace HSPI_SIID.BACnet
         public void FetchProperties()      //if NOT structured view, etc...right?
         {
 
-            //BacnetProperties.Clear();     //yes, just re-fetch required properties.       //don't want to wipe this out if an error occurs though
-
-
-            var oldProperties = new List<KeyValuePair<BacnetPropertyIds, BACnetProperty>>();
-            oldProperties.AddRange(BacnetProperties);
-
-
-
-
-            //TODO: put a lock on this in case another is trying at the same time...
-            //but wait, these are kept per-instance, right?
-
-            BacnetProperties.Clear();
-
-
-            AllPropertiesFetched = false;
-
-
-            //TODO: if this is a structured view or object group, handle differently
-            //A structured view has no Present Value prooperty
-            //An object group's present value property is just its list of members, so we really just want to make sub-objects, not properties.
-
-
-            //Also, in Yabe the properties will actually show up in the address space...this is not what we want for plugin
-
-
-            var comm = BacnetDevice.BacnetNetwork.BacnetClient;
-            var adr = BacnetDevice.BacnetAddress;
-            var object_id = BacnetObjectId;
-            BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
-
-            //do we want to skip the properties used above?  For structured view, group, etc.?
-
-            IList<BacnetReadAccessResult> multi_value_list = new List<BacnetReadAccessResult>();
-            try
+            lock (this.BacnetProperties)
             {
-                //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
-                if (comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list))
+
+                //BacnetProperties.Clear();     //yes, just re-fetch required properties.       //don't want to wipe this out if an error occurs though
+
+
+                var oldProperties = new List<KeyValuePair<BacnetPropertyIds, BACnetProperty>>();
+                oldProperties.AddRange(BacnetProperties);
+
+
+
+
+                //TODO: put a lock on this in case another is trying at the same time...
+                //but wait, these are kept per-instance, right?
+
+                BacnetProperties.Clear();
+
+
+                AllPropertiesFetched = false;
+
+
+                //TODO: if this is a structured view or object group, handle differently
+                //A structured view has no Present Value prooperty
+                //An object group's present value property is just its list of members, so we really just want to make sub-objects, not properties.
+
+
+                //Also, in Yabe the properties will actually show up in the address space...this is not what we want for plugin
+
+
+                var comm = BacnetDevice.BacnetNetwork.BacnetClient;
+                var adr = BacnetDevice.BacnetAddress;
+                var object_id = BacnetObjectId;
+                BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
+
+                //do we want to skip the properties used above?  For structured view, group, etc.?
+
+                IList<BacnetReadAccessResult> multi_value_list = new List<BacnetReadAccessResult>();
+                try
                 {
-
-                    //update grid
-                    //Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
-                    foreach (BacnetPropertyValue p_value in multi_value_list[0].values)
+                    //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
+                    if (comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list))
                     {
-                        AddProperty(p_value);
+
+                        //update grid
+                        //Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
+                        foreach (BacnetPropertyValue p_value in multi_value_list[0].values)
+                        {
+                            AddProperty(p_value);
 
 
 
-                        //var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
+                            //var id = (BacnetPropertyIds)p_value.property.propertyIdentifier;
 
 
 
-                        //var val = p_value.value[0];
+                            //var val = p_value.value[0];
 
 
-                        ////var requiredProps = new List<BacnetPropertyIds>(){BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, BacnetPropertyIds.PROP_OBJECT_TYPE, BacnetPropertyIds.PROP_OBJECT_NAME};
+                            ////var requiredProps = new List<BacnetPropertyIds>(){BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, BacnetPropertyIds.PROP_OBJECT_TYPE, BacnetPropertyIds.PROP_OBJECT_NAME};
 
-                        ////if (requiredProps.Contains(id))     //already fetched these before.
-                        ////    continue;
+                            ////if (requiredProps.Contains(id))     //already fetched these before.
+                            ////    continue;
 
 
-                        //AddProperty(id, val);   //if required properties, will just overwrite
+                            //AddProperty(id, val);   //if required properties, will just overwrite
+                        }
+
+
+
+
                     }
+                    else
+                    {
+                        Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
 
-
-
-
+                    }
                 }
-                else{
+                catch (Exception ex)
+                {
                     Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
 
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
+                    if (!ReadAllPropertiesBySingle())   //shouldn't really have to return and process values...just add in place.
+                    {
+                        Trace.TraceWarning("Couldn't perform ReadProperty ... Trying ReadProperty instead");
+                        //MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                if (!ReadAllPropertiesBySingle())   //shouldn't really have to return and process values...just add in place.
-                {
-                    Trace.TraceWarning("Couldn't perform ReadProperty ... Trying ReadProperty instead");
-                    //MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        BacnetProperties = oldProperties;
+                        return;
+                    }
 
-                    BacnetProperties = oldProperties;
-                    return;
+                    //return; //?
                 }
 
-                //return; //?
+
+
+
+
+
+
+                AllPropertiesFetched = true;
+
+                SetName();
+
             }
-
-
-
-
-
-            
-
-            AllPropertiesFetched = true;
-
-            SetName();
 
         }
 

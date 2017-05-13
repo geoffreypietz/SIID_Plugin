@@ -84,17 +84,6 @@ namespace HSPI_SIID.BACnet
 
 
 
-       public void BacnetDeviceControl(CAPI.CAPIControl ActionIn)
-       {
-            var devID = ActionIn.Ref;
-            var Send = ActionIn.ControlValue;
-
-
-
-       }
-
-
-
         public void ReadWriteBacnet(Scheduler.Classes.DeviceClass hsBacnetDev, String controlValue)
         {
             try
@@ -390,7 +379,7 @@ namespace HSPI_SIID.BACnet
 
 
                     object prop_val = vals[0].Value;
-                    Type t = prop_val.GetType();
+                    //Type t = prop_val.GetType();      //doesn't work if null, but pretty sure this was just debugging anyway
 
                     String propElemId = dv1 + "__" + propIdNum;
 
@@ -709,8 +698,11 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 {
 
 
+                    //Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
+
                     Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
 
+                    //TODO: should we just get from SiidDevices list, but update this on delete?
 
                     if (hsBacnetDevice == null)
                     {
@@ -746,47 +738,93 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                         bno.FetchProperties();
 
 
-                        var hasPresentVal = false;
-                        foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
+
+                        lock (bno.BacnetProperties)
                         {
-                            BacnetPropertyIds propId = kvp.Key;
-                            BACnetProperty prop = kvp.Value;
-
-
-                            if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                            var hasPresentVal = false;
+                            foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
+                            //TODO: collection was modified; enumeration operation may not execute
                             {
-                                hasPresentVal = true;
-                                Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
-                                Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
-                                break;
+                                BacnetPropertyIds propId = kvp.Key;
+                                BACnetProperty prop = kvp.Value;
+
+
+                                if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                                {
+                                    hasPresentVal = true;
+                                    Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
+                                    Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
+                                    //break;
+                                }
+
+
+                                if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                                {
+
+                                    try
+                                    {
+
+
+                                    }
+                                    catch
+                                    {
+
+
+                                    }
+
+
+                                    if (hsBacnetNodeData["priority_array_hs_device"] == null)
+                                        continue;
+
+                                    var hsPriorityArrayDv = Int32.Parse(hsBacnetNodeData["priority_array_hs_device"]);
+
+                                    Scheduler.Classes.DeviceClass hsPriorityArrayDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsPriorityArrayDv);
+
+
+                                    if (hsPriorityArrayDevice == null)
+                                    {
+                                        Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsPriorityArrayDv));
+
+                                        continue;
+
+                                    }
+
+
+                                    Instance.host.SetDeviceString(hsPriorityArrayDv, prop.ValueString(), false);
+
+
+                                }
+
+
                             }
+
+                            if (!hasPresentVal)
+                                Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
+
+
+                            //so update its displayed value by reading the present value from it.
+
+                            //try
+                            //{
+                            //    lock (WhoIsBeingPolled)
+                            //    {
+                            //        WhoIsBeingPolled.Add(Dev.Ref.ToString());   // so GUI can't update during.
+                            //    }
+                            //}
+
+
+
+                            //finally
+                            //{
+                            //    //OneAtATime.ReleaseMutex();
+                            //    lock (WhoIsBeingPolled)
+                            //    {
+                            //        WhoIsBeingPolled.Remove(Dev.Ref.ToString());
+                            //    }
+                            //}
+
+
                         }
-
-                        if (!hasPresentVal)
-                            Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
-
-
-                        //so update its displayed value by reading the present value from it.
-
-                        //try
-                        //{
-                        //    lock (WhoIsBeingPolled)
-                        //    {
-                        //        WhoIsBeingPolled.Add(Dev.Ref.ToString());   // so GUI can't update during.
-                        //    }
-                        //}
-
-
-
-                        //finally
-                        //{
-                        //    //OneAtATime.ReleaseMutex();
-                        //    lock (WhoIsBeingPolled)
-                        //    {
-                        //        WhoIsBeingPolled.Remove(Dev.Ref.ToString());
-                        //    }
-                        //}
-
                     }
 
 

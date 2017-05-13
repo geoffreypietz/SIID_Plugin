@@ -151,6 +151,7 @@ namespace HSPI_SIID.BACnet
                                                                           BacnetObjectTypes.OBJECT_EVENT_ENROLLMENT,
                                                                           BacnetObjectTypes.OBJECT_MULTI_STATE_INPUT,
                                                                           BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT,
+                                                                          BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE,
                                                                           BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS,
                                                                           };
 

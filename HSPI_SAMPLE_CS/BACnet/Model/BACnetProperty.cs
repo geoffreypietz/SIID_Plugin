@@ -126,6 +126,9 @@ namespace HSPI_SIID.BACnet
             //this.
 
 
+            //want to put in logic here so that priority array gets read as a string.  Look at how property html is generated
+
+
 
         }
 
@@ -323,7 +326,30 @@ namespace HSPI_SIID.BACnet
 
             IList<BacnetValue> vals = bacnetValue.value;
 
-            return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+
+            if (vals.Count == 1)
+                 return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+
+
+            var valsString = "{";
+
+
+            foreach (var val in vals)
+            {
+                String valString;
+                if (val.Value == null)
+                    valString = "null";
+                else
+                    valString = val.ToString();
+                valString += val.ToString() + ",";
+            }
+            valsString.TrimEnd(",".ToCharArray());
+
+            valsString += "}";
+
+            return valsString;
+
+
         }
 
 
