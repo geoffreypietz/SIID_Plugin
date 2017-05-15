@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using SoftCircuits;
 
 namespace HSPI_SIID.General
 {
@@ -45,13 +46,17 @@ namespace HSPI_SIID.General
                     try
                     {
                         string Rep = Tempparts["RawValue"];
+                        if (Rep == null)
+                            throw new Exception();
                         FinalString.Replace("$(" + dv + ")", Rep);
                     }
                     catch
                     {
                         try
                         {
-                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            string Rep = Instance.host.DeviceValueEx(dv).ToString(); //Problem, device values return as int
+                            if (Rep == null)
+                                throw new Exception();
                             FinalString.Replace("$(" + dv + ")", Rep);
                         }
                         catch
@@ -65,8 +70,10 @@ namespace HSPI_SIID.General
 
                     try
                     {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
-                        FinalString.Replace("$(" + dv + ")", Rep);
+                        string Rep = Instance.host.DeviceValueEx(dv).ToString(); //OK this is not working correctly.
+                        if (Rep == null)
+                            throw new Exception();
+                        FinalString.Replace("$(" + dv + ")", Rep); 
                     }
                     catch
                     {
@@ -86,13 +93,17 @@ namespace HSPI_SIID.General
                     try
                     {
                         string Rep = Tempparts["ProcessedValue"];
+                        if (Rep == null)
+                            throw new Exception();
                         FinalString.Replace("#(" + dv + ")", Rep);
                     }
                     catch
                     {
                         try
                         {
-                            string Rep = Instance.host.DeviceValue(dv).ToString();
+                            string Rep = Instance.host.DeviceValueEx(dv).ToString();
+                            if (Rep == null)
+                                throw new Exception();
                             FinalString.Replace("#(" + dv + ")", Rep);
                         }
                         catch
@@ -105,8 +116,9 @@ namespace HSPI_SIID.General
                 {
                     try
                     {
-                        string Rep = Instance.host.DeviceValue(dv).ToString();
-                        FinalString.Replace("#(" + dv + ")", Rep);
+                        string Rep = Instance.host.DeviceValueEx(dv).ToString();
+                        if (Rep != null)
+                            FinalString.Replace("#(" + dv + ")", Rep);
                     }
                     catch
                     {
@@ -124,8 +136,14 @@ namespace HSPI_SIID.General
 
         public static string[] DaysOfWeek = new string[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
-        public static double Evaluate(String input) //http://stackoverflow.com/questions/333737/evaluating-string-342-yield-int-18?noredirect=1&lq=1  Modified for numbers of more than one character
-        {
+        public static double Evaluate(String input)       {
+
+
+            var E = new Eval();
+           return E.Execute(input);
+
+            //http://stackoverflow.com/questions/333737/evaluating-string-342-yield-int-18?noredirect=1&lq=1  Modified for numbers of more than one character
+/*
             String expr = "(" + input + ")";
             Stack<String> ops = new Stack<String>();
             Stack<Double> vals = new Stack<Double>();
@@ -174,6 +192,7 @@ namespace HSPI_SIID.General
                 else vals.Push(Double.Parse(s));
             }
             return vals.Pop();
+            */
         }
 
 
