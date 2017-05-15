@@ -116,8 +116,30 @@ namespace HSPI_SIID.BACnet
 
                     //var writePriority = 16;
 
-                            var singleVal = Single.Parse(controlValue.ToString());
-                prop.WriteValue(singleVal, writePriority);
+
+                    var propTag = prop.BacnetPropertyValue.Value.value[0].Tag;
+
+
+                    switch (propTag)
+                    {
+                        case (BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL):
+                            {
+                                var singleVal = Single.Parse(controlValue.ToString());
+                                prop.WriteValue(singleVal, writePriority);
+                                break;
+                            }
+                        case (BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT):
+                            {
+                                var uintVal = UInt32.Parse(controlValue.ToString());
+                                prop.WriteValue(uintVal, writePriority);
+                                break;
+                            }
+
+
+                    }
+
+
+
 
 
                 //after writing

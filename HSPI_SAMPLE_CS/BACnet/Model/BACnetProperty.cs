@@ -222,7 +222,7 @@ namespace HSPI_SIID.BACnet
             var object_id = BacnetObject.BacnetObjectId;
             var property_id = BacnetPropertyId;
 
-            var success = false;
+            var success = true;     //unless we hit one of the failure cases below
 
 
             var customProperty = this.CustomProperty;  //customProperty
@@ -292,6 +292,11 @@ namespace HSPI_SIID.BACnet
                 //comm.WritePriority = (uint)Yabe.Properties.Settings.Default.DefaultWritePriority;   //TODO: let this be changeable
                 //comm.WritePriority = (uint)BacnetObject.WritePriority;
                 comm.WritePriority = (uint)writePriority;
+
+                //b_value[0] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL, b_value[0].Value);
+
+                //b_value[0].Value = null;      //This is how to relinquish a value at a certain priority
+
                 if (!comm.WritePropertyRequest(adr, object_id, BacnetPropertyId, b_value))
                 {
                     success = false;
@@ -304,7 +309,7 @@ namespace HSPI_SIID.BACnet
                 //MessageBox.Show(this, "Error during write: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            success = true;
+            //success = true;
 
             //ReadValue();            //or do we let the webpage do this?  Once write callback has returned, read the value again?
 
@@ -341,7 +346,7 @@ namespace HSPI_SIID.BACnet
                     valString = "null";
                 else
                     valString = val.ToString();
-                valString += val.ToString() + ",";
+                valsString += valString + ",";
             }
             valsString.TrimEnd(",".ToCharArray());
 
