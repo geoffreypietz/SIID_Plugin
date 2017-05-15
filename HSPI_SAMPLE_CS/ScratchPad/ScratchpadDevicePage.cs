@@ -97,7 +97,7 @@ namespace HSPI_SIID.ScratchPad
             Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
             string userNote=Rule.Device.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += parts.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+parts.ToString();
             Rule.Device.set_UserNote(Instance.host, userNote);
             
            Rule.Extra = EDO;
@@ -238,7 +238,7 @@ namespace HSPI_SIID.ScratchPad
 
             string userNote = newDevice.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += ruleString.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+ruleString.ToString();
             newDevice.set_UserNote(Instance.host, userNote);
 
             EDO.AddNamed("SSIDKey", ruleString);
@@ -458,7 +458,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
             string userNote = newDevice.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += ruleString.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+ruleString.ToString();
             newDevice.set_UserNote(Instance.host, userNote);
 
             EDO.AddNamed("SSIDKey", ruleString);
