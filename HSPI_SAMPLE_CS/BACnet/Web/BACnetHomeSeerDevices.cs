@@ -301,8 +301,8 @@ namespace HSPI_SIID.BACnet
 
             //TODO: collection was modified, enumeration may not execute
 
-
-            foreach (SiidDevice Dev in Instance.Devices)
+            lock (Instance.Devices)     //TODO: need to lock elsewhere
+            foreach (SiidDevice Dev in Instance.Devices)    //collection modified; enum may not execute
             {
                 var hsBacnetDevice = Dev.Device;
 
@@ -1071,11 +1071,46 @@ namespace HSPI_SIID.BACnet
                 Control.RangeStart = -100000;
                 Control.RangeEnd = 100000;
                 //Control.Render = Enums.CAPIControlType.TextBox_Number;
+
+                //Control.Status = "Command";
+
                 Control.Render = Enums.CAPIControlType.TextBox_String;
+                
+
+                //Control.
+
+
                 var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
 
 
+                Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                Control.PairType = VSVGPairs.VSVGPairType.SingleValue;
+                //Control.RangeStart = -100000;
+                //Control.RangeEnd = 100000;
+                //Control.Render = Enums.CAPIControlType.TextBox_Number;
+                //Control.StringList = new String[] { "Release" };
+                //Control.StringListAdd = "Release";
 
+
+
+                Control.Status = "Release";
+
+                //Control.
+
+                //ntrol.ControlUse = ePairControlUse.
+
+                //Control.ControlStatus = ePairStatusControl.
+
+                //Control.Value = "Release";
+
+                //Control.Render_Location = Enums.CAPIControlLocation.
+
+                Control.Render = Enums.CAPIControlType.Button;
+
+
+
+
+                IS = Instance.host.DeviceVSP_AddPair(dv, Control);
 
 
 

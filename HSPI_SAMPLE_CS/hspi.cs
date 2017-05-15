@@ -681,7 +681,11 @@ namespace HSPI_SIID
                             {
                                 var hsDev = NewDevice.Device;
 
-                                Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlString);
+
+                                if (CC.Label == "Release")
+                                    Instance.bacnetDevices.ReadWriteBacnet(hsDev, null);
+                                else
+                                    Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlString);
 
 
 
@@ -698,6 +702,8 @@ namespace HSPI_SIID
 
                                 break;
                             }
+
+
 
                     }
 

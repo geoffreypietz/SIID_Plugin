@@ -84,7 +84,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public void ReadWriteBacnet(Scheduler.Classes.DeviceClass hsBacnetDev, String controlValue)
+        public void ReadWriteBacnet(Scheduler.Classes.DeviceClass hsBacnetDev, String controlValue = null)
         {
             try
             {
@@ -113,28 +113,36 @@ namespace HSPI_SIID.BACnet
 
 
 
-
-                    //var writePriority = 16;
-
-
-                    var propTag = prop.BacnetPropertyValue.Value.value[0].Tag;
-
-
-                    switch (propTag)
+                    if (controlValue == null)
+                        prop.WriteValue(null, writePriority);
+                    else
                     {
-                        case (BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL):
-                            {
-                                var singleVal = Single.Parse(controlValue.ToString());
-                                prop.WriteValue(singleVal, writePriority);
-                                break;
-                            }
-                        case (BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT):
-                            {
-                                var uintVal = UInt32.Parse(controlValue.ToString());
-                                prop.WriteValue(uintVal, writePriority);
-                                break;
-                            }
 
+
+
+                        //var writePriority = 16;
+
+
+                        var propTag = prop.BacnetPropertyValue.Value.value[0].Tag;
+
+
+                        switch (propTag)
+                        {
+                            case (BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL):
+                                {
+                                    var singleVal = Single.Parse(controlValue.ToString());
+                                    prop.WriteValue(singleVal, writePriority);
+                                    break;
+                                }
+                            case (BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT):
+                                {
+                                    var uintVal = UInt32.Parse(controlValue.ToString());
+                                    prop.WriteValue(uintVal, writePriority);
+                                    break;
+                                }
+
+
+                        }
 
                     }
 
@@ -812,7 +820,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                                     }
 
 
-                                    Instance.host.SetDeviceString(hsPriorityArrayDv, prop.ValueString(), false);
+                                    Instance.host.SetDeviceString(hsPriorityArrayDv, prop.PriorityArrayTable(), false);
 
 
                                 }

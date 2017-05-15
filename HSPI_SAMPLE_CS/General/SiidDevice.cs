@@ -31,6 +31,7 @@ namespace HSPI_SIID.General
 
         public static SiidDevice GetFromListByID(List<SiidDevice> li, int R)
         {
+            lock(li)
             foreach (SiidDevice Dev in li)
             {
                 if (Dev.Ref == R)
@@ -49,6 +50,7 @@ namespace HSPI_SIID.General
         public static void Update(InstanceHolder I)
         {
             List<SiidDevice> UpdatedDevs = new List<SiidDevice>();
+            lock(I.Devices)
             foreach (SiidDevice D in I.Devices.ToList())
             {
                 if (I.host.DeviceExistsRef(D.Ref)) {

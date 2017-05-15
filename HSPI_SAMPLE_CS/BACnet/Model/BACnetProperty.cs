@@ -215,6 +215,8 @@ namespace HSPI_SIID.BACnet
 
 
 
+
+
         public bool WriteValue(object new_value, int writePriority = 0)
         {
             var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;
@@ -233,57 +235,74 @@ namespace HSPI_SIID.BACnet
 
             //new value
             //object new_value = gridItem.Value;
-            var ty = new_value.GetType();
+            //var ty = new_value.GetType();
 
             //convert to bacnet
             BacnetValue[] b_value = null;
-            try
+
+
+
+
+            if (new_value == null)
             {
-                if (new_value != null && new_value.GetType().IsArray)
+
+                b_value = new BacnetValue[] { new BacnetValue(null) };
+
+            }
+            else
+            {
+
+
+                try
                 {
-                    Array arr = (Array)new_value;
-                    b_value = new BacnetValue[arr.Length];
-                    for (int i = 0; i < arr.Length; i++)
-                        b_value[i] = new BacnetValue(arr.GetValue(i));
-                }
-                else
-                {
+                    if (new_value != null && new_value.GetType().IsArray)
                     {
-                        // Modif FC
-                        b_value = new BacnetValue[1];
-                        if ((BacnetApplicationTags)customProperty.bacnetApplicationTags != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        Array arr = (Array)new_value;
+                        b_value = new BacnetValue[arr.Length];
+                        for (int i = 0; i < arr.Length; i++)
+                            b_value[i] = new BacnetValue(arr.GetValue(i));
+                    }
+                    else
+                    {
                         {
-                            b_value[0] = new BacnetValue((BacnetApplicationTags)customProperty.bacnetApplicationTags, new_value);
-                        }
-                        else
-                        {
-                            object o = null;
-                            TypeConverter t = new TypeConverter();
-                            // try to convert to the simplest type
-                            String[] typelist = { "Boolean", "UInt32", "Int32", "Single", "Double" };
-
-                            foreach (String typename in typelist)
+                            // Modif FC
+                            b_value = new BacnetValue[1];
+                            if ((BacnetApplicationTags)customProperty.bacnetApplicationTags != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
                             {
-                                try
-                                {
-                                    o = Convert.ChangeType(new_value, Type.GetType("System." + typename));
-                                    break;
-                                }
-                                catch { }
+                                b_value[0] = new BacnetValue((BacnetApplicationTags)customProperty.bacnetApplicationTags, new_value);
                             }
-
-                            if (o == null)
-                                b_value[0] = new BacnetValue(new_value);
                             else
-                                b_value[0] = new BacnetValue(o);
+                            {
+                                object o = null;
+                                TypeConverter t = new TypeConverter();
+                                // try to convert to the simplest type
+                                String[] typelist = { "Boolean", "UInt32", "Int32", "Single", "Double" };
+
+                                foreach (String typename in typelist)
+                                {
+                                    try
+                                    {
+                                        o = Convert.ChangeType(new_value, Type.GetType("System." + typename));
+                                        break;
+                                    }
+                                    catch { }
+                                }
+
+                                if (o == null)
+                                    b_value[0] = new BacnetValue(new_value);
+                                else
+                                    b_value[0] = new BacnetValue(o);
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                //MessageBox.Show(this, "Couldn't convert property: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                catch (Exception ex)
+                {
+                    //MessageBox.Show(this, "Couldn't convert property: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+
             }
 
             //write
@@ -323,21 +342,63 @@ namespace HSPI_SIID.BACnet
 
 
 
+        public string priorityArrayHtml(IList<BacnetValue> vals, int startIndex, int endIndex)
+        {
+
+            var tblString = "<table class='priorityArray'><thead><tr>"; //<tr></tr>
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                tblString += "<th>" + i + "</th>";
+            }
+            tblString += "</tr></thead>";
+
+
+            tblString += "<tbody><tr>";
+
+
+
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                var val = vals[i - 1];
+
+                String valString;
+                if (val.Value == null)
+                    valString = "null";
+                else
+                    valString = val.ToString();
+
+                tblString += "<td>" + valString + "</td>";
+
+            }
+
+            tblString += "</tr></tbody>";
+
+
+            tblString += "</table>";
+
+            return tblString;
+
+        }
+
+
+
 
         public string ValueString()
         {
+
 
             var bacnetValue = this.BacnetPropertyValue.Value;
 
             IList<BacnetValue> vals = bacnetValue.value;
 
 
+
             if (vals.Count == 1)
-                 return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+                return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+
 
 
             var valsString = "{";
-
 
             foreach (var val in vals)
             {
@@ -346,11 +407,134 @@ namespace HSPI_SIID.BACnet
                     valString = "null";
                 else
                     valString = val.ToString();
+
+                //valsString += "<td>" + valString + "</td>";
+
                 valsString += valString + ",";
             }
-            valsString.TrimEnd(",".ToCharArray());
+            valsString = valsString.TrimEnd(",".ToCharArray());
+
+           // valsString += "</tr></tbody>";
+
+
+            //valsString += "</table>";
 
             valsString += "}";
+
+            return valsString;
+
+
+
+        }
+
+
+        public string PriorityArrayTable()
+        {
+
+            var bacnetValue = this.BacnetPropertyValue.Value;
+
+            IList<BacnetValue> vals = bacnetValue.value;
+
+
+            //if (vals.Count == 1)
+            //     return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+
+
+            //var valsString = "{";
+
+
+
+            //valsString = "";
+
+            var valsString = @"<style>table.priorityArray {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 290px;
+    margin: 5px;
+}
+
+table.priorityArray, .priorityArray th, .priorityArray td {
+    border: 1px solid black;
+}</style>";
+
+
+            //TODO: find a different place to inject this?  But only really needed if there is a priority array present....
+            valsString += @"
+
+<script>
+$(function() {
+
+        $('span.ui-button-text').filter(function(){
+      return ($(this).text() == 'Submit');
+    }).text('Command').closest('form').css('display','');
+
+
+});
+//replace 'Submit' button text with 'Command' (in context of priority array)
+//and change styling of parent form so that the buttons stack
+
+</script>
+
+
+
+";
+
+
+
+
+
+            valsString += priorityArrayHtml(vals, 1, 8);
+
+
+            valsString += priorityArrayHtml(vals, 9, 16);
+
+
+            //valsString += "<table class='priorityArray'><thead><tr>"; //<tr></tr>
+            //for (int i = 1; i <= 8; i++)
+            //{
+            //    valsString += "<td>" + i + "</td>";
+            //}
+            //valsString += "</tr></thead>";
+
+
+            //valsString += "<tbody><tr>";
+
+
+
+            //for (int i = 1; i <= 8; i++)
+            //{
+            //    var val = vals[i - 1];
+
+            //    String valString;
+            //    if (val.Value == null)
+            //        valString = "null";
+            //    else
+            //        valString = val.ToString();
+
+            //    valsString += "<td>" + valString + "</td>";
+
+            //}
+
+            //foreach (var val in vals)
+            //{
+            //    String valString;
+            //    if (val.Value == null)
+            //        valString = "null";
+            //    else
+            //        valString = val.ToString();
+
+            //    valsString += "<td>" + valString + "</td>";
+
+            //    //valsString += valString + ",";
+            //}
+            ////valsString = valsString.TrimEnd(",".ToCharArray());
+
+            //valsString += "</tr></tbody>";
+
+
+            //valsString += "</table>";
+
+            //valsString += "}";
 
             return valsString;
 
