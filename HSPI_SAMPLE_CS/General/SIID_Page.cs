@@ -255,7 +255,13 @@ namespace HSPI_SIID
                                         int.TryParse(Old, out T);
                                         if (T != 0)
                                         {
-                                            newDevice.AssociatedDevice_Add(Instance.host, OldToNew[T]);
+                                            try
+                                            {
+                                                newDevice.AssociatedDevice_Add(Instance.host, OldToNew[T]);
+                                            }
+                                            catch
+                                            {
+                                            }
                                         }
                                       
                                     }
@@ -284,7 +290,15 @@ namespace HSPI_SIID
                                                 bacnetNodeData["device_instance"] = FetchAttribute(CodeLookup, "DeviceInstance");
 
                                                 bacnetNodeData["object_type_string"] = FetchAttribute(CodeLookup, "ObjectType");
-                                                bacnetNodeData["object_type"] = ((Int32)(Enum.Parse(typeof(BacnetObjectTypes), bacnetNodeData["object_type_string"]))).ToString();
+                                                //following line breaks bad
+                                                try
+                                                {
+                                                    bacnetNodeData["object_type"] = ((Int32)(Enum.Parse(typeof(BacnetObjectTypes), bacnetNodeData["object_type_string"]))).ToString();
+                                                }
+                                                catch
+                                                {
+                                                    bacnetNodeData["object_type"] = "0";
+                                                }
                                                 bacnetNodeData["object_instance"] = FetchAttribute(CodeLookup, "ObjectInstance");
                                                 bacnetNodeData["object_name"] = FetchAttribute(CodeLookup, "ObjectName");
                                                 bacnetNodeData["polling_interval"] = FetchAttribute(CodeLookup, "PollInterval");
@@ -432,9 +446,9 @@ namespace HSPI_SIID
 
 
                                 }
-                                catch
+                                catch(Exception e)
                                 {
-
+                                    string b = e.Message;
 
                                 }
 
@@ -696,9 +710,14 @@ namespace HSPI_SIID
 
 
                 var bacnetNodeData = Instance.bacnetDevices.getBacnetNodeData(bacnetDevice);
+                try
+                {
 
-
-                Instance.bacnetDevices.updateDevicePollTimer(Siid.Ref, Convert.ToInt32(bacnetNodeData["polling_interval"]));
+                    Instance.bacnetDevices.updateDevicePollTimer(Siid.Ref, Convert.ToInt32(bacnetNodeData["polling_interval"]));
+                }
+                catch
+                {
+                }
 
                 //if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
                 //{
