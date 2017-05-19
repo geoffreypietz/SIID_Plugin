@@ -409,7 +409,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
         }
-        public void eatAction(CAPI.CAPIControl ActionIn)
+        public void resetOrSetDate(CAPI.CAPIControl ActionIn)
         {
             var devID = ActionIn.Ref;
             var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
@@ -491,6 +491,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
      
             Gateway.AssociatedDevice_Add(Instance.host, dv); //This is totally working actually
 
+            return "refresh";
+
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
             //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
             page.AddBody(stb.ToString());
@@ -510,26 +512,35 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             string partID = changed["id"].Split('_')[0];
             int devId = Int32.Parse(changed["id"].Split('_')[1]);
 
-            SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices,devId);
-            //check for gateway change, do something special
-            if (partID == "Name")
+            if (partID == "S")
             {
-                newDevice.Device.set_Name(Instance.host, changed["value"]);
+                addSubrule(changed["id"]);
             }
-            else if (partID == "devdelete")
-            {
-                Instance.host.DeleteDevice(devId);
-                SiidDevice.removeDev(Instance.Devices, devId);
-            }
-
             else
             {
-                newDevice.UpdateExtraData(partID, changed["value"]);
-                if (partID == "ScratchPadString") {
-                    UpdateDisplay(newDevice);
+
+
+                SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
+                //check for gateway change, do something special
+                if (partID == "Name")
+                {
+                    newDevice.Device.set_Name(Instance.host, changed["value"]);
+                }
+                else if (partID == "devdelete")
+                {
+                    Instance.host.DeleteDevice(devId);
+                    SiidDevice.removeDev(Instance.Devices, devId);
+                }
+
+                else
+                {
+                    newDevice.UpdateExtraData(partID, changed["value"]);
+                    if (partID == "ScratchPadString")
+                    {
+                        UpdateDisplay(newDevice);
+                    }
                 }
             }
-
 
             
             return "True";
