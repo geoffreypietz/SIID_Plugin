@@ -100,6 +100,7 @@ namespace HSPI_SIID
 
                 foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
                 {
+                    //Console.WriteLine("***"+row);
                     //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
                     int CellCount = row.Split(',').Count();
                     if (CellCount > 1) //Then either a header row or a Device row
@@ -116,6 +117,7 @@ namespace HSPI_SIID
                         }
                         else
                         {
+                       //     Console.WriteLine(row);
                             HasHeader = true;
                             Headers.Add(row.ToLower()+"\n");
                             RowByHeaderID[Headers.Count - 1] = new List<string>();
@@ -135,7 +137,8 @@ namespace HSPI_SIID
                 foreach(string row in Headers)
                 {
                     StringBuilder FileString = new StringBuilder();
-                    FileString.Append(row + "\n");
+                    FileString.Append(row);
+                    //Console.WriteLine("THE HEADER ROW IS: "+row);
                     foreach (string Entry in RowByHeaderID[count])
                     {
                         
@@ -143,18 +146,34 @@ namespace HSPI_SIID
                         
 
                     }
-                    byte[] byteArray = Encoding.ASCII.GetBytes(FileString.ToString());
-                    MemoryStream stream = new MemoryStream(byteArray);
-                    using (TextFieldParser parser = new TextFieldParser(stream))
+                    Console.WriteLine(FileString.ToString());
+                    // byte[] byteArray = Encoding.ASCII.GetBytes(FileString.ToString());
+                    // MemoryStream stream = new MemoryStream(byteArray);
+                    StringReader sr = new StringReader(FileString.ToString());
+                    using (TextFieldParser parser = new TextFieldParser(sr))
                     {
                         parser.TextFieldType = FieldType.Delimited;
                         parser.SetDelimiters(",");
                         parser.TrimWhiteSpace = true;
+                        parser.HasFieldsEnclosedInQuotes = true;
                         bool hasHeader = false;
                         string[] HeaderArray = null;
                         while (!parser.EndOfData)
                         {
-                            string[] fieldRow = parser.ReadFields();
+                            Console.WriteLine("Reading line:");
+                            string[] fieldRow = null;
+                            try
+                            {
+
+                                 fieldRow = parser.ReadFields();
+                            }
+                            catch(Exception e)
+                            {
+
+                                Console.WriteLine("Error in reading file:");
+                                Console.WriteLine(e.ToString());
+                                continue;
+                            }
                             
                             if (!hasHeader)
                             {
@@ -168,13 +187,16 @@ namespace HSPI_SIID
                                 Dictionary<string, string> CodeLookup = new Dictionary<string, string>();
                                 foreach (string fieldRowCell in fieldRow)
                                 {
-                                    CodeLookup[HeaderArray[FRind].ToLower()] = fieldRowCell;
+                                    //Console.WriteLine(HeaderArray[FRind].ToLower());
+                                  CodeLookup[HeaderArray[FRind].ToLower()] = fieldRowCell;
                                     FRind++;
                                 }
+                                // "Failed while importing device" try
                                 try
                                 {
+                                    Console.WriteLine("Configuring imported device "+int.Parse(CodeLookup["id"])); //Having a failure at CodeLookup["id"]
                                     Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
-                                   
+                                    Console.WriteLine("Device imported to ID " + OldToNew[int.Parse(CodeLookup["id"])]);
                                     newDevice.set_Name(Instance.host, FetchAttribute(CodeLookup, "Name"));
                                     newDevice.set_Location2(Instance.host, FetchAttribute(CodeLookup, "Floor"));
                                     newDevice.set_Location(Instance.host, FetchAttribute(CodeLookup, "Room"));
@@ -231,7 +253,7 @@ namespace HSPI_SIID
                                     }
                                     try
                                     {
-                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('_');
+                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('?'); 
 
                                         if (DeviceTypes.Count() == 6)
                                         {
@@ -243,9 +265,10 @@ namespace HSPI_SIID
                                             newDevice.set_DeviceType_Set(Instance.host, DevINFO);
                                         }
                                     }
-                                    catch
+                                    catch(Exception e)
                                     {
-
+                                        Console.WriteLine("Failed setting device type.");
+                                        Console.WriteLine(e.ToString());
                                     }
                                     //Now replace associated devices with their new ID:
                                     string[] OldAssocDeviceList = FetchAttribute(CodeLookup, "associatedDevicesList").Split(',');
@@ -259,8 +282,10 @@ namespace HSPI_SIID
                                             {
                                                 newDevice.AssociatedDevice_Add(Instance.host, OldToNew[T]);
                                             }
-                                            catch
+                                            catch(Exception e)
                                             {
+                                                Console.WriteLine("Failed adding associated device.");
+                                                Console.WriteLine(e.ToString());
                                             }
                                         }
                                       
@@ -270,172 +295,203 @@ namespace HSPI_SIID
                                     {
                                         case ("BACnet Device") : case ("BACnet Object"):
                                             {
-                                                var dv = newDevice.get_Ref(Instance.host);
-                                                Instance.bacnetHomeSeerDevices.MakeBACnetGraphicsAndStatus(dv);
-
-                                                var parts = HttpUtility.ParseQueryString(string.Empty);
-
-                                                parts["Type"] = CodeLookup["type"];    //unless we've already set this?
-
-                                                var bacnetNodeData = HttpUtility.ParseQueryString(string.Empty);
-
-
-                                                bacnetNodeData["node_type"] = CodeLookup["type"].Split(" ".ToCharArray())[1].ToLower();
-
-                                                bacnetNodeData["ip_address"] = FetchAttribute(CodeLookup, "NetworkIPAddress");
-
-                                                bacnetNodeData["device_ip_address"] = FetchAttribute(CodeLookup, "DeviceIPAddress");    //do these matter?  Just for export later...
-                                                bacnetNodeData["device_udp_port"] = FetchAttribute(CodeLookup, "DeviceUDPPort");
-
-                                                bacnetNodeData["device_instance"] = FetchAttribute(CodeLookup, "DeviceInstance");
-
-                                                bacnetNodeData["object_type_string"] = FetchAttribute(CodeLookup, "ObjectType");
-                                                //following line breaks bad
                                                 try
                                                 {
-                                                    bacnetNodeData["object_type"] = ((Int32)(Enum.Parse(typeof(BacnetObjectTypes), bacnetNodeData["object_type_string"]))).ToString();
+                                                    var dv = newDevice.get_Ref(Instance.host);
+                                                    Instance.bacnetHomeSeerDevices.MakeBACnetGraphicsAndStatus(dv);
+
+                                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+
+                                                    parts["Type"] = CodeLookup["type"];    //unless we've already set this?
+
+                                                    var bacnetNodeData = HttpUtility.ParseQueryString(string.Empty);
+
+
+                                                    bacnetNodeData["node_type"] = CodeLookup["type"].Split(" ".ToCharArray())[1].ToLower();
+
+                                                    bacnetNodeData["ip_address"] = FetchAttribute(CodeLookup, "NetworkIPAddress");
+
+                                                    bacnetNodeData["device_ip_address"] = FetchAttribute(CodeLookup, "DeviceIPAddress");    //do these matter?  Just for export later...
+                                                    bacnetNodeData["device_udp_port"] = FetchAttribute(CodeLookup, "DeviceUDPPort");
+
+                                                    bacnetNodeData["device_instance"] = FetchAttribute(CodeLookup, "DeviceInstance");
+
+                                                    bacnetNodeData["object_type_string"] = FetchAttribute(CodeLookup, "ObjectType");
+                                                    //following line breaks bad
+                                                    try
+                                                    {
+                                                        bacnetNodeData["object_type"] = ((Int32)(Enum.Parse(typeof(BacnetObjectTypes), bacnetNodeData["object_type_string"]))).ToString();
+                                                    }
+                                                    catch
+                                                    {
+                                                        bacnetNodeData["object_type"] = "0";
+                                                    }
+                                                    bacnetNodeData["object_instance"] = FetchAttribute(CodeLookup, "ObjectInstance");
+                                                    bacnetNodeData["object_name"] = FetchAttribute(CodeLookup, "ObjectName");
+                                                    bacnetNodeData["polling_interval"] = FetchAttribute(CodeLookup, "PollInterval");
+
+
+                                                    parts["BACnetNodeData"] = bacnetNodeData.ToString();
+
+
+                                                    parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");            //not much point importing these, but...
+                                                    parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
+
+
+                                                    EDO.AddNamed("SSIDKey", parts.ToString());
                                                 }
-                                                catch
+                                                catch(Exception e)
                                                 {
-                                                    bacnetNodeData["object_type"] = "0";
+                                                    Console.WriteLine("Failed to add specific BACnet information.");
+                                                    Console.WriteLine(e.ToString());
                                                 }
-                                                bacnetNodeData["object_instance"] = FetchAttribute(CodeLookup, "ObjectInstance");
-                                                bacnetNodeData["object_name"] = FetchAttribute(CodeLookup, "ObjectName");
-                                                bacnetNodeData["polling_interval"] = FetchAttribute(CodeLookup, "PollInterval");
-                                                
-
-                                                parts["BACnetNodeData"] = bacnetNodeData.ToString();
-
-
-                                                parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");            //not much point importing these, but...
-                                                parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
-
-
-                                                EDO.AddNamed("SSIDKey", parts.ToString());
-
 
                                                 break;
                                             }
                                         case ("Scratchpad"):
                                             {
-                                                var parts = HttpUtility.ParseQueryString(string.Empty);
-                                                parts["Type"] = FetchAttribute(CodeLookup, "type"); ;
-                                                parts["IsEnabled"] = FetchAttribute(CodeLookup, "isenabled"); ;
-                                                parts["IsAccumulator"] = FetchAttribute(CodeLookup, "isaccumulator"); ;
-                                                //    parts["UpdateInterval"] = "30000"; //Global every 30 seconds for all rules
-                                                parts["ResetType"] = FetchAttribute(CodeLookup, "resettype"); ;
-                                                parts["ResetInterval"] = FetchAttribute(CodeLookup, "resetinterval"); ;
-
-                                                parts["ResetTime"] = FetchAttribute(CodeLookup, "resettime"); ;
-                                                parts["DayOfWeek"] = FetchAttribute(CodeLookup, "dayofweek"); ;
-                                                parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); ;
-
-                                                string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
-                                                foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
+                                                try
                                                 {
-                                                    string old = "$(" + OLDTONEW.Key + ")";
-                                                    string NN = "$(" + OLDTONEW.Value + ")";
-                                                    ScratchString = ScratchString.Replace(old, NN);
-                                                    ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+                                                    parts["Type"] = FetchAttribute(CodeLookup, "type"); ;
+                                                    parts["IsEnabled"] = FetchAttribute(CodeLookup, "isenabled"); ;
+                                                    parts["IsAccumulator"] = FetchAttribute(CodeLookup, "isaccumulator"); ;
+                                                    //    parts["UpdateInterval"] = "30000"; //Global every 30 seconds for all rules
+                                                    parts["ResetType"] = FetchAttribute(CodeLookup, "resettype"); ;
+                                                    parts["ResetInterval"] = FetchAttribute(CodeLookup, "resetinterval"); ;
+
+                                                    parts["ResetTime"] = FetchAttribute(CodeLookup, "resettime"); ;
+                                                    parts["DayOfWeek"] = FetchAttribute(CodeLookup, "dayofweek"); ;
+                                                    parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); ;
+
+                                                    string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
+                                                    foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
+                                                    {
+                                                        string old = "$(" + OLDTONEW.Key + ")";
+                                                        string NN = "$(" + OLDTONEW.Value + ")";
+                                                        ScratchString = ScratchString.Replace(old, NN);
+                                                        ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                    }
+
+                                                    parts["ScratchPadString"] = ScratchString;
+                                                    parts["DisplayString"] = FetchAttribute(CodeLookup, "displaystring"); ;
+                                                    parts["OldValue"] = FetchAttribute(CodeLookup, "oldvalue"); ;
+                                                    parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); ;
+                                                    parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
+                                                    parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
+                                                    EDO.AddNamed("SSIDKey", parts.ToString());
+
+                                                    var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+                                                    DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
+                                                    Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
                                                 }
-
-                                                parts["ScratchPadString"] = ScratchString;
-                                                parts["DisplayString"] = FetchAttribute(CodeLookup, "displaystring"); ;
-                                                parts["OldValue"] = FetchAttribute(CodeLookup, "oldvalue"); ;
-                                                parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); ;
-                                                parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
-                                                parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
-                                                EDO.AddNamed("SSIDKey", parts.ToString());
-
-                                                var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
-                                                DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
-                                                Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine("Failed to add specific Scratchpad Rule information.");
+                                                    Console.WriteLine(e.ToString());
+                                                }
                                                 break;
                                             }
                                         case ("Modbus Gateway"):
                                             {
-                                                Instance.modPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
-
-
-
-                                                var parts = HttpUtility.ParseQueryString(string.Empty);
-
-
-                                                parts["Type"] = FetchAttribute(CodeLookup, "type");
-                                                parts["Gateway"] = FetchAttribute(CodeLookup, "gateway");
-                                                parts["TCP"] = FetchAttribute(CodeLookup, "tcp");
-                                                parts["Poll"] = FetchAttribute(CodeLookup, "poll");
-                                                parts["Enabled"] = FetchAttribute(CodeLookup, "enabled");
-                                                parts["BigE"] = FetchAttribute(CodeLookup, "bige");
-                                                parts["ZeroB"] = FetchAttribute(CodeLookup, "zerob");
-                                                parts["RWRetry"] = FetchAttribute(CodeLookup, "rwretry");
-                                                parts["RWTime"] = FetchAttribute(CodeLookup, "rwtime");
-                                                parts["Delay"] = FetchAttribute(CodeLookup, "delay");
-                                                parts["RegWrite"] = FetchAttribute(CodeLookup, "regwrite");
-
-                                                StringBuilder NewRef = new StringBuilder();
-                                                foreach (string old in FetchAttribute(CodeLookup, "LinkedDevices").Split(','))
+                                                try
                                                 {
-                                                    try
-                                                    {
-                                                        NewRef.Append(OldToNew[int.Parse(old)] + ",");
-                                                    }
-                                                    catch
-                                                    {
+                                                    Instance.modPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
 
+
+
+                                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+
+
+                                                    parts["Type"] = FetchAttribute(CodeLookup, "type");
+                                                    parts["Gateway"] = FetchAttribute(CodeLookup, "gateway");
+                                                    parts["TCP"] = FetchAttribute(CodeLookup, "tcp");
+                                                    parts["Poll"] = FetchAttribute(CodeLookup, "poll");
+                                                    parts["Enabled"] = FetchAttribute(CodeLookup, "enabled");
+                                                    parts["BigE"] = FetchAttribute(CodeLookup, "bige");
+                                                    parts["ZeroB"] = FetchAttribute(CodeLookup, "zerob");
+                                                    parts["RWRetry"] = FetchAttribute(CodeLookup, "rwretry");
+                                                    parts["RWTime"] = FetchAttribute(CodeLookup, "rwtime");
+                                                    parts["Delay"] = FetchAttribute(CodeLookup, "delay");
+                                                    parts["RegWrite"] = FetchAttribute(CodeLookup, "regwrite");
+
+                                                    StringBuilder NewRef = new StringBuilder();
+                                                    foreach (string old in FetchAttribute(CodeLookup, "LinkedDevices").Split(','))
+                                                    {
+                                                        try
+                                                        {
+                                                            NewRef.Append(OldToNew[int.Parse(old)] + ",");
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            Console.WriteLine("Associated linked device does not exist for Modbus Gateway.");
+                                                            Console.WriteLine(e.ToString());
+                                                        }
                                                     }
+
+                                                    parts["LinkedDevices"] = NewRef.ToString();
+                                                    parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");
+                                                    parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
+                                                    EDO.AddNamed("SSIDKey", parts.ToString());
                                                 }
-
-                                                parts["LinkedDevices"] = NewRef.ToString();
-                                                parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");
-                                                parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
-                                                EDO.AddNamed("SSIDKey", parts.ToString());
-
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine("Failed to add specific Modbus Gateway information.");
+                                                    Console.WriteLine(e.ToString());
+                                                }
 
 
                                                 break;
                                             }
                                         case ("Modbus Device"):
                                             {
-                                                Instance.modPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
-                                                var parts = HttpUtility.ParseQueryString(string.Empty);
-                                                parts["Type"] = FetchAttribute(CodeLookup, "type");
-
-                                                parts["GateID"] = OldToNew[int.Parse(FetchAttribute(CodeLookup, "GateID"))].ToString(); //Replace
-
-
-                                                parts["Gateway"] = FetchAttribute(CodeLookup, "Gateway");
-                                                parts["RegisterType"] = FetchAttribute(CodeLookup, "RegisterType");//Instance.modAjax.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
-                                                parts["SlaveId"] = FetchAttribute(CodeLookup, "SlaveId"); //get number of slaves from gateway?
-                                                parts["ReturnType"] = FetchAttribute(CodeLookup, "ReturnType");
-                                                //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=string2,6=string4,7=string6,8=string8
-                                                //tells us how many registers to read/write and also how to parse returns
-                                                //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
-                                                //So coil and discrete are bool ONLY
-                                                //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
-                                                parts["SignedValue"] = FetchAttribute(CodeLookup, "SignedValue");
-
-
-                                                string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
-                                                foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
+                                                try
                                                 {
-                                                    string old = "$(" + OLDTONEW.Key + ")";
-                                                    string NN = "$(" + OLDTONEW.Value + ")";
-                                                    ScratchString=ScratchString.Replace(old,NN);
-                                                    ScratchString=ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
-                                                }
-                                                parts["ScratchpadString"] = ScratchString; //Replace
-                                                parts["DisplayFormatString"] = FetchAttribute(CodeLookup, "DisplayFormatString");
-                                                parts["ReadOnlyDevice"] = FetchAttribute(CodeLookup, "ReadOnlyDevice");
-                                                parts["DeviceEnabled"] = FetchAttribute(CodeLookup, "DeviceEnabled");
-                                                parts["RegisterAddress"] = FetchAttribute(CodeLookup, "RegisterAddress");
-                                                parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");
-                                                parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
+                                                    Instance.modPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
+                                                    var parts = HttpUtility.ParseQueryString(string.Empty);
+                                                    parts["Type"] = FetchAttribute(CodeLookup, "type");
 
-                                                EDO.AddNamed("SSIDKey", parts.ToString());
+                                                    parts["GateID"] = OldToNew[int.Parse(FetchAttribute(CodeLookup, "GateID"))].ToString(); //Replace
+
+
+                                                    parts["Gateway"] = FetchAttribute(CodeLookup, "Gateway");
+                                                    parts["RegisterType"] = FetchAttribute(CodeLookup, "RegisterType");//Instance.modAjax.modbusDefaultPoll.ToString(); //0 is discrete input, 1 is coil, 2 is InputRegister, 3 is Holding Register
+                                                    parts["SlaveId"] = FetchAttribute(CodeLookup, "SlaveId"); //get number of slaves from gateway?
+                                                    parts["ReturnType"] = FetchAttribute(CodeLookup, "ReturnType");
+                                                    //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=string2,6=string4,7=string6,8=string8
+                                                    //tells us how many registers to read/write and also how to parse returns
+                                                    //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
+                                                    //So coil and discrete are bool ONLY
+                                                    //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
+                                                    parts["SignedValue"] = FetchAttribute(CodeLookup, "SignedValue");
+
+
+                                                    string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
+                                                    foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
+                                                    {
+                                                        string old = "$(" + OLDTONEW.Key + ")";
+                                                        string NN = "$(" + OLDTONEW.Value + ")";
+                                                        ScratchString = ScratchString.Replace(old, NN);
+                                                        ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                    }
+                                                    parts["ScratchpadString"] = ScratchString; //Replace
+                                                    parts["DisplayFormatString"] = FetchAttribute(CodeLookup, "DisplayFormatString");
+                                                    parts["ReadOnlyDevice"] = FetchAttribute(CodeLookup, "ReadOnlyDevice");
+                                                    parts["DeviceEnabled"] = FetchAttribute(CodeLookup, "DeviceEnabled");
+                                                    parts["RegisterAddress"] = FetchAttribute(CodeLookup, "RegisterAddress");
+                                                    parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");
+                                                    parts["ProcessedValue"] = FetchAttribute(CodeLookup, "ProcessedValue");
+
+                                                    EDO.AddNamed("SSIDKey", parts.ToString());
+                                                   
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    Console.WriteLine("Failed to add specific Modbus Device information.");
+                                                    Console.WriteLine(e.ToString());
+                                                }
                                                 break;
                                             }
 
@@ -446,10 +502,10 @@ namespace HSPI_SIID
 
 
                                 }
-                                catch(Exception e)
+                                catch (Exception e)
                                 {
-                                    string b = e.Message;
-
+                                    Console.WriteLine("Failed while importing device ");
+                                    Console.WriteLine(e.ToString());
                                 }
 
 
@@ -458,7 +514,7 @@ namespace HSPI_SIID
 
 
 
-                                }
+                            }
                            
                         }
 
@@ -471,10 +527,10 @@ namespace HSPI_SIID
               
 
             }
-            catch //Fails for some reason
+            catch (Exception e)
             {
-
-
+                Console.WriteLine("Failed out of uppermost level of Import function");
+                Console.WriteLine(e.ToString());
             }
 
         }
@@ -555,11 +611,11 @@ namespace HSPI_SIID
                     //    }
 
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    var s = 2;
+                    Console.WriteLine(e.ToString());
                 }
-              
+
 
 
             }
@@ -715,10 +771,10 @@ namespace HSPI_SIID
 
                     Instance.bacnetDevices.updateDevicePollTimer(Siid.Ref, Convert.ToInt32(bacnetNodeData["polling_interval"]));
                 }
-                catch
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.ToString());
                 }
-
                 //if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
                 //{
 
@@ -765,9 +821,9 @@ namespace HSPI_SIID
                             updatedList.Append(subId + ",");
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
-
+                        Console.WriteLine(e.ToString());
                     }
 
 
@@ -957,9 +1013,10 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                                 ScratchTable.addArrayRow(Row.ToArray());
                             }
-                            catch
-                            {
-                            }
+                            catch(Exception e)
+                                    {
+                                        Console.WriteLine(e.ToString());
+                                    }
 
                         }
                  

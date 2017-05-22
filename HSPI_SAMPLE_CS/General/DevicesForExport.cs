@@ -94,7 +94,7 @@ namespace HSPI_SIID
              Values["userAccess"]=Device.get_UserAccess(Instance.host);
              Values["notes"]=Device.get_UserNote(Instance.host);
             var DeviceType= Device.get_DeviceType_Get(Instance.host);
-            Values["DeviceType"] = DeviceType.Device_API.ToString()+"_"+DeviceType.Device_API_Description.ToString()+"_"+DeviceType.Device_SubType.ToString()+"_"+DeviceType.Device_SubType_Description.ToString()+"_"+DeviceType.Device_Type.ToString()+"_"+DeviceType.Device_Type_Description.ToString();
+            Values["DeviceType"] = DeviceType.Device_API.ToString()+"?"+DeviceType.Device_API_Description.ToString()+"?"+DeviceType.Device_SubType.ToString()+"?"+DeviceType.Device_SubType_Description.ToString()+"?"+DeviceType.Device_Type.ToString()+"?"+DeviceType.Device_Type_Description.ToString();
              Values["deviceTypeString"]= Device.get_Device_Type_String(Instance.host);
              Values["RelationshipStatus"]=Device.get_Relationship(Instance.host);
              Values["associatedDevicesList"]= Device.get_AssociatedDevices_List(Instance.host);
@@ -115,7 +115,7 @@ namespace HSPI_SIID
                 try { Row.Append("\""+Values[head].ToString()+"\""); }
                 catch
                 {
-                    int a = 1;
+                    Row.Append("\"" + "" + "\"");
                 }
                     NotFirst = true;
 
