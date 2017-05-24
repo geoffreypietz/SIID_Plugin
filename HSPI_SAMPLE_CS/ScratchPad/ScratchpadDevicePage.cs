@@ -71,7 +71,12 @@ namespace HSPI_SIID.ScratchPad
 
                 EDO.RemoveNamed("SSIDKey");
                 EDO.AddNamed("SSIDKey", parts.ToString());
-     
+
+                string userNote = Rule.Device.get_UserNote(Instance.host);
+                userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
+                userNote += "PLUGIN EXTRA DATA:" + parts.ToString();
+                Rule.Device.set_UserNote(Instance.host, userNote);
+
                 Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
                 Rule.Extra = EDO;
             }
