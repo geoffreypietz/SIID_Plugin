@@ -677,7 +677,7 @@ namespace HSPI_SIID
                     switch (parts["type"]) {
                         case "Scratchpad":
                             {
-                                if (NewDevice.Device.get_Location(Instance.host) == "SubScratchpadRule")
+                                if (NewDevice.Device.get_Location2(Instance.host) == "Rates")
                                 {
 
                                     System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.setValue(CC));
@@ -685,7 +685,7 @@ namespace HSPI_SIID
                                 else
                                 {
 
-                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.eatAction(CC));
+                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.resetOrSetDate(CC));
                                 }
 
 

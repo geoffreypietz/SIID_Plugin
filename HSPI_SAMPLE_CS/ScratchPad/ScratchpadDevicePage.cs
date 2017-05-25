@@ -71,7 +71,12 @@ namespace HSPI_SIID.ScratchPad
 
                 EDO.RemoveNamed("SSIDKey");
                 EDO.AddNamed("SSIDKey", parts.ToString());
-     
+
+                string userNote = Rule.Device.get_UserNote(Instance.host);
+                userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
+                userNote += "PLUGIN EXTRA DATA:" + parts.ToString();
+                Rule.Device.set_UserNote(Instance.host, userNote);
+
                 Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
                 Rule.Extra = EDO;
             }
@@ -97,7 +102,7 @@ namespace HSPI_SIID.ScratchPad
             Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
             string userNote=Rule.Device.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += parts.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+parts.ToString();
             Rule.Device.set_UserNote(Instance.host, userNote);
             
            Rule.Extra = EDO;
@@ -218,9 +223,10 @@ namespace HSPI_SIID.ScratchPad
     
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
-            newDevice.set_Name(Instance.host, "Scratchpad Rule " + dv);
+            newDevice.set_Name(Instance.host, "Type Meter Calc " + dv);
             //newDevice.set_Location2(Instance.host, "ScratchpadRule");
-            newDevice.set_Location(Instance.host, "ScratchpadRule");
+            newDevice.set_Location(Instance.host, "Utilities");
+            newDevice.set_Location2(Instance.host, "Calcs");
             //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
                                                                      //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
@@ -238,7 +244,7 @@ namespace HSPI_SIID.ScratchPad
 
             string userNote = newDevice.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += ruleString.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+ruleString.ToString();
             newDevice.set_UserNote(Instance.host, userNote);
 
             EDO.AddNamed("SSIDKey", ruleString);
@@ -287,7 +293,7 @@ namespace HSPI_SIID.ScratchPad
                     string s = parts["Type"];
                     if (parts["Type"] == "Scratchpad")
                     {
-                        if (Dev.Device.get_Location2(Instance.host) != "ScratchpadSubRule")
+                        if (Dev.Device.get_Location2(Instance.host) != "Rates")
                         {
                             listOfDevices.Add(Dev);
                         }
@@ -408,7 +414,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
         }
-        public void eatAction(CAPI.CAPIControl ActionIn)
+        public void resetOrSetDate(CAPI.CAPIControl ActionIn)
         {
             var devID = ActionIn.Ref;
             var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
@@ -437,9 +443,11 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
-            newDevice.set_Name(Instance.host, "Scratchpad Sub Rule " + dv);
-         //   newDevice.set_Location2(Instance.host, "ScratchpadSubRule");
-            newDevice.set_Location(Instance.host, "SubScratchpadRule"); //Maybe do a search
+            newDevice.set_Name(Instance.host, "Type Meter Rate" + dv);
+            //   newDevice.set_Location2(Instance.host, "ScratchpadSubRule");
+            newDevice.set_Location(Instance.host, "Utilities");
+            newDevice.set_Location2(Instance.host, "Rates");
+
             //newDevice.set_Interface(Instance.host, "Modbus Configuration");//Put here the registered name of the page for what we want in the Modbus tab!!!  So easy!
             newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
                                                                      //newDevice.set_InterfaceInstance()''  SET INTERFACE INSTANCE
@@ -458,7 +466,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
             string userNote = newDevice.get_UserNote(Instance.host);
             userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
-            userNote += ruleString.ToString();
+            userNote += "PLUGIN EXTRA DATA:"+ruleString.ToString();
             newDevice.set_UserNote(Instance.host, userNote);
 
             EDO.AddNamed("SSIDKey", ruleString);
@@ -488,6 +496,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
      
             Gateway.AssociatedDevice_Add(Instance.host, dv); //This is totally working actually
 
+            return "refresh";
+
             stb.Append("<meta http-equiv=\"refresh\" content = \"0; URL='/deviceutility?ref=" + dv + "&edit=1'\" />");
             //    stb.Append("<a id = 'LALA' href='/deviceutility?ref=" + dv + "&edit=1'/><script>LALA.click()</script> ");
             page.AddBody(stb.ToString());
@@ -507,26 +517,35 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             string partID = changed["id"].Split('_')[0];
             int devId = Int32.Parse(changed["id"].Split('_')[1]);
 
-            SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices,devId);
-            //check for gateway change, do something special
-            if (partID == "Name")
+            if (partID == "S")
             {
-                newDevice.Device.set_Name(Instance.host, changed["value"]);
+                addSubrule(changed["id"]);
             }
-            else if (partID == "devdelete")
-            {
-                Instance.host.DeleteDevice(devId);
-                SiidDevice.removeDev(Instance.Devices, devId);
-            }
-
             else
             {
-                newDevice.UpdateExtraData(partID, changed["value"]);
-                if (partID == "ScratchPadString") {
-                    UpdateDisplay(newDevice);
+
+
+                SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
+                //check for gateway change, do something special
+                if (partID == "Name")
+                {
+                    newDevice.Device.set_Name(Instance.host, changed["value"]);
+                }
+                else if (partID == "devdelete")
+                {
+                    Instance.host.DeleteDevice(devId);
+                    SiidDevice.removeDev(Instance.Devices, devId);
+                }
+
+                else
+                {
+                    newDevice.UpdateExtraData(partID, changed["value"]);
+                    if (partID == "ScratchPadString")
+                    {
+                        UpdateDisplay(newDevice);
+                    }
                 }
             }
-
 
             
             return "True";
