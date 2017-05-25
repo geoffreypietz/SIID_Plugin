@@ -591,32 +591,107 @@ namespace HSPI_SIID.BACnet
 
 
 
+                var strs = new String[] { 
+                    "0 (No Priority)", 
+                    "1 (Manual Life Safety)",
+                    "2 (Automatic Life Safety)",
+                    "3",
+                    "4",
+                    "5 (Critical Equipment Control)",
+                    "6 (Minimum On/Off)",
+                    "7",
+                    "8 (Manual Operator)",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16"
+                
+                };
+
+                for (int i = 0; i < strs.Length; i++)
+                {
+                    var Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
+                    Control.PairType = VSVGPairs.VSVGPairType.SingleValue;
+
+
+                    Control.Render_Location.Row = 0;
+                    Control.Render_Location.Column = 0;
+                    Control.Render_Location.ColumnSpan = 0;
 
 
 
-                var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
-                Control.PairType = VSVGPairs.VSVGPairType.Range;
+                    //
+
+                    Control.Value = i;
+                    Control.Status = strs[i];
+
+                    Control.IncludeValues = false;
+
+                    //Control.StringListAdd = "blah";
+
+                    //Control.StringListAdd = "blah2";
 
 
-                //Control.
+                    //Control.StringList = new String[] { "Release2" };
+
+                    Control.Render = Enums.CAPIControlType.Single_Text_from_List;
 
 
-                //Control.Value = 2.0;
-
-                Control.RangeStart = 0;
-                Control.RangeEnd = 16;
-
-                //Control.
-
-                //Control.
-
-                //Control.Value = 2;
+                    var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
 
 
 
-                //Control.Render = Enums.CAPIControlType.TextBox_Number;
-                Control.Render = Enums.CAPIControlType.ValuesRange;
-                var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+                }
+
+
+
+
+
+
+
+                //var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                //Control.PairType = VSVGPairs.VSVGPairType.Range;
+
+
+                ////Control.
+
+
+                ////Control.Value = 2.0;
+
+                //Control.RangeStart = 0;
+                //Control.RangeEnd = 16;
+
+
+                ////won't need these once we build custom one....
+
+
+
+                ////Control.StringListAdd = "blah";
+
+
+                ////Control.
+
+                ////Control.
+
+                ////Control.Value = 2;
+
+
+
+                ////Control.Render = Enums.CAPIControlType.TextBox_Number;
+
+
+                //Control.Render = Enums.CAPIControlType.ValuesRange;
+
+                ////Control.Render = Enums.CAPIControlType.List_Text_from_List;
+
+
+                //var IS2 = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
 
             //Instance.host.
 
@@ -686,6 +761,262 @@ namespace HSPI_SIID.BACnet
 
 
         }
+
+
+
+
+
+
+
+
+
+        public int testDev()      //parentDv is for the device device
+        {
+            var dv = Instance.host.NewDeviceRef("BACnet Object (write priority)");
+
+            Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+            newDevice.set_InterfaceInstance(Instance.host, Instance.name);
+
+
+
+            //var parentDevId = (int)deviceDv;   //parent is the BACnet object device, not the BACnet device device
+            //var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
+
+            //parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
+            //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
+
+            //newDevice.AssociatedDevice_Add(Instance.host, parentDevId);
+            //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Child);
+
+
+
+            //bacnetNodeData["bacnet_object_hs_device"] = objDv.ToString();     //on change, can then go and change nodeData in that object.
+
+
+            //bacnetNodeData[""]
+
+
+            //newDevice.set_Name(Instance.host, "BACnet Object - " + objectName); //Can include ID in the name cause why not
+
+
+
+            //parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.);
+
+            newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
+
+
+            Instance.host.SetDeviceValueByRef(dv, 0, false);
+            Instance.host.SetDeviceString(dv, "0", false);
+
+
+
+            //Instance.host.DeviceScriptButton_Add(dv, "blah", "blah.js", "func", "", 1, 1, 1);
+
+
+            //Instance.host.DeviceProperty_StrArray(
+
+            //Instance.host.DeviceScriptButton_Add
+
+            //but shouldn't it update when you change?
+
+
+            //TODO: add the different write priorities here.
+
+
+            //I//nstance.hspi.
+
+
+
+
+
+
+
+
+
+
+            //var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+            //Control.PairType = VSVGPairs.VSVGPairType.Range;
+
+
+            //Control.RangeStart = 0;
+            //Control.RangeEnd = 16;
+
+
+            //Control.StringListAdd = "blah";
+
+
+
+            //Control.Render = Enums.CAPIControlType.Single_Text_from_List;
+
+
+            //var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+            Control.PairType = VSVGPairs.VSVGPairType.SingleValue;
+
+
+            //Control.RangeStart = 0;
+            //Control.RangeEnd = 1;
+
+
+            //Control.Value = 2;
+
+
+            Control.Status = "blahblah";
+
+
+
+            //Control.
+
+            //Control.StringListAdd = "blah";
+
+            //Control.StringList = new String[] { "blah" };
+
+
+            //
+
+            //Control.Render = Enums.CAPIControlType.TextList;
+
+
+            var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+            Control.PairType = VSVGPairs.VSVGPairType.Range;
+
+
+            //Control.RangeStart = 0;
+            //Control.RangeEnd = 1;
+
+
+            //Control.Value = 2;
+
+
+            //Control.Status = "blahblah";
+
+
+            //Control.StringListAdd = "blah";
+
+            //Control.StringList = new String[] { "blah" };
+
+
+            //
+
+            Control.Render = Enums.CAPIControlType.ValuesRange;
+
+
+            IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+            //Instance.host.
+
+            //newDevice.
+
+
+            //Instance.host.
+
+
+
+            //}
+
+
+
+            newDevice.set_Name(Instance.host, "test (write priority)");
+
+
+            newDevice.set_Location2(Instance.host, "BACnet"); //Location 2 is the Floor, can say whatever we want
+            newDevice.set_Location(Instance.host, "System");
+
+            newDevice.set_Interface(Instance.host, Util.IFACE_NAME); //Needed to link device to plugin, so the tab calls back to the correct hardcoded homeseer function
+
+
+
+            //newDevice.set_Relationship(Instance.host, Enums.eRelationship.Standalone); //So this part here is if we want the device to have a grouping relationship with anything else
+            //Can do:
+            /* Not_Set = 0,
+            Indeterminate = 1,
+            Parent_Root = 2,
+            Standalone = 3,
+            Child = 4
+            */
+
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.NO_LOG); //Basically do we want this to log or not log somewhere, I haven't done any plugin specific logging stuff yet'
+            //but this may be homeseer log stuff
+            newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
+            //HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
+
+
+
+
+
+
+            //EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString(), true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            //Could be BACnet device or object, but either way turns into a HomeSeer device
+
+
+            //newDevice.set_PlugExtraData_Set(Instance.host, EDO);
+
+
+            var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
+            DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;  //Necessary for having the ability to control the device from the devices page using a defined action
+            //may be useful later when we want to try actually writing to devices, however we decide to do it 
+            newDevice.set_DeviceType_Set(Instance.host, DevINFO);
+
+
+
+
+
+            Instance.Devices.Add(new SiidDevice(Instance, newDevice));
+
+
+
+            return dv;
+
+
+
+
+        }
+
+
+
+
+
+
+
+
 
 
 
@@ -1064,23 +1395,137 @@ namespace HSPI_SIID.BACnet
 
 
 
+                VSVGPairs.VSPair Control;
+                bool IS;
+
+                if (bacnetObject.BacnetObjectId.Type == BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE)
+                {
+
+                    //string list will be list of state text
 
 
-                var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
-                Control.PairType = VSVGPairs.VSVGPairType.Range;
-                Control.RangeStart = -100000;
-                Control.RangeEnd = 100000;
-                //Control.Render = Enums.CAPIControlType.TextBox_Number;
 
-                //Control.Status = "Command";
+                    var stateTextProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_STATE_TEXT);
 
-                Control.Render = Enums.CAPIControlType.TextBox_String;
+
+                    var strs = stateTextProp.ValueString().TrimStart("{".ToCharArray()).TrimEnd("}".ToCharArray()).Split(",".ToCharArray());
+
+
+                    for (int i = 0; i < strs.Length; i++)
+                    {
+                        Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
+                        Control.PairType = VSVGPairs.VSVGPairType.SingleValue;
+
+
+                        Control.Render_Location.Row = 1;
+                        Control.Render_Location.Column = 1;
+                        Control.Render_Location.ColumnSpan = 1;
+
+
+
+                        //
+
+                        Control.Value = i + 1;      //1-based indices for state text
+                        Control.Status = (i + 1).ToString() + " (" + strs[i] + ")";
+
+                        Control.IncludeValues = false;
+
+                        //Control.StringListAdd = "blah";
+
+                        //Control.StringListAdd = "blah2";
+
+
+                        //Control.StringList = new String[] { "Release2" };
+
+                        Control.Render = Enums.CAPIControlType.Single_Text_from_List;
+
+
+                        IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+                    }
+
+
+
+                    Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                    Control.PairType = VSVGPairs.VSVGPairType.SingleValue;
+                    //Control.RangeStart = -100000;
+                    //Control.RangeEnd = 100000;
+                    //Control.Render = Enums.CAPIControlType.TextBox_Number;
+                    //Control.StringList = new String[] { "Release" };
+                    //Control.StringListAdd = "Release";
+
+
+                    Control.Render_Location.Row = 1;
+                    Control.Render_Location.Column = 2;
+                    Control.Render_Location.ColumnSpan = 1;
+
+
+
+                    Control.Status = "Command";
+
+                    //Control.
+
+                    //ntrol.ControlUse = ePairControlUse.
+
+                    //Control.ControlStatus = ePairStatusControl.
+
+                    //Control.Value = "Release";
+
+                    //Control.Render_Location = Enums.CAPIControlLocation.
+
+                    Control.Render = Enums.CAPIControlType.Button;
+
+
+
+
+                    IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+
+
+
+                }
+                else
+                {
+
+
+                    Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+                    Control.PairType = VSVGPairs.VSVGPairType.Range;
+                    Control.RangeStart = -100000;
+                    Control.RangeEnd = 100000;
+                    //Control.Render = Enums.CAPIControlType.TextBox_Number;
+
+                    //Control.Status = "Command";   //no, leave this alone, messes up status number/graphics
+
+
+
+                    Control.Render_Location.Row = 1;
+                    Control.Render_Location.Column = 1;
+                    Control.Render_Location.ColumnSpan = 1;
+
+
+                    //Control.
+
+                    Control.Render = Enums.CAPIControlType.TextBox_String;
+
+
+                    IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+
+                }
+
+
+
                 
 
                 //Control.
 
 
-                var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+                
+
+
+
+
 
 
                 Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
@@ -1092,8 +1537,48 @@ namespace HSPI_SIID.BACnet
                 //Control.StringListAdd = "Release";
 
 
+                Control.Render_Location.Row = 2;
+                Control.Render_Location.Column = 1;
+                Control.Render_Location.ColumnSpan = 1;
 
-                Control.Status = "Release";
+
+
+                var statusText = "Release" + @"
+                
+                <script>
+                $(function() {
+                
+                        $('#dv_Control" + dv + @" span.ui-button-text').filter(function(){
+                      return ($(this).text() == 'Submit');
+                    }).text('Command');
+
+                        $('#dv_Control" + dv + @" span.ui-button-text').each(function(){
+
+                            $(this).children().first().removeClass('button_selected');
+
+                    });
+
+
+                    //.closest('form').css('display','');
+                
+                
+                });
+                //replace 'Submit' button text with 'Command' (in context of priority array)
+                //and change styling of parent form so that the buttons stack
+                
+                </script>
+                
+                
+                
+                ";
+
+
+                Control.Status = statusText;
+
+
+
+
+
 
                 //Control.
 
@@ -1105,12 +1590,82 @@ namespace HSPI_SIID.BACnet
 
                 //Control.Render_Location = Enums.CAPIControlLocation.
 
-                Control.Render = Enums.CAPIControlType.Button;
-
+                //Control.Render = Enums.CAPIControlType.Button;
+                Control.Render = Enums.CAPIControlType.Button_Script;
 
 
 
                 IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+                //doesn't show up for multi-state value, for some reason
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   //Dim MyVSP As New VSPair(ePairStatusControl.Both)
+   //     Dim i As Integer
+   //     For i = 0 To _Buttons.Length - 1
+   //         MyVSP.PairType = VSVGPairType.SingleValue
+   //         MyVSP.Render_Location.Row = 0
+   //         MyVSP.Render_Location.Column = 0
+   //         MyVSP.Render_Location.ColumnSpan = 0
+   //         MyVSP.Value = i
+   //         MyVSP.Status = _Buttons(i)
+   //         MyVSP.IncludeValues = False
+   //         MyVSP.Render = Enums.CAPIControlType.TextList
+   //         hs.DeviceVSP_AddPair(ref, MyVSP)
+   //     Next
+
+
+
+
+
+
+        //    Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
+        //    Control.PairType = VSVGPairs.VSVGPairType.Range;
+
+        //    Control.RangeStart = -1;
+        //    Control.RangeEnd = strs.Length - 1;
+
+
+        //Control.Render_Location.Row = 1;
+        //Control.Render_Location.Column = 1;
+        //Control.Render_Location.ColumnSpan = 15;
+
+
+        //    //Control.Status = "<script>console.log('blah');</script>";
+
+
+        //    //Control.StringListAdd = "blah";
+
+        //    //Control.StringListAdd = "blah2";
+
+
+        //    //Control.StringList = new String[] { "Release2" };
+
+        //    Control.Render = Enums.CAPIControlType.ValuesRange;
+
+
+        //    IS = Instance.host.DeviceVSP_AddPair(dv, Control);
 
 
 
@@ -1190,6 +1745,9 @@ namespace HSPI_SIID.BACnet
                     //Instance.bacnetDevices.updateBacnetNodeData(dv, "priority_array_hs_device", priorityArrayHsDv.ToString());
 
                 }
+
+
+                Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(dv);
 
 
             }

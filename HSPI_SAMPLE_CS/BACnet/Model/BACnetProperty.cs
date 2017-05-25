@@ -383,6 +383,9 @@ namespace HSPI_SIID.BACnet
 
 
 
+
+
+
         public string ValueString()
         {
 
@@ -459,25 +462,25 @@ table.priorityArray, .priorityArray th, .priorityArray td {
 
 
             //TODO: find a different place to inject this?  But only really needed if there is a priority array present....
-            valsString += @"
-
-<script>
-$(function() {
-
-        $('span.ui-button-text').filter(function(){
-      return ($(this).text() == 'Submit');
-    }).text('Command').closest('form').css('display','');
-
-
-});
-//replace 'Submit' button text with 'Command' (in context of priority array)
-//and change styling of parent form so that the buttons stack
-
-</script>
-
-
-
-";
+//            valsString += @"
+//
+//<script>
+//$(function() {
+//
+//        $('span.ui-button-text').filter(function(){
+//      return ($(this).text() == 'Submit');
+//    }).text('Command').closest('form').css('display','');
+//
+//
+//});
+////replace 'Submit' button text with 'Command' (in context of priority array)
+////and change styling of parent form so that the buttons stack
+//
+//</script>
+//
+//
+//
+//";
 
 
 

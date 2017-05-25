@@ -698,13 +698,24 @@ namespace HSPI_SIID
                             }
                         case "BACnet Object":
                             {
+
+                                //Instance.bacnetHomeSeerDevices.testDev();
+                                //return;
+
+                                //Instance.bacnetHomeseerDevices.testDev();
+
                                 var hsDev = NewDevice.Device;
 
 
                                 if (CC.Label == "Release")
                                     Instance.bacnetDevices.ReadWriteBacnet(hsDev, null);
                                 else
-                                    Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlString);
+                                {
+                                    if (CC.ControlString == "")     //changing with drop-down...only for multi-state value devices
+                                        Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlValue.ToString());
+                                    else
+                                        Instance.bacnetDevices.ReadWriteBacnet(hsDev, CC.ControlString);
+                                }
 
 
 

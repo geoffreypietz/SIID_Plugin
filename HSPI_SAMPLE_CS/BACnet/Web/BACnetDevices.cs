@@ -378,7 +378,7 @@ namespace HSPI_SIID.BACnet
 
                 bno.FetchProperties();  //force refresh, even if already fetched
 
-
+                lock(bno.BacnetProperties)  //TODO: find out where this is used
                 foreach (var bacnetProperty in bno.BacnetProperties)
                 {
                     BacnetPropertyIds propId = bacnetProperty.Key;
@@ -656,6 +656,197 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
+            public string BacnetObjectUpdateJs(NameValueCollection hsBacnetNodeData)
+            {
+
+
+
+
+                return "<script>console.log('blah');</script>";
+            }
+
+
+
+            public void UpdateBacnetObjectHsDeviceStatus(int hsBacnetDevRef)
+            {
+
+
+
+
+                    //Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
+
+                    //Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
+
+
+
+                var siidDev = SiidDevice.GetFromListByID(Instance.Devices, hsBacnetDevRef);
+
+                
+
+
+
+                    //TODO: check if null?
+
+
+                    ////TODO: should we just get from SiidDevices list, but update this on delete?
+
+                if (siidDev == null)
+                {
+
+                    SiidDevice.Update(Instance);
+
+                    //Instance.Devices.Remove(hsBacnetDevice.);
+
+                    return;
+
+                }
+
+
+                Scheduler.Classes.DeviceClass hsBacnetDevice = siidDev.Device;
+
+
+                    //var hsBacnetDevice = Dev.Device;
+
+                    var hsBacnetNodeData = getBacnetNodeData(hsBacnetDevice);
+
+
+                    ////TODO: make sure from this instance
+
+                    //if (hsBacnetNodeData["node_type"] == "object" && hsBacnetNodeData["device_instance"] == hsParentBacnetNodeData["device_instance"])
+                    //{
+                    //    // we have found a child BACnet object
+
+
+
+                        BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(hsBacnetNodeData);
+
+                        if (bno == null)
+                        {
+
+                            Instance.host.SetDeviceString(hsBacnetDevRef, "Could not read object property", true);      //same as setting value?
+                            return;
+                        }
+
+
+                        bno.FetchProperties();
+
+
+                        String presentValString = "";
+
+
+                        lock (bno.BacnetProperties)
+                        {
+                            var hasPresentVal = false;
+                            foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
+                            //TODO: collection was modified; enumeration operation may not execute
+                            {
+                                BacnetPropertyIds propId = kvp.Key;
+                                BACnetProperty prop = kvp.Value;
+
+
+                                if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                                {
+                                    hasPresentVal = true;
+                                    Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
+
+
+                                    //can keep this.
+
+                                    //TODO: here would be the place to add in the script which would update the write priority device options, the multi-state value inputs, etc.
+                                    //This is the only place the status string is set
+
+                                    //The only problem is that this isn't called immediately after device creation....but it could be, if you make it a function....
+
+
+                                    presentValString += prop.ValueString();
+
+                                    //Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
+                                    //break;
+                                }
+
+
+                                if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                                {
+
+                                    try
+                                    {
+
+
+                                    }
+                                    catch
+                                    {
+
+
+                                    }
+
+
+                                    if (hsBacnetNodeData["priority_array_hs_device"] == null)
+                                        continue;
+
+                                    var hsPriorityArrayDv = Int32.Parse(hsBacnetNodeData["priority_array_hs_device"]);
+
+
+
+                                    ////Scheduler.Classes.DeviceClass hsPriorityArrayDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsPriorityArrayDv);
+                                    //Scheduler.Classes.DeviceClass hsPriorityArrayDevice = (Scheduler.Classes.DeviceClass)SiidDevice.GetFromListByID(Instance.Devices, hsPriorityArrayDv).Device
+
+
+
+                                    //if (hsPriorityArrayDevice == null)
+                                    //{
+                                    //    Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsPriorityArrayDv));
+
+                                    //    continue;
+
+                                    //}
+
+
+                                    Instance.host.SetDeviceString(hsPriorityArrayDv, prop.PriorityArrayTable(), false);
+
+
+                                }
+
+
+                            }
+
+                            if (!hasPresentVal)
+                                Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
+                            else
+                                Instance.host.SetDeviceString(hsBacnetDevRef, presentValString, true);
+                                //Instance.host.SetDeviceString(hsBacnetDevRef, presentValString + BacnetObjectUpdateJs(hsBacnetNodeData), true);
+
+                            //so update its displayed value by reading the present value from it.
+
+
+
+                            
+
+                            //try
+                            //{
+                            //    lock (WhoIsBeingPolled)
+                            //    {
+                            //        WhoIsBeingPolled.Add(Dev.Ref.ToString());   // so GUI can't update during.
+                            //    }
+                            //}
+
+
+
+                            //finally
+                            //{
+                            //    //OneAtATime.ReleaseMutex();
+                            //    lock (WhoIsBeingPolled)
+                            //    {
+                            //        WhoIsBeingPolled.Remove(Dev.Ref.ToString());
+                            //    }
+                            //}
+
+
+                        }
+                    }
+
+
+
+
 
 
 
@@ -728,133 +919,163 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 {
 
 
-                    //Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
-
-                    Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
-
-                    //TODO: should we just get from SiidDevices list, but update this on delete?
-
-                    if (hsBacnetDevice == null)
-                    {
-                        Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsBacnetDevRef));
-
-                        continue;
-
-                    }
-
-                    //var hsBacnetDevice = Dev.Device;
-
-                    var hsBacnetNodeData = getBacnetNodeData(hsBacnetDevice);
-
-
-                    ////TODO: make sure from this instance
-
-                    //if (hsBacnetNodeData["node_type"] == "object" && hsBacnetNodeData["device_instance"] == hsParentBacnetNodeData["device_instance"])
-                    //{
-                    //    // we have found a child BACnet object
+                    Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(hsBacnetDevRef);
 
 
 
-                        BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(hsBacnetNodeData);
 
-                        if (bno == null)
-                        {
-
-                            Instance.host.SetDeviceString(hsBacnetDevRef, "Could not read object property", true);
-                            continue;
-                        }
-
-
-                        bno.FetchProperties();
+                    ////TODO: maybe general try/catch in this loop in case device doesn't exist anymore in homeseer.....
 
 
 
-                        lock (bno.BacnetProperties)
-                        {
-                            var hasPresentVal = false;
-                            foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
-                            //TODO: collection was modified; enumeration operation may not execute
-                            {
-                                BacnetPropertyIds propId = kvp.Key;
-                                BACnetProperty prop = kvp.Value;
 
 
-                                if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
-                                {
-                                    hasPresentVal = true;
-                                    Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
-                                    Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
-                                    //break;
-                                }
+                    ////Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsBacnetDevRef);
+
+                    //Scheduler.Classes.DeviceClass hsBacnetDevice = (Scheduler.Classes.DeviceClass)SiidDevice.GetFromListByID(Instance.Devices, hsBacnetDevRef).Device;
+
+                    ////TODO: should we just get from SiidDevices list, but update this on delete?
+
+                    ////if (hsBacnetDevice == null)
+                    ////{
+                    ////    Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsBacnetDevRef));
+
+                    ////    continue;
+
+                    ////}
+
+                    ////var hsBacnetDevice = Dev.Device;
+
+                    //var hsBacnetNodeData = getBacnetNodeData(hsBacnetDevice);
 
 
-                                if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
-                                {
+                    //////TODO: make sure from this instance
 
-                                    try
-                                    {
-
-
-                                    }
-                                    catch
-                                    {
-
-
-                                    }
-
-
-                                    if (hsBacnetNodeData["priority_array_hs_device"] == null)
-                                        continue;
-
-                                    var hsPriorityArrayDv = Int32.Parse(hsBacnetNodeData["priority_array_hs_device"]);
-
-                                    Scheduler.Classes.DeviceClass hsPriorityArrayDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsPriorityArrayDv);
-
-
-                                    if (hsPriorityArrayDevice == null)
-                                    {
-                                        Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsPriorityArrayDv));
-
-                                        continue;
-
-                                    }
-
-
-                                    Instance.host.SetDeviceString(hsPriorityArrayDv, prop.PriorityArrayTable(), false);
-
-
-                                }
-
-
-                            }
-
-                            if (!hasPresentVal)
-                                Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
-
-
-                            //so update its displayed value by reading the present value from it.
-
-                            //try
-                            //{
-                            //    lock (WhoIsBeingPolled)
-                            //    {
-                            //        WhoIsBeingPolled.Add(Dev.Ref.ToString());   // so GUI can't update during.
-                            //    }
-                            //}
+                    ////if (hsBacnetNodeData["node_type"] == "object" && hsBacnetNodeData["device_instance"] == hsParentBacnetNodeData["device_instance"])
+                    ////{
+                    ////    // we have found a child BACnet object
 
 
 
-                            //finally
-                            //{
-                            //    //OneAtATime.ReleaseMutex();
-                            //    lock (WhoIsBeingPolled)
-                            //    {
-                            //        WhoIsBeingPolled.Remove(Dev.Ref.ToString());
-                            //    }
-                            //}
+                    //    BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(hsBacnetNodeData);
+
+                    //    if (bno == null)
+                    //    {
+
+                    //        Instance.host.SetDeviceString(hsBacnetDevRef, "Could not read object property", true);
+                    //        continue;
+                    //    }
 
 
-                        }
+                    //    bno.FetchProperties();
+
+
+
+                    //    lock (bno.BacnetProperties)
+                    //    {
+                    //        var hasPresentVal = false;
+                    //        foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
+                    //        //TODO: collection was modified; enumeration operation may not execute
+                    //        {
+                    //            BacnetPropertyIds propId = kvp.Key;
+                    //            BACnetProperty prop = kvp.Value;
+
+
+                    //            if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                    //            {
+                    //                hasPresentVal = true;
+                    //                Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
+
+
+
+                    //                //TODO: here would be the place to add in the script which would update the write priority device options, the multi-state value inputs, etc.
+                    //                //This is the only place the status string is set
+
+                    //                //The only problem is that this isn't called immediately after device creation....but it could be, if you make it a function....
+
+
+                    //                Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
+                    //                //break;
+                    //            }
+
+
+                    //            if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                    //            {
+
+                    //                try
+                    //                {
+
+
+                    //                }
+                    //                catch
+                    //                {
+
+
+                    //                }
+
+
+                    //                if (hsBacnetNodeData["priority_array_hs_device"] == null)
+                    //                    continue;
+
+                    //                var hsPriorityArrayDv = Int32.Parse(hsBacnetNodeData["priority_array_hs_device"]);
+
+                    //                //Scheduler.Classes.DeviceClass hsPriorityArrayDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(hsPriorityArrayDv);
+
+
+                    //                //if (hsPriorityArrayDevice == null)
+                    //                //{
+                    //                //    Instance.Devices.Remove(SiidDevice.GetFromListByID(Instance.Devices, hsPriorityArrayDv));
+
+                    //                //    continue;
+
+                    //                //}
+
+
+                    //                Instance.host.SetDeviceString(hsPriorityArrayDv, prop.PriorityArrayTable(), false);
+
+
+                    //            }
+
+
+                    //        }
+
+                    //        if (!hasPresentVal)
+                    //            Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
+
+
+                    //        //so update its displayed value by reading the present value from it.
+
+                    //        //try
+                    //        //{
+                    //        //    lock (WhoIsBeingPolled)
+                    //        //    {
+                    //        //        WhoIsBeingPolled.Add(Dev.Ref.ToString());   // so GUI can't update during.
+                    //        //    }
+                    //        //}
+
+
+
+                    //        //finally
+                    //        //{
+                    //        //    //OneAtATime.ReleaseMutex();
+                    //        //    lock (WhoIsBeingPolled)
+                    //        //    {
+                    //        //        WhoIsBeingPolled.Remove(Dev.Ref.ToString());
+                    //        //    }
+                    //        //}
+
+
+                    //    }
+
+
+
+
+
+
+
+
+
+
                     }
 
 

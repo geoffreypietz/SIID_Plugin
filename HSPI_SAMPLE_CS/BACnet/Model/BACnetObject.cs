@@ -211,6 +211,7 @@ namespace HSPI_SIID.BACnet
                                                                           BacnetPropertyIds.PROP_LIMIT_ENABLE,
                                                                           BacnetPropertyIds.PROP_EVENT_ENABLE,
                                                                           BacnetPropertyIds.PROP_NOTIFY_TYPE,
+                                                                          BacnetPropertyIds.PROP_STATE_TEXT
                                                                           };
 
 
