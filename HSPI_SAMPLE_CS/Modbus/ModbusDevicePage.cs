@@ -685,6 +685,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 changeGateway(NewDevice, changed["value"]);
                 
             }
+            if (partID == "ScratchpadString")
+            {
+                changed["value"] = changed["value"].Replace(" ", "%2B");
+
+            }
             NewDevice.UpdateExtraData(partID, changed["value"]);
             Instance.host.SetDeviceValueByRef(devId, 0, false);
             //  ModbusTcpMasterReadInputs();

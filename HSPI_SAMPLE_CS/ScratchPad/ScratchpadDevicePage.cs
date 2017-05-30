@@ -521,6 +521,10 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             {
                 addSubrule(changed["id"]);
             }
+            else if (partID == "ScratchPadString")
+            {
+                changed["value"] = changed["value"].Replace(" ", "%2B");
+            }
             else
             {
 

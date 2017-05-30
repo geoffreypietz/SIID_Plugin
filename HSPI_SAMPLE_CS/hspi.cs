@@ -482,7 +482,7 @@ namespace HSPI_SIID
             // get the correct page
             if (pageName == "SIIDPage")
             {
-                Console.WriteLine("IN SIID PAGE");
+                //Console.WriteLine("IN SIID PAGE");
                 return (Instance.siidPage.GetPagePlugin(pageName, user, userRights, queryString));
             }
             else if (pageName == "Scratch" + Instance.ajaxName)
