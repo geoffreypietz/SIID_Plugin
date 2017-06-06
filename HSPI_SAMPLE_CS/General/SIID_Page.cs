@@ -848,7 +848,7 @@ namespace HSPI_SIID
                     +"&edit=1", Gateway.get_Name(Instance.host)).print(), ModbusBuilder.Qbutton("G_"+GateRef,"Add Device").print());
                 sb.Append(ModbusConfHtml.print());
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
-                ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
+                ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format","HomeseerID");
                
                 
                 foreach (SiidDevice M in ModbusDevs)
@@ -861,10 +861,11 @@ namespace HSPI_SIID
                         if (Convert.ToInt32(parts["GateID"]) == GateRef)
                         {
                             ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
-                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Instance.host) + "&edit=1", MDevice.get_Name(Instance.host)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + M.Ref + "&edit=1", MDevice.get_Name(Instance.host)).print(),
                                parts["SlaveId"],
                                Instance.modPage.GetReg(parts["RegisterType"]),
-                               Instance.modPage.GetRet(parts["ReturnType"]));
+                               Instance.modPage.GetRet(parts["ReturnType"]),
+                               ""+M.Ref);
 
                         }
                     }
@@ -891,10 +892,25 @@ namespace HSPI_SIID
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
 
+                bool EvenOdd = false;
+                string BG1 = "#eeeeee";
+                string BG2 = "#eeeeff";
+                string Back = BG1;
                 foreach (SiidDevice Dev in Rules)
                 {
+                    
+                    if (EvenOdd)
+                    {
+                        Back = BG2;
+                        EvenOdd = false;
+                    }
+                    else
+                    {
+                        Back = BG1;
+                        EvenOdd = true;
+                    }
                     int ID = Dev.Ref;
                     List<string> Row = new List<string>();
                     var EDO = Dev.Extra;
@@ -940,11 +956,11 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
-
+                    Row.Add("" + Dev.Ref);
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                     Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
-
-                    ScratchTable.addArrayRow(Row.ToArray());
+               
+                    ScratchTable.addArrayRow(Row.ToArray(), Back);
 
                     var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
                     if (ASSOCIATES != null)
@@ -1006,12 +1022,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                                 Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                                 //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                                 Row.Add("<div/>");
-
+                                Row.Add("" + Sub.Ref);
                                 Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                                 Row.Add("<div/>");
                                 // Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
 
-                                ScratchTable.addArrayRow(Row.ToArray());
+                                ScratchTable.addArrayRow(Row.ToArray(), Back);
                             }
                             catch(Exception e)
                                     {
