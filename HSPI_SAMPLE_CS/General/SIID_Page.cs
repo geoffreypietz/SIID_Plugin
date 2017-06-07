@@ -253,12 +253,72 @@ namespace HSPI_SIID
                                     }
                                     try
                                     {
-                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('?'); 
+                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('?');
+                                        for (var H = 0; H < DeviceTypes.Count(); H++)
+                                        {
 
-                                        if (DeviceTypes.Count() == 6)
+                                            switch (DeviceTypes[H])
+                                            {
+                                                case ("No_API"):
+                                                    {
+                                                        DeviceTypes[H] = "0";
+                                                        break;
+
+                                                    }
+                                                case ("Plug_In"):
+                                                    {
+                                                        DeviceTypes[H] = "4";
+                                                        break;
+
+                                                    }
+                                                case ("Security"):
+                                                    {
+                                                        DeviceTypes[H] = "8";
+                                                        break;
+
+                                                    }
+                                                case ("Thermostat"):
+                                                    {
+                                                        DeviceTypes[H] = "16";
+                                                        break;
+
+                                                    }
+                                                case ("Media"):
+                                                    {
+                                                        DeviceTypes[H] = "32";
+                                                        break;
+
+                                                    }
+                                                case ("SourceSwitch"):
+                                                    {
+                                                        DeviceTypes[H] = "64";
+                                                        break;
+
+                                                    }
+                                                case ("Script"):
+                                                    {
+                                                        DeviceTypes[H] = "128";
+                                                        break;
+
+                                                    }
+                                                case ("Energy"):
+                                                    {
+                                                        DeviceTypes[H] = "256";
+                                                        break;
+
+                                                    }
+                                                    Default:
+                                                    {
+                                                        break;
+                                                    }
+                                            }
+                                        }
+
+                                                    if (DeviceTypes.Count() == 6)
                                         {
                                             var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
-                                            DevINFO.Device_API = (DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI)int.Parse(DeviceTypes[0]);
+                                         
+                                           DevINFO.Device_API = (DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI)int.Parse(DeviceTypes[0]);
                                             DevINFO.Device_SubType = int.Parse(DeviceTypes[2]);
                                             DevINFO.Device_SubType_Description = DeviceTypes[3];
                                             DevINFO.Device_Type = int.Parse(DeviceTypes[4]);
@@ -670,13 +730,21 @@ namespace HSPI_SIID
         {
             Console.WriteLine("AM in the SIID postbackConfig for some reason");
             System.Collections.Specialized.NameValueCollection parts = null;
-            parts = HttpUtility.ParseQueryString(data);
+            parts = HttpUtility.ParseQueryString(data); //problem happens when we have nested query strings
             string ID = parts["id"].Split('_')[0];
             switch (ID)
             {
                 case "Import":
                     {
-                        ImportDevices(parts["value"]);
+                        //OK so a problem. Our imports now have nested query strings
+                        //will need to do manual querys tring parsing to remove that nonsense.
+                        //Starts with &value=
+                        //ends with &id=Import
+                        //going to be bad. take a substring
+                        String CSVFile = data.Substring(7, data.Count() - 17);
+                        ImportDevices(CSVFile);
+
+                       // ImportDevices(parts["value"]);
                         return ""; 
                       
                     }

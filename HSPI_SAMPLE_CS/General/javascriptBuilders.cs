@@ -247,10 +247,16 @@ console.log('ARRIVED IN THERE');
  fr = new FileReader();
 fr.onload = function(e){
 console.log( e.target.result);
-V= e.target.result;
- var theData ='&value='+  e.target.result+ '&id=' + '" + id + @"';
 
-$.ajax({
+V= e.target.result;
+
+
+ theData ='&value='+  V+ '&id=' + '" + id + @"';
+
+
+
+
+jQuery.ajax({
   type: 'POST',
   async: true,
   url: '/' + '" + AjaxPostDestination + @"',
