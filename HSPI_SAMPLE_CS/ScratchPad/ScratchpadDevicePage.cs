@@ -526,14 +526,19 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             {
                 addSubrule(changed["id"]);
             }
-            else if (partID == "ScratchPadString")
+            else if (partID == "R")
             {
-                changed["value"] = changed["value"].Replace(" ", "%2B");
+                Reset(SiidDevice.GetFromListByID(Instance.Devices, devId));
             }
+
             else
             {
 
+                if (partID == "ScratchPadString")
+                {
+                    changed["value"] = changed["value"].Replace(" ", "%2B");
 
+                }
                 SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
                 //check for gateway change, do something special
                 if (partID == "Name")

@@ -1025,6 +1025,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                     Row.Add("" + Dev.Ref);
+                    Row.Add(ScratchBuilder.button("R_"+ID.ToString(),"Reset").print());
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                     Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
                
@@ -1091,6 +1092,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                                 //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                                 Row.Add("<div/>");
                                 Row.Add("" + Sub.Ref);
+                                Row.Add("<div/>");
                                 Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                                 Row.Add("<div/>");
                                 // Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
