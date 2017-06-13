@@ -253,12 +253,72 @@ namespace HSPI_SIID
                                     }
                                     try
                                     {
-                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('?'); 
+                                        string[] DeviceTypes = FetchAttribute(CodeLookup, "DeviceType").Split('?');
+                                        for (var H = 0; H < DeviceTypes.Count(); H++)
+                                        {
 
-                                        if (DeviceTypes.Count() == 6)
+                                            switch (DeviceTypes[H])
+                                            {
+                                                case ("No_API"):
+                                                    {
+                                                        DeviceTypes[H] = "0";
+                                                        break;
+
+                                                    }
+                                                case ("Plug_In"):
+                                                    {
+                                                        DeviceTypes[H] = "4";
+                                                        break;
+
+                                                    }
+                                                case ("Security"):
+                                                    {
+                                                        DeviceTypes[H] = "8";
+                                                        break;
+
+                                                    }
+                                                case ("Thermostat"):
+                                                    {
+                                                        DeviceTypes[H] = "16";
+                                                        break;
+
+                                                    }
+                                                case ("Media"):
+                                                    {
+                                                        DeviceTypes[H] = "32";
+                                                        break;
+
+                                                    }
+                                                case ("SourceSwitch"):
+                                                    {
+                                                        DeviceTypes[H] = "64";
+                                                        break;
+
+                                                    }
+                                                case ("Script"):
+                                                    {
+                                                        DeviceTypes[H] = "128";
+                                                        break;
+
+                                                    }
+                                                case ("Energy"):
+                                                    {
+                                                        DeviceTypes[H] = "256";
+                                                        break;
+
+                                                    }
+                                                    Default:
+                                                    {
+                                                        break;
+                                                    }
+                                            }
+                                        }
+
+                                                    if (DeviceTypes.Count() == 6)
                                         {
                                             var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
-                                            DevINFO.Device_API = (DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI)int.Parse(DeviceTypes[0]);
+                                         
+                                           DevINFO.Device_API = (DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI)int.Parse(DeviceTypes[0]);
                                             DevINFO.Device_SubType = int.Parse(DeviceTypes[2]);
                                             DevINFO.Device_SubType_Description = DeviceTypes[3];
                                             DevINFO.Device_Type = int.Parse(DeviceTypes[4]);
@@ -670,13 +730,21 @@ namespace HSPI_SIID
         {
             Console.WriteLine("AM in the SIID postbackConfig for some reason");
             System.Collections.Specialized.NameValueCollection parts = null;
-            parts = HttpUtility.ParseQueryString(data);
+            parts = HttpUtility.ParseQueryString(data); //problem happens when we have nested query strings
             string ID = parts["id"].Split('_')[0];
             switch (ID)
             {
                 case "Import":
                     {
-                        ImportDevices(parts["value"]);
+                        //OK so a problem. Our imports now have nested query strings
+                        //will need to do manual querys tring parsing to remove that nonsense.
+                        //Starts with &value=
+                        //ends with &id=Import
+                        //going to be bad. take a substring
+                        String CSVFile = data.Substring(7, data.Count() - 17);
+                        ImportDevices(CSVFile);
+
+                       // ImportDevices(parts["value"]);
                         return ""; 
                       
                     }
@@ -848,7 +916,7 @@ namespace HSPI_SIID
                     +"&edit=1", Gateway.get_Name(Instance.host)).print(), ModbusBuilder.Qbutton("G_"+GateRef,"Add Device").print());
                 sb.Append(ModbusConfHtml.print());
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
-                ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format");
+                ModbusConfHtml.addSubHeader("Enabled","Device Name","Address","Type","Format","HomeseerID");
                
                 
                 foreach (SiidDevice M in ModbusDevs)
@@ -861,10 +929,11 @@ namespace HSPI_SIID
                         if (Convert.ToInt32(parts["GateID"]) == GateRef)
                         {
                             ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
-                               ModbusBuilder.MakeLink("/deviceutility?ref=" + MDevice.get_Ref(Instance.host) + "&edit=1", MDevice.get_Name(Instance.host)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + M.Ref + "&edit=1", MDevice.get_Name(Instance.host)).print(),
                                parts["SlaveId"],
                                Instance.modPage.GetReg(parts["RegisterType"]),
-                               Instance.modPage.GetRet(parts["ReturnType"]));
+                               Instance.modPage.GetRet(parts["ReturnType"]),
+                               ""+M.Ref);
 
                         }
                     }
@@ -891,10 +960,25 @@ namespace HSPI_SIID
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
 
+                bool EvenOdd = false;
+                string BG1 = "#eeeeee";
+                string BG2 = "#eeeeff";
+                string Back = BG1;
                 foreach (SiidDevice Dev in Rules)
                 {
+                    
+                    if (EvenOdd)
+                    {
+                        Back = BG2;
+                        EvenOdd = false;
+                    }
+                    else
+                    {
+                        Back = BG1;
+                        EvenOdd = true;
+                    }
                     int ID = Dev.Ref;
                     List<string> Row = new List<string>();
                     var EDO = Dev.Extra;
@@ -940,11 +1024,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
-
+                    Row.Add("" + Dev.Ref);
+                    Row.Add(ScratchBuilder.button("R_"+ID.ToString(),"Reset").print());
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                     Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
-
-                    ScratchTable.addArrayRow(Row.ToArray());
+               
+                    ScratchTable.addArrayRow(Row.ToArray(), Back);
 
                     var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
                     if (ASSOCIATES != null)
@@ -1006,12 +1091,13 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                                 Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
                                 //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                                 Row.Add("<div/>");
-
+                                Row.Add("" + Sub.Ref);
+                                Row.Add("<div/>");
                                 Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                                 Row.Add("<div/>");
                                 // Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
 
-                                ScratchTable.addArrayRow(Row.ToArray());
+                                ScratchTable.addArrayRow(Row.ToArray(), Back);
                             }
                             catch(Exception e)
                                     {

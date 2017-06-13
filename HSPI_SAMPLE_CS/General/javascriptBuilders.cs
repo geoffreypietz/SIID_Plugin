@@ -247,10 +247,16 @@ console.log('ARRIVED IN THERE');
  fr = new FileReader();
 fr.onload = function(e){
 console.log( e.target.result);
-V= e.target.result;
- var theData ='&value='+  e.target.result+ '&id=' + '" + id + @"';
 
-$.ajax({
+V= e.target.result;
+
+
+ theData ='&value='+  V+ '&id=' + '" + id + @"';
+
+
+
+
+jQuery.ajax({
   type: 'POST',
   async: true,
   url: '/' + '" + AjaxPostDestination + @"',
@@ -743,6 +749,29 @@ console.log(theData);
 
         }
 
+        public void addArrayRow(string[] HeadArray,string BackgroundColor)
+        {
+            StringBuilder row = new StringBuilder();
+            foreach (string head in HeadArray)
+            {
+                row.Append("<td  class ='tablecell' style='background:"+BackgroundColor+"'> " + head + "</td>");
+            }
+            addRow(row.ToString());
+
+        }
+
+        public void addSubHeader(string I1, string I2, string I3, string I4, string I5, string I6)
+        {
+            StringBuilder row = new StringBuilder();
+            row.Append("<td width = '2%' ></td>");
+            row.Append("<td class ='columnheader' width='20px'>" + I1 + "</td>");
+            row.Append("<td class ='columnheader' >" + I2 + "</td>");
+            row.Append("<td class ='columnheader' >" + I3 + "</td>");
+            row.Append("<td class ='columnheader' >" + I4 + "</td>");
+            row.Append("<td class ='columnheader' >" + I5 + "</td>");
+            row.Append("<td class ='columnheader' >" + I6 + "</td>");
+            addRow(row.ToString());
+        }
 
         public void addSubHeader(string I1,string I2, string I3, string I4, string I5)
         {
@@ -767,7 +796,19 @@ console.log(theData);
             addRow(row.ToString());
 
         }
+        public void addSubMain(string I1, string I2, string I3, string I4, string I5, string I6)
+        {
+            StringBuilder row = new StringBuilder();
+            row.Append("<td width = '2%' ></td>");
+            row.Append("<td class ='tableroweven' width='5%'>" + I1 + "</td>");
+            row.Append("<td class ='tableroweven' >" + I2 + "</td>");
+            row.Append("<td class ='tablecell' width='100px' >" + I3 + "</td>");
+            row.Append("<td class ='tablecell' width='15%'>" + I4 + "</td>");
+            row.Append("<td class ='tablecell'>" + I5 + "</td>");
+            row.Append("<td class ='tablecell'>" + I6 + "</td>");
+            addRow(row.ToString());
 
+        }
 
         public void addSub(string[] HeadArray)
         {

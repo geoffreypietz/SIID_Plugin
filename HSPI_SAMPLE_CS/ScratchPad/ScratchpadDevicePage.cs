@@ -49,12 +49,13 @@ namespace HSPI_SIID.ScratchPad
         {
             try
             {
-                var EDO = Rule.Extra;
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                var parts=HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+               
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
                 double CalculatedString = CalculateString(RawNumberString);
-                parts["NewValue"] = CalculatedString.ToString();
+                Rule.UpdateExtraData("NewValue", "" + CalculatedString.ToString());
+             
                 if (bool.Parse(parts["IsAccumulator"]))
                 {
                     CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
@@ -62,23 +63,27 @@ namespace HSPI_SIID.ScratchPad
                 }
                 Rule.UpdateExtraData("RawValue", ""+CalculatedString);
                 Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
+                Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
 
                 string ValueString = String.Format(parts["DisplayString"], CalculatedString);
 
                 Instance.host.SetDeviceString(Rule.Ref, ValueString, true);
                 Instance.host.SetDeviceValueByRef(Rule.Ref, CalculatedString, true);
-                parts["DisplayedValue"] = ValueString;
+                Rule.UpdateExtraData("DisplayedValue", "" + ValueString);
 
-                EDO.RemoveNamed("SSIDKey");
-                EDO.AddNamed("SSIDKey", parts.ToString());
+
+                // EDO.RemoveNamed("SSIDKey");
+                //  EDO.AddNamed("SSIDKey", parts.ToString());
+
+                 parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
 
                 string userNote = Rule.Device.get_UserNote(Instance.host);
                 userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
                 userNote += "PLUGIN EXTRA DATA:" + parts.ToString();
                 Rule.Device.set_UserNote(Instance.host, userNote);
 
-                Rule.Device.set_PlugExtraData_Set(Instance.host, EDO);
-                Rule.Extra = EDO;
+                Rule.Device.set_PlugExtraData_Set(Instance.host, Rule.Extra);
+           
             }
             catch (Exception e)
             {
@@ -521,10 +526,19 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             {
                 addSubrule(changed["id"]);
             }
+            else if (partID == "R")
+            {
+                Reset(SiidDevice.GetFromListByID(Instance.Devices, devId));
+            }
+
             else
             {
 
+                if (partID == "ScratchPadString")
+                {
+                    changed["value"] = changed["value"].Replace(" ", "%2B");
 
+                }
                 SiidDevice newDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
                 //check for gateway change, do something special
                 if (partID == "Name")
