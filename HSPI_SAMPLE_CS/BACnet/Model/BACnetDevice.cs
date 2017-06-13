@@ -141,6 +141,7 @@ namespace HSPI_SIID.BACnet
 
 
         public static readonly BacnetObjectTypes[] SupportedObjectTypes = { 
+                                                                          BacnetObjectTypes.OBJECT_ACCUMULATOR,
                                                                           BacnetObjectTypes.OBJECT_ANALOG_INPUT,
                                                                           BacnetObjectTypes.OBJECT_ANALOG_OUTPUT,
                                                                           BacnetObjectTypes.OBJECT_ANALOG_VALUE,
@@ -414,8 +415,9 @@ namespace HSPI_SIID.BACnet
         {
             var comm = BacnetNetwork.BacnetClient;
 
+            IList<BacnetValue> all_values_list = new List<BacnetValue>();
 
-            IList<BacnetValue> value_list = new List<BacnetValue>();
+            IList<BacnetValue> value_list;
                 try
                 {
                     for (int i = 1; i <= count; i++)
@@ -425,6 +427,15 @@ namespace HSPI_SIID.BACnet
                         {
                             //MessageBox.Show("Couldn't fetch object list index", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             //return null;
+                        }
+                        else if (value_list.Count == 1)
+                        {
+                            all_values_list.Add(value_list[0]);
+                        }
+                        else
+                        {
+                            //should never get here...
+
                         }
 
                         //if (AsynchRequestId != this.AsynchRequestId) return; // Selected device is no more the good one
@@ -450,7 +461,7 @@ namespace HSPI_SIID.BACnet
                     //return;
                 }
 
-                return value_list;
+                return all_values_list;
 
         }
 

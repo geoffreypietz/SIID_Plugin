@@ -390,6 +390,10 @@ namespace HSPI_SIID.BACnet
 
                     var propIdNum = (int)propId;
                     BACnetProperty prop = bacnetProperty.Value;
+
+                    if (prop.BacnetPropertyValue == null)
+                        continue;
+
                     IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
                     BacnetApplicationTags propTag = vals[0].Tag;
 

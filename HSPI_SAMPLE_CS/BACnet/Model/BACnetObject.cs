@@ -21,6 +21,8 @@ namespace HSPI_SIID.BACnet
             this.BacnetDevice = bnd;        //need this for communication - i.e. get sub-objects.
             this.BacnetObjectId = boi;
 
+            this.Name = "";
+
             //GetName();  //or just get all properties....
 
 
@@ -294,10 +296,18 @@ namespace HSPI_SIID.BACnet
 
         private void SetName()      //don't call in the middle of FetchProperties...        actually, now it's fine because of bypass refresh
         {
-            BacnetPropertyValue namePropVal = (BacnetPropertyValue)GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME, true).BacnetPropertyValue;
-            //careful - don't call GetBacnetProperty internally, or else it will keep trying to refresh properties since AllPropertiesFetched is still false
+            try
+            {
+                BacnetPropertyValue namePropVal = (BacnetPropertyValue)GetBacnetProperty(BacnetPropertyIds.PROP_OBJECT_NAME, true).BacnetPropertyValue;
+                //careful - don't call GetBacnetProperty internally, or else it will keep trying to refresh properties since AllPropertiesFetched is still false
 
-            Name = namePropVal.value[0].ToString();   //BacnetValue.Value.ToString();
+                Name = namePropVal.value[0].ToString();   //BacnetValue.Value.ToString();
+
+            }
+            catch (Exception ex)
+            {
+                //leave it alone?
+            }
 
         }
 
