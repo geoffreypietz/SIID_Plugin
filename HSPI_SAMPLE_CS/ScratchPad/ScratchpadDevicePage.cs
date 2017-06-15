@@ -44,7 +44,25 @@ namespace HSPI_SIID.ScratchPad
             }
             return OutValue;
         }
+        public void doLiveRule(SiidDevice Rule)
+        {
+            var parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
 
+            string RawNumberString = GeneralHelperFunctions.GetValues(Instance, parts["LiveUpdateID"]);
+            double CalculatedString = CalculateString(RawNumberString);
+            try
+            {
+                double Rate = Double.Parse(parts["RateValue"]);
+                CalculatedString = CalculatedString * Rate;
+            }
+            catch
+            {
+            }
+            Rule.UpdateExtraData("LiveValue", "" + CalculatedString.ToString());
+
+   
+
+        }
         public void UpdateDisplay(SiidDevice Rule)
         {
             try
@@ -61,6 +79,18 @@ namespace HSPI_SIID.ScratchPad
                     CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
 
                 }
+
+
+                try
+                {
+                    double Rate = Double.Parse(parts["RateValue"]);
+                    CalculatedString = CalculatedString * Rate;
+                }
+                catch
+                {
+                }
+               
+              
                 Rule.UpdateExtraData("RawValue", ""+CalculatedString);
                 Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
                 Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
@@ -92,8 +122,8 @@ namespace HSPI_SIID.ScratchPad
 
             //Check if rule is an accumulator, if so do NewValue - OldValue
 
-                //String Format the value, put results in display
-
+            //String Format the value, put results in display
+            doLiveRule(Rule);
         }
         public void Reset(SiidDevice Rule)
         {
@@ -216,6 +246,11 @@ namespace HSPI_SIID.ScratchPad
             parts["NewValue"] = "0";
             parts["DisplayedValue"] = "0";
             parts["DateOfLastReset"] = DateTime.Now.ToString() ;
+            parts["LiveUpdateID"] = "";
+            parts["RateValue"] = "";
+            parts["LiveValue"] ="0";
+
+
 
 
             return parts.ToString();
@@ -419,11 +454,31 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 
         }
-        public void resetOrSetDate(CAPI.CAPIControl ActionIn)
+        public void SetRate(SiidDevice Device, double RatePlus200) {
+            double Rate = 0;
+            if (RatePlus200 < 0)
+            {
+                Rate = RatePlus200 + 200;
+            }
+            else
+            {
+                Rate = RatePlus200 - 200;
+            }
+            Device.UpdateExtraData("RateValue", Rate.ToString());
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+
+        }
+        public void resetOrSetDateOrRate(CAPI.CAPIControl ActionIn)
         {
             var devID = ActionIn.Ref;
             var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
-            
+
+            if (Math.Abs(ActionIn.ControlValue) >= 200)
+            {
+                SetRate(newDevice, ActionIn.ControlValue);
+                return;
+            }
 
             if (ActionIn.ControlValue < 0){
                 Reset(newDevice);

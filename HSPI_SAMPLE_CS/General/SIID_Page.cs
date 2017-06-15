@@ -960,7 +960,7 @@ namespace HSPI_SIID
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String","Rate ($ per unit)","Real Time Data Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
 
                 bool EvenOdd = false;
                 string BG1 = "#eeeeee";
@@ -1023,8 +1023,11 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     Row.Add(ComplexCell.ToString());
 
                     Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
+                    Row.Add(ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print());
+                    Row.Add(ScratchBuilder.stringInput("LiveUpdateID_" + ID, parts["LiveUpdateID"]).print());
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                     Row.Add("" + Dev.Ref);
+
                     Row.Add(ScratchBuilder.button("R_"+ID.ToString(),"Reset").print());
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                     Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
@@ -1089,9 +1092,12 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                                 Row.Add("<div/>");
 
                                 Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
+                                Row.Add("<div/>");
+                                Row.Add("<div/>");
                                 //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                                 Row.Add("<div/>");
                                 Row.Add("" + Sub.Ref);
+
                                 Row.Add("<div/>");
                                 Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
                                 Row.Add("<div/>");
