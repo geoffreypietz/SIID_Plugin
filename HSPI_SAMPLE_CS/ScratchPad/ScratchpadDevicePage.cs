@@ -464,6 +464,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             {
                 Rate = RatePlus200 - 200;
             }
+            Rate= Double.Parse(Rate.ToString("0.00000"));
             Device.UpdateExtraData("RateValue", Rate.ToString());
             UpdateDisplay(Device);
             CheckForReset(Device);
