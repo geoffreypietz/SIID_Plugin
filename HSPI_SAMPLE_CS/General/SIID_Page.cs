@@ -786,7 +786,7 @@ namespace HSPI_SIID
         public void InitializeScratchpadTimer()
         {
 
-          ScratchTimer = new System.Threading.Timer(Instance.scrPage.DoScratchRules, true, 30000,30000);
+          ScratchTimer = new System.Threading.Timer(Instance.scrPage.DoScratchRules, true, 3000,3000);
 
         }
 

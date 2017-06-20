@@ -734,7 +734,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         {
                             try
                             {
-                                lock (WhoIsBeingPolled)
+                                lock (WhoIsBeingPolled) //keep subdevice level locks
                                 {
                                     WhoIsBeingPolled.Add(subId);
                                 }
@@ -829,7 +829,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     {
                         WhoIsBeingWritten.Add(devID.ToString());
                     }
-                    Instance.host.SetDeviceString(Convert.ToInt32(devID), "Sending command to device...", true);
+                    String Old=Instance.host.DeviceString(Convert.ToInt32(devID));
+                    Old = Old.Replace("Sending command to device. Old value: ","");
+                    Instance.host.SetDeviceString(Convert.ToInt32(devID), "Sending command to device. Old value: "+Old, true);
 
 
                     var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
@@ -874,7 +876,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             catch (Exception e)
                             {
                                 Console.WriteLine("Exception: " + e.StackTrace);
-                                Instance.host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
+                                String OldM = Instance.host.DeviceString(Convert.ToInt32(devID));
+                                OldM = OldM.Replace("Sending command to device. Old value: ", "");
+
+                                Instance.host.SetDeviceString(Convert.ToInt32(devID), OldM, true);
                                 if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
                                 {
                                     Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
@@ -985,7 +990,34 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
                 if (int.Parse(parts["ReturnType"]) > 5 || int.Parse(parts["ReturnType"]) ==0) //return is a string or a bool
                 {
-                    OutValue = FinalString.ToString();
+                    if (int.Parse(parts["ReturnType"]) == 0)//is bool check for bool controlls, make status that status
+                    {
+                        double val = 0;
+                        if (FinalString.ToString() == "true") {
+                            val = 1;
+                        }
+                        var status = "";
+                        try
+                        {
+
+                            CAPI.CAPIControl[] controlls = Instance.host.CAPIGetControl(NewDevice.Ref);
+                            foreach (CAPI.CAPIControl cont in controlls)
+                            {
+                                if (cont.ControlValue == val) {
+                                    status = cont.Label;
+                                    break;
+                                }
+                            }
+
+                            OutValue = status;
+                        }
+                        catch { }
+
+                    }
+                    else
+                    {
+                        OutValue = FinalString.ToString();
+                    }
                 }
                 else
                 {
@@ -1001,8 +1033,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
 
             NewDevice.UpdateExtraData( "ProcessedValue", OutValue);
-
-
+         
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Instance.host.SetDeviceString(devID,ValueString,true);
             Instance.host.SetDeviceValueByRef(devID, 1, true);
