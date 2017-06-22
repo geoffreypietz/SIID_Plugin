@@ -211,9 +211,34 @@ namespace HSPI_SIID
                                     newDevice.set_UserAccess(Instance.host, FetchAttribute(CodeLookup, "useraccess"));
                                     newDevice.set_UserNote(Instance.host, FetchAttribute(CodeLookup, "notes"));
                                     newDevice.set_Device_Type_String(Instance.host, FetchAttribute(CodeLookup, "deviceTypeString"));
+                                    bool hasGraph = false;
+                                    bool hasStatus = false;
+                                    try
+                                    {
+                                        HomeSeerAPI.VSVGPairs.VSPair[] NewActions = HomeSeerDevice.DecodeVSPairs(FetchAttribute(CodeLookup, "vsp"));
+                                        foreach (var pair in NewActions)
+                                        {
+                                            Instance.host.DeviceVSP_AddPair(OldToNew[int.Parse(CodeLookup["id"])], pair);
+                                            hasStatus = true;
+                                        }
+                                    }
+                                    catch { }
+                                    try
+                                    {
+                                        HomeSeerAPI.VSVGPairs.VGPair[] NewGraphics = HomeSeerDevice.DecodeVGPairs(FetchAttribute(CodeLookup, "vgp"));
+                                        foreach (var pair in NewGraphics)
+                                        {
+                                            Instance.host.DeviceVGP_AddPair(OldToNew[int.Parse(CodeLookup["id"])], pair);
+                                            hasGraph = true;
+                                        }
 
-                                    
-                                    switch(FetchAttribute(CodeLookup, "RelationshipStatus"))
+                                    }
+                                    catch
+                                    {
+
+                                    }
+
+                                    switch (FetchAttribute(CodeLookup, "RelationshipStatus"))
                                     {
                                         case ("Not_Set"):
                                             {
@@ -425,12 +450,15 @@ namespace HSPI_SIID
                                                     parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); ;
 
                                                     string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
+                                                    string liveString= FetchAttribute(CodeLookup, "liveupdateiD");
                                                     foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
                                                     {
                                                         string old = "$(" + OLDTONEW.Key + ")";
                                                         string NN = "$(" + OLDTONEW.Value + ")";
                                                         ScratchString = ScratchString.Replace(old, NN);
                                                         ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                        liveString= liveString.Replace(old, NN);
+                                                        liveString = liveString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
                                                     }
 
                                                     parts["ScratchPadString"] = ScratchString;
@@ -439,10 +467,18 @@ namespace HSPI_SIID
                                                     parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); ;
                                                     parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
                                                     parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
+
+                                                    parts["LiveUpdateID"] = liveString;
+                                                    parts["RateValue"] = FetchAttribute(CodeLookup, "ratevalue");
+                                                    parts["LiveValue"] = FetchAttribute(CodeLookup, "livevalue");
+
+                                                  
+
                                                     EDO.AddNamed("SSIDKey", parts.ToString());
 
                                                     var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
                                                     DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
+
                                                     Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
                                                 }
                                                 catch (Exception e)
@@ -456,7 +492,10 @@ namespace HSPI_SIID
                                             {
                                                 try
                                                 {
-                                                    Instance.modPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    if (!hasStatus || !hasGraph)
+                                                    {
+                                                        Instance.modPage.MakeGatewayGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    }
                                                     newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
 
 
@@ -508,12 +547,20 @@ namespace HSPI_SIID
                                             {
                                                 try
                                                 {
-                                                    Instance.modPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    if (!hasStatus || !hasGraph)
+                                                    {
+                                                        Instance.modPage.MakeSubDeviceGraphicsAndStatus(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    }
                                                     newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
                                                     var parts = HttpUtility.ParseQueryString(string.Empty);
                                                     parts["Type"] = FetchAttribute(CodeLookup, "type");
-
-                                                    parts["GateID"] = OldToNew[int.Parse(FetchAttribute(CodeLookup, "GateID"))].ToString(); //Replace
+                                                    string Newgate = "0";
+                                                    try
+                                                    {
+                                                        Newgate = OldToNew[int.Parse(FetchAttribute(CodeLookup, "GateID"))].ToString();
+                                                    }
+                                                    catch { }
+                                                    parts["GateID"] = Newgate;  //Replace
 
 
                                                     parts["Gateway"] = FetchAttribute(CodeLookup, "Gateway");
@@ -531,10 +578,17 @@ namespace HSPI_SIID
                                                     string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
                                                     foreach (KeyValuePair<int, int> OLDTONEW in OldToNew)
                                                     {
-                                                        string old = "$(" + OLDTONEW.Key + ")";
-                                                        string NN = "$(" + OLDTONEW.Value + ")";
-                                                        ScratchString = ScratchString.Replace(old, NN);
-                                                        ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                        try
+                                                        {
+                                                            string old = "$(" + OLDTONEW.Key + ")";
+                                                            string NN = "$(" + OLDTONEW.Value + ")";
+                                                            ScratchString = ScratchString.Replace(old, NN);
+                                                            ScratchString = ScratchString.Replace("#(" + OLDTONEW.Key + ")", "#(" + OLDTONEW.Value + ")");
+                                                        }
+                                                        catch
+                                                        {
+                                                          
+                                                        }
                                                     }
                                                     parts["ScratchpadString"] = ScratchString; //Replace
                                                     parts["DisplayFormatString"] = FetchAttribute(CodeLookup, "DisplayFormatString");
@@ -792,7 +846,7 @@ namespace HSPI_SIID
 
         public void InitializeModbusGatewayTimers()
         {
-            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
+            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways().Item1;
 
             //ModbusGates.AddRange(Instance.bacnetDevices.getAllDevices());           //just add in bacnet devices here, since functionality is the same
 
@@ -868,7 +922,9 @@ namespace HSPI_SIID
             StringBuilder sb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("AddModbusDevice" + Instance.ajaxName);
 
-            List<SiidDevice> ModbusGates = Instance.modPage.getAllGateways();
+            var Returned = Instance.modPage.getAllGateways();
+            List<SiidDevice> ModbusGates = Returned.Item1;
+            List<SiidDevice> OrphanedDevices = Returned.Item2;
             List<SiidDevice> ModbusDevs = new List<SiidDevice>();
 
             foreach (var GID in ModbusGates)
@@ -940,13 +996,47 @@ namespace HSPI_SIID
 
 
                 }
+               
+                sb.Append(ModbusConfHtml.print());
+                sb.Append("<br>");
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+            }
+            if (OrphanedDevices.Count > 0)
+            {
+                ModbusConfHtml.addDevMain("" +
+                 "Orphaned Modbus Devices", "");
+                sb.Append(ModbusConfHtml.print());
+                ModbusConfHtml = ModbusBuilder.htmlTable(800);
+                ModbusConfHtml.addSubHeader("Enabled", "Device Name", "Address", "Type", "Format", "HomeseerID");
+                foreach (SiidDevice M in OrphanedDevices)
+                {
+                    Scheduler.Classes.DeviceClass MDevice = M.Device;
+                    if (MDevice != null)
+                    {
+                        var EDO = M.Extra;
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        if (Convert.ToInt32(parts["GateID"]) == 0)
+                        {
+                            ModbusConfHtml.addSubMain(ModbusBuilder.MakeImage(16, 16, MDevice.get_Image(Instance.host)).print(),
+                               ModbusBuilder.MakeLink("/deviceutility?ref=" + M.Ref + "&edit=1", MDevice.get_Name(Instance.host)).print(),
+                               parts["SlaveId"],
+                               Instance.modPage.GetReg(parts["RegisterType"]),
+                               Instance.modPage.GetRet(parts["ReturnType"]),
+                               "" + M.Ref);
+
+                        }
+                    }
+
+
+                }
+
+
                 sb.Append(ModbusConfHtml.print());
                 sb.Append("<br>");
                 ModbusConfHtml = ModbusBuilder.htmlTable(800);
             }
 
-            
-           // Instance.modPage.UpdateGateList(ModbusGates.ToArray());
+            // Instance.modPage.UpdateGateList(ModbusGates.ToArray());
             return sb.ToString();
         }
 

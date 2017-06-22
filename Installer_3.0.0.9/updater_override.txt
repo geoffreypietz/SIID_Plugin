@@ -27,5 +27,5 @@ homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
-SIID,	HSPI_SIID.exe,		,3.0.0.9,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.9.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
+SIID,	HSPI_SIID.exe,		,3.0.0.10,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.10.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
 

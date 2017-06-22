@@ -43,10 +43,12 @@ namespace HSPI_SIID.Modbus
         public static List<SiidDevice> ModbusGates { get; set; }
 
 
-        public List<SiidDevice> getAllGateways()
+        public Tuple<List<SiidDevice>, List<SiidDevice>> getAllGateways()
         {
+           
             SiidDevice.Update(Instance);
            ModbusGates = new List<SiidDevice>();
+            List<SiidDevice>  Orphaned = new List<SiidDevice>();
             foreach (var Siid in Instance.Devices)
             {
                 var EDO = Siid.Extra;
@@ -59,10 +61,15 @@ namespace HSPI_SIID.Modbus
                         ModbusGates.Add(Siid);
 
                     }
+                    if ((parts["Type"] == "Modbus Device") && (parts["GateID"] == "0"))
+                    {
+                        Orphaned.Add(Siid);
+                    }
                 }
                 catch { }
             }
-                return ModbusGates;
+            return new Tuple<List<SiidDevice>, List<SiidDevice>>(ModbusGates,Orphaned);
+             
 
             
         }
@@ -219,10 +226,22 @@ public string GetReg(string instring)
             var EDO = Device.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string OldGatewayID = parts["GateID"];
-            RemoveDeviceFromGateway(Device.Ref, Convert.ToInt32(OldGatewayID));
-            AddDeviceToGateway(Device.Ref, Convert.ToInt32(newGatewayId));
-            Scheduler.Classes.DeviceClass Gateway = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(newGatewayId)).Device;
-            Device.UpdateExtraData("Gateway", Gateway.get_Name(Instance.host));
+            if (OldGatewayID != "0")
+            {
+                RemoveDeviceFromGateway(Device.Ref, Convert.ToInt32(OldGatewayID));
+            }
+            if (newGatewayId != "0")
+            {
+                AddDeviceToGateway(Device.Ref, Convert.ToInt32(newGatewayId));
+                Scheduler.Classes.DeviceClass Gateway = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(newGatewayId)).Device;
+                Device.UpdateExtraData("Gateway", Gateway.get_Name(Instance.host));
+            }
+            else
+            {
+                
+                Device.UpdateExtraData("Gateway", "none");
+            }
+           
 
 
 
@@ -472,11 +491,21 @@ public string GetReg(string instring)
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBusDevTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             //ModbusConfHtml.addDevHeader("Gateway: " + parts["Gateway"]);
-           string[] GatewayStringArray = (from kvp in ModbusGates select kvp.Device.get_Name(Instance.host)).ToArray();
-            //OK so want the index of the selected gateway in our gateway string array
-             SiidDevice Item = ModbusGates.Where(x => x.Ref == Convert.ToInt32(parts["GateID"])).First();
 
-            int DefGateway = ModbusGates.IndexOf(Item);
+           string[] Arrs = (from kvp in ModbusGates select kvp.Device.get_Name(Instance.host)).ToArray();
+            string[] GatewayStringArray = new string[Arrs.Length + 1];
+            GatewayStringArray[0] = "None";                                // set the prepended value
+            Array.Copy(Arrs, 0, GatewayStringArray, 1, Arrs.Length);
+
+            //OK so want the index of the selected gateway in our gateway string array
+            int DefGateway = 0;
+            if (parts["GateID"] != "0")
+            {
+                SiidDevice Item = ModbusGates.Where(x => x.Ref == Convert.ToInt32(parts["GateID"])).First();
+                DefGateway = ModbusGates.IndexOf(Item)+1;
+            }
+
+     
             ModbusConfHtml.add("Modbus Gateway ID: ", ModbusBuilder.selectorInput(GatewayStringArray, dv + "_GateID", "GateID", DefGateway).print());
             ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(RegTypeArray, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
@@ -681,7 +710,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //check for gateway change, do something special
             if(partID == "GateID")
             {
-                changed["value"] = ""+ModbusGates[Convert.ToInt32(changed["value"])].Ref+"";
+                if (Convert.ToInt32(changed["value"]) > 0)
+                {
+                    changed["value"] = "" + ModbusGates[(Convert.ToInt32(changed["value"]) - 1)].Ref + "";
+                }
+                else
+                {
+                    changed["value"] = "0";
+                }
                 changeGateway(NewDevice, changed["value"]);
                 
             }

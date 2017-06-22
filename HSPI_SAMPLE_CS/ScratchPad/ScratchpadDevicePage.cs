@@ -306,7 +306,7 @@ namespace HSPI_SIID.ScratchPad
 
 
        public void MakeStewardVSP(int deviceID) {
-        
+       // Instance.host.DeviceVSP_ClearAll(deviceID, true);
 
             var Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
             Control.PairType = VSVGPairs.VSVGPairType.Range;
@@ -322,37 +322,47 @@ namespace HSPI_SIID.ScratchPad
         public List<SiidDevice> getAllRules()
         {
             List<SiidDevice> listOfDevices = new List<SiidDevice>();
-            SiidDevice.Update(Instance);
-
-            foreach (SiidDevice Dev in Instance.Devices)
+            List<SiidDevice> B = new List<SiidDevice>();
+            lock (Instance.Devices)
             {
-                try
-                {
-                    var EDO = Dev.Extra;
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string s = parts["Type"];
-                    if (parts["Type"] == "Scratchpad")
-                    {
-                        if (Dev.Device.get_Location2(Instance.host) != "Rates")
-                        {
-                            listOfDevices.Add(Dev);
-                        }
                 
-                        
+                foreach (SiidDevice C in Instance.Devices) {
+                    B.Add(C);
+                }
+            }
+                
+                SiidDevice.Update(Instance);
 
+                foreach (SiidDevice Dev in B)
+                {
+                    try
+                    {
+                        var EDO = Dev.Extra;
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        string s = parts["Type"];
+                        if (parts["Type"] == "Scratchpad")
+                        {
+                            if (Dev.Device.get_Location2(Instance.host) != "Rates")
+                            {
+                                listOfDevices.Add(Dev);
+                            }
+
+
+
+
+                        }
+
+
+                    }
+                    catch
+                    {
 
                     }
 
 
-                }
-                catch
-                {
 
                 }
-               
-
-
-            }
+            
             return listOfDevices;
 
         }
