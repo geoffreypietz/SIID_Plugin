@@ -115,6 +115,7 @@ public string GetReg(string instring)
             parts["Poll"] = Instance.modbusDefaultPoll.ToString();
             parts["Enabled"] = "false";
             parts["BigE"] = "false";
+            parts["RevByte"] = "false";
             parts["ZeroB"] = "true";
             parts["RWRetry"] = "2";
             parts["RWTime"] = "1000";
@@ -449,6 +450,15 @@ public string GetReg(string instring)
            var EDO = NewDevice.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
+            foreach (String GateAttribute in ModbusMaster.Attributes)
+            {
+                if (parts[GateAttribute] == null)
+                {
+                    parts[GateAttribute] = "False";
+                }
+
+            }
+
             string dv = "" + dv1 + "";
       
             StringBuilder stb = new StringBuilder();
@@ -460,7 +470,8 @@ public string GetReg(string instring)
             ModbusConfHtml.add("Poll Interval:", ModbusBuilder.numberInput(dv+"_Poll", Int32.Parse(parts["Poll"])).print());
             ModbusConfHtml.add("Gateway Enabled:", ModbusBuilder.checkBoxInput(dv+"_Enabled", Boolean.Parse(parts["Enabled"])).print());
             ModbusConfHtml.addT("Advanced Settings");
-            ModbusConfHtml.add("Big-Endian Value:", ModbusBuilder.checkBoxInput(dv+"_BigE", Boolean.Parse(parts["BigE"])).print());
+            ModbusConfHtml.add("Reverse Register word order:", ModbusBuilder.checkBoxInput(dv+"_BigE", Boolean.Parse(parts["BigE"])).print());
+            ModbusConfHtml.add("Reverse word byte order:", ModbusBuilder.checkBoxInput(dv + "_RevByte", Boolean.Parse(parts["RevByte"])).print());
             ModbusConfHtml.add("Zero-based Addressing:", ModbusBuilder.checkBoxInput(dv+"_ZeroB", Boolean.Parse(parts["ZeroB"])).print());
             ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry", Int32.Parse(parts["RWRetry"])).print());
             ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime", Int32.Parse(parts["RWTime"])).print());
@@ -754,7 +765,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             if (Gateway != null)
             {
-                Console.WriteLine("Polling Gateway: " + Gate.Ref);
+           //     Console.WriteLine("Polling Gateway: " + Gate.Ref);
 
                 var EDO = Gate.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
@@ -840,8 +851,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         }
 
-        public void FlipBits(ushort[] Input)
+        public ushort[] FlipByts(ushort[] Input)
         {
+
+
            int  index = 0;
             foreach(ushort Item in Input){
                 byte[] temp = BitConverter.GetBytes(Item);
@@ -849,6 +862,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 Input[index] = BitConverter.ToUInt16(temp,0);
                 index++;
             }
+            return Input;
 
 
 
@@ -1367,9 +1381,17 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             SiidDevice Gateway = SiidDevice.GetFromListByID(Instance.Devices,GatewayID);
             var EDOGate = Gateway.Extra;
             var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
-
-            bool flipbits = bool.Parse(partsGate["BigE"]);
-
+            bool flipwords =false;
+            bool flipbits = false;
+            try
+            {
+                var A = partsGate["BigE"];
+                var B = partsGate["RevByte"];
+                flipwords = bool.Parse(partsGate["BigE"]); //reverse word order 
+                flipbits = bool.Parse(partsGate["RevByte"]);
+            }
+            catch { }
+            
             int Offset = 0;
             if(bool.Parse(partsGate["ZeroB"])){
                 Offset = -1;
@@ -1423,11 +1445,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                 Return = master.ReadHoldingRegisters(startAddress, numInputs);
                      
 
-                            if (flipbits)
+                            if (flipwords)
                             { //Note according to blog here: https://ctlsys.com/common_modbus_protocol_misconceptions/
                               //Each register is in Big Endian and the little endienness is the order we read the registers
                               //so::
-                                Return.Reverse();
+                                Return= Return.Reverse().ToArray();
                                 // FlipBits(Return);//may not just be flip bits, may be flip the array also
                                 //IDEA is we have a returned array
                                 /*
@@ -1440,6 +1462,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                  * 
                                  * Depenging on our datatype, we want to parse these 4 registers as a single thing
                                  */
+                            }
+                            if (flipbits)
+                            {
+                                Return=FlipByts(Return);
+                                
                             }
                         }
                      //   return Return;
@@ -1460,10 +1487,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         }
                         else
                         {
+                            if (flipwords)
+                            {
+                                Data= Data.Reverse().ToArray();
+                                //FlipBits(Data);
+                            }
                             if (flipbits)
                             {
-                                Data.Reverse();
-                                //FlipBits(Data);
+                                Data= FlipByts(Data);
                             }
                             master.WriteMultipleRegisters(startAddress, Data);
 

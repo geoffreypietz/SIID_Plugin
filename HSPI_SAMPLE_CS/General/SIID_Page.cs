@@ -509,6 +509,7 @@ namespace HSPI_SIID
                                                     parts["Poll"] = FetchAttribute(CodeLookup, "poll");
                                                     parts["Enabled"] = FetchAttribute(CodeLookup, "enabled");
                                                     parts["BigE"] = FetchAttribute(CodeLookup, "bige");
+                                                    parts["RevByte"] = FetchAttribute(CodeLookup, "RevByte");
                                                     parts["ZeroB"] = FetchAttribute(CodeLookup, "zerob");
                                                     parts["RWRetry"] = FetchAttribute(CodeLookup, "rwretry");
                                                     parts["RWTime"] = FetchAttribute(CodeLookup, "rwtime");
