@@ -389,42 +389,55 @@ namespace HSPI_SIID.BACnet
         public string ValueString()
         {
 
-
-            var bacnetValue = this.BacnetPropertyValue.Value;
-
-            IList<BacnetValue> vals = bacnetValue.value;
-
-
-
-            if (vals.Count == 1)
-                return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
-
-
-
-            var valsString = "{";
-
-            foreach (var val in vals)
+            try
             {
-                String valString;
-                if (val.Value == null)
-                    valString = "null";
-                else
-                    valString = val.ToString();
 
-                //valsString += "<td>" + valString + "</td>";
+                var bacnetValue = this.BacnetPropertyValue.Value;
 
-                valsString += valString + ",";
+                IList<BacnetValue> vals = bacnetValue.value;
+
+
+
+                if (vals.Count == 1)
+                    return vals[0].ToString();      //this gets more tricky if enum, etc....gets underlying Value (of type object) and calls ToString...
+
+
+
+                var valsString = "{";
+
+                foreach (var val in vals)
+                {
+                    String valString;
+                    if (val.Value == null)
+                        valString = "null";
+                    else
+                        valString = val.ToString();
+
+                    //valsString += "<td>" + valString + "</td>";
+
+                    valsString += valString + ",";
+                }
+                valsString = valsString.TrimEnd(",".ToCharArray());
+
+                // valsString += "</tr></tbody>";
+
+
+                //valsString += "</table>";
+
+                valsString += "}";
+
+                return valsString;
+
             }
-            valsString = valsString.TrimEnd(",".ToCharArray());
+            catch (Exception ex)
+            {
 
-           // valsString += "</tr></tbody>";
+                return "";
+            }
 
 
-            //valsString += "</table>";
 
-            valsString += "}";
-
-            return valsString;
+            
 
 
 

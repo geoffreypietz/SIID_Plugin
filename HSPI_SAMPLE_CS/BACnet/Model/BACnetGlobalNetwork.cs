@@ -44,7 +44,7 @@ namespace HSPI_SIID.BACnet
 
         public int RetriesValue = 2;
 
-        public int TimeoutValue = 1000;
+        public int TimeoutValue = 3000;
 
 
 
