@@ -31,8 +31,11 @@ namespace HSPI_SIID.ScratchPad
        "OldValue",
        "NewValue",
        "DisplayedValue",
-       "DateOfLastReset"
-            
+       "DateOfLastReset",
+        "LiveUpdateID",
+        "RateValue",
+        "LiveValue",
+
         };
 
         public static string[] ResetType = new string[] {

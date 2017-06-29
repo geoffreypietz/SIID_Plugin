@@ -40,7 +40,8 @@ namespace HSPI_SIID.Modbus
            "TCP",
               "Poll",
         "Enabled",
-            "BigE",
+            "BigE", //Wordorder reversed
+            "RevByte",//Reverse bytes in gateway
             "ZeroB",
             "RWRetry",
             "RWTime",

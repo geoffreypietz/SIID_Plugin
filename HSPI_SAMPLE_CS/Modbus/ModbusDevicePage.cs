@@ -43,10 +43,12 @@ namespace HSPI_SIID.Modbus
         public static List<SiidDevice> ModbusGates { get; set; }
 
 
-        public List<SiidDevice> getAllGateways()
+        public Tuple<List<SiidDevice>, List<SiidDevice>> getAllGateways()
         {
+           
             SiidDevice.Update(Instance);
            ModbusGates = new List<SiidDevice>();
+            List<SiidDevice>  Orphaned = new List<SiidDevice>();
             foreach (var Siid in Instance.Devices)
             {
                 var EDO = Siid.Extra;
@@ -59,10 +61,15 @@ namespace HSPI_SIID.Modbus
                         ModbusGates.Add(Siid);
 
                     }
+                    if ((parts["Type"] == "Modbus Device") && (parts["GateID"] == "0"))
+                    {
+                        Orphaned.Add(Siid);
+                    }
                 }
                 catch { }
             }
-                return ModbusGates;
+            return new Tuple<List<SiidDevice>, List<SiidDevice>>(ModbusGates,Orphaned);
+             
 
             
         }
@@ -108,6 +115,7 @@ public string GetReg(string instring)
             parts["Poll"] = Instance.modbusDefaultPoll.ToString();
             parts["Enabled"] = "false";
             parts["BigE"] = "false";
+            parts["RevByte"] = "false";
             parts["ZeroB"] = "true";
             parts["RWRetry"] = "2";
             parts["RWTime"] = "1000";
@@ -219,10 +227,22 @@ public string GetReg(string instring)
             var EDO = Device.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             string OldGatewayID = parts["GateID"];
-            RemoveDeviceFromGateway(Device.Ref, Convert.ToInt32(OldGatewayID));
-            AddDeviceToGateway(Device.Ref, Convert.ToInt32(newGatewayId));
-            Scheduler.Classes.DeviceClass Gateway = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(newGatewayId)).Device;
-            Device.UpdateExtraData("Gateway", Gateway.get_Name(Instance.host));
+            if (OldGatewayID != "0")
+            {
+                RemoveDeviceFromGateway(Device.Ref, Convert.ToInt32(OldGatewayID));
+            }
+            if (newGatewayId != "0")
+            {
+                AddDeviceToGateway(Device.Ref, Convert.ToInt32(newGatewayId));
+                Scheduler.Classes.DeviceClass Gateway = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(newGatewayId)).Device;
+                Device.UpdateExtraData("Gateway", Gateway.get_Name(Instance.host));
+            }
+            else
+            {
+                
+                Device.UpdateExtraData("Gateway", "none");
+            }
+           
 
 
 
@@ -430,6 +450,15 @@ public string GetReg(string instring)
            var EDO = NewDevice.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
+            foreach (String GateAttribute in ModbusMaster.Attributes)
+            {
+                if (parts[GateAttribute] == null)
+                {
+                    parts[GateAttribute] = "False";
+                }
+
+            }
+
             string dv = "" + dv1 + "";
       
             StringBuilder stb = new StringBuilder();
@@ -441,7 +470,8 @@ public string GetReg(string instring)
             ModbusConfHtml.add("Poll Interval:", ModbusBuilder.numberInput(dv+"_Poll", Int32.Parse(parts["Poll"])).print());
             ModbusConfHtml.add("Gateway Enabled:", ModbusBuilder.checkBoxInput(dv+"_Enabled", Boolean.Parse(parts["Enabled"])).print());
             ModbusConfHtml.addT("Advanced Settings");
-            ModbusConfHtml.add("Big-Endian Value:", ModbusBuilder.checkBoxInput(dv+"_BigE", Boolean.Parse(parts["BigE"])).print());
+            ModbusConfHtml.add("Reverse Register word order:", ModbusBuilder.checkBoxInput(dv+"_BigE", Boolean.Parse(parts["BigE"])).print());
+            ModbusConfHtml.add("Reverse word byte order:", ModbusBuilder.checkBoxInput(dv + "_RevByte", Boolean.Parse(parts["RevByte"])).print());
             ModbusConfHtml.add("Zero-based Addressing:", ModbusBuilder.checkBoxInput(dv+"_ZeroB", Boolean.Parse(parts["ZeroB"])).print());
             ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry", Int32.Parse(parts["RWRetry"])).print());
             ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime", Int32.Parse(parts["RWTime"])).print());
@@ -472,11 +502,21 @@ public string GetReg(string instring)
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBusDevTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             //ModbusConfHtml.addDevHeader("Gateway: " + parts["Gateway"]);
-           string[] GatewayStringArray = (from kvp in ModbusGates select kvp.Device.get_Name(Instance.host)).ToArray();
-            //OK so want the index of the selected gateway in our gateway string array
-             SiidDevice Item = ModbusGates.Where(x => x.Ref == Convert.ToInt32(parts["GateID"])).First();
 
-            int DefGateway = ModbusGates.IndexOf(Item);
+           string[] Arrs = (from kvp in ModbusGates select kvp.Device.get_Name(Instance.host)).ToArray();
+            string[] GatewayStringArray = new string[Arrs.Length + 1];
+            GatewayStringArray[0] = "None";                                // set the prepended value
+            Array.Copy(Arrs, 0, GatewayStringArray, 1, Arrs.Length);
+
+            //OK so want the index of the selected gateway in our gateway string array
+            int DefGateway = 0;
+            if (parts["GateID"] != "0")
+            {
+                SiidDevice Item = ModbusGates.Where(x => x.Ref == Convert.ToInt32(parts["GateID"])).First();
+                DefGateway = ModbusGates.IndexOf(Item)+1;
+            }
+
+     
             ModbusConfHtml.add("Modbus Gateway ID: ", ModbusBuilder.selectorInput(GatewayStringArray, dv + "_GateID", "GateID", DefGateway).print());
             ModbusConfHtml.add("Selector Type: ", ModbusBuilder.selectorInput(RegTypeArray, dv + "_RegisterType", "RegisterType", Convert.ToInt32(parts["RegisterType"])).print());
             ModbusConfHtml.add("Slave ID: ", ModbusBuilder.numberInput(dv + "_SlaveId", Convert.ToInt32(parts["SlaveId"])).print());
@@ -681,7 +721,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //check for gateway change, do something special
             if(partID == "GateID")
             {
-                changed["value"] = ""+ModbusGates[Convert.ToInt32(changed["value"])].Ref+"";
+                if (Convert.ToInt32(changed["value"]) > 0)
+                {
+                    changed["value"] = "" + ModbusGates[(Convert.ToInt32(changed["value"]) - 1)].Ref + "";
+                }
+                else
+                {
+                    changed["value"] = "0";
+                }
                 changeGateway(NewDevice, changed["value"]);
                 
             }
@@ -718,7 +765,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             if (Gateway != null)
             {
-                Console.WriteLine("Polling Gateway: " + Gate.Ref);
+           //     Console.WriteLine("Polling Gateway: " + Gate.Ref);
 
                 var EDO = Gate.Extra;
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
@@ -734,7 +781,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         {
                             try
                             {
-                                lock (WhoIsBeingPolled)
+                                lock (WhoIsBeingPolled) //keep subdevice level locks
                                 {
                                     WhoIsBeingPolled.Add(subId);
                                 }
@@ -804,8 +851,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         }
 
-        public void FlipBits(ushort[] Input)
+        public ushort[] FlipByts(ushort[] Input)
         {
+
+
            int  index = 0;
             foreach(ushort Item in Input){
                 byte[] temp = BitConverter.GetBytes(Item);
@@ -813,6 +862,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 Input[index] = BitConverter.ToUInt16(temp,0);
                 index++;
             }
+            return Input;
 
 
 
@@ -829,7 +879,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     {
                         WhoIsBeingWritten.Add(devID.ToString());
                     }
-                    Instance.host.SetDeviceString(Convert.ToInt32(devID), "Sending command to device...", true);
+                    String Old=Instance.host.DeviceString(Convert.ToInt32(devID));
+                    Old = Old.Replace("Sending command to device. Old value: ","");
+                    Instance.host.SetDeviceString(Convert.ToInt32(devID), "Sending command to device. Old value: "+Old, true);
 
 
                     var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
@@ -874,7 +926,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             catch (Exception e)
                             {
                                 Console.WriteLine("Exception: " + e.StackTrace);
-                                Instance.host.SetDeviceString(Convert.ToInt32(devID), e.Message, true);
+                                String OldM = Instance.host.DeviceString(Convert.ToInt32(devID));
+                                OldM = OldM.Replace("Sending command to device. Old value: ", "");
+
+                                Instance.host.SetDeviceString(Convert.ToInt32(devID), OldM, true);
                                 if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
                                 {
                                     Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
@@ -985,7 +1040,34 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
                 if (int.Parse(parts["ReturnType"]) > 5 || int.Parse(parts["ReturnType"]) ==0) //return is a string or a bool
                 {
-                    OutValue = FinalString.ToString();
+                    if (int.Parse(parts["ReturnType"]) == 0)//is bool check for bool controlls, make status that status
+                    {
+                        double val = 0;
+                        if (FinalString.ToString() == "true") {
+                            val = 1;
+                        }
+                        var status = "";
+                        try
+                        {
+
+                            CAPI.CAPIControl[] controlls = Instance.host.CAPIGetControl(NewDevice.Ref);
+                            foreach (CAPI.CAPIControl cont in controlls)
+                            {
+                                if (cont.ControlValue == val) {
+                                    status = cont.Label;
+                                    break;
+                                }
+                            }
+
+                            OutValue = status;
+                        }
+                        catch { }
+
+                    }
+                    else
+                    {
+                        OutValue = FinalString.ToString();
+                    }
                 }
                 else
                 {
@@ -1001,8 +1083,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
 
             NewDevice.UpdateExtraData( "ProcessedValue", OutValue);
-
-
+         
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Instance.host.SetDeviceString(devID,ValueString,true);
             Instance.host.SetDeviceValueByRef(devID, 1, true);
@@ -1300,9 +1381,17 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             SiidDevice Gateway = SiidDevice.GetFromListByID(Instance.Devices,GatewayID);
             var EDOGate = Gateway.Extra;
             var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
-
-            bool flipbits = bool.Parse(partsGate["BigE"]);
-
+            bool flipwords =false;
+            bool flipbits = false;
+            try
+            {
+                var A = partsGate["BigE"];
+                var B = partsGate["RevByte"];
+                flipwords = bool.Parse(partsGate["BigE"]); //reverse word order 
+                flipbits = bool.Parse(partsGate["RevByte"]);
+            }
+            catch { }
+            
             int Offset = 0;
             if(bool.Parse(partsGate["ZeroB"])){
                 Offset = -1;
@@ -1356,11 +1445,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                 Return = master.ReadHoldingRegisters(startAddress, numInputs);
                      
 
-                            if (flipbits)
+                            if (flipwords)
                             { //Note according to blog here: https://ctlsys.com/common_modbus_protocol_misconceptions/
                               //Each register is in Big Endian and the little endienness is the order we read the registers
                               //so::
-                                Return.Reverse();
+                                Return= Return.Reverse().ToArray();
                                 // FlipBits(Return);//may not just be flip bits, may be flip the array also
                                 //IDEA is we have a returned array
                                 /*
@@ -1373,6 +1462,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                  * 
                                  * Depenging on our datatype, we want to parse these 4 registers as a single thing
                                  */
+                            }
+                            if (flipbits)
+                            {
+                                Return=FlipByts(Return);
+                                
                             }
                         }
                      //   return Return;
@@ -1393,10 +1487,14 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         }
                         else
                         {
+                            if (flipwords)
+                            {
+                                Data= Data.Reverse().ToArray();
+                                //FlipBits(Data);
+                            }
                             if (flipbits)
                             {
-                                Data.Reverse();
-                                //FlipBits(Data);
+                                Data= FlipByts(Data);
                             }
                             master.WriteMultipleRegisters(startAddress, Data);
 

@@ -21,6 +21,13 @@ namespace HSPI_SIID.General
             this.Device = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(R);
             this.Extra = Device.get_PlugExtraData_Get(Instance.host);
         }
+        public SiidDevice(InstanceHolder I)
+        {
+            this.Instance = I;
+            this.Ref = 0;
+            this.Device = null;
+            this.Extra = null;
+        }
         public SiidDevice(InstanceHolder I, Scheduler.Classes.DeviceClass Dev)
         {
             this.Instance = I;
