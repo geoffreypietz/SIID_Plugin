@@ -936,14 +936,18 @@ namespace HSPI_SIID
                 StringBuilder updatedList = new StringBuilder();
                 foreach (var subId in parts["LinkedDevices"].Split(','))
                 {
+
                     try
                     {
-                        SiidDevice ModDevice = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
-                        
-                        if (ModDevice != null)
+                        if (subId != "")
                         {
-                            ModbusDevs.Add(ModDevice);
-                            updatedList.Append(subId + ",");
+                            SiidDevice ModDevice = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
+
+                            if (ModDevice != null)
+                            {
+                                ModbusDevs.Add(ModDevice);
+                                updatedList.Append(subId + ",");
+                            }
                         }
                     }
                     catch (Exception e)

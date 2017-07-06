@@ -744,111 +744,174 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             return "True";
         }
       public static System.Threading.Mutex OneAtATime = new System.Threading.Mutex();
-    public  void PollActiveFromGate(object RawID)
+
+
+       
+
+
+
+        public  void PollActiveFromGate(object RawID)
         {
             //First, check if device even exits
-
+        
             SiidDevice Gate =(SiidDevice)RawID;
-            
-            //Check if gate is active
-            Scheduler.Classes.DeviceClass Gateway = null;
-            try
-            {
-                Gateway = Gate.Device;
-            }
-            catch
-            {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
-                SIID_Page.PluginTimerDictionary[Gate.Ref].Dispose();
-                SIID_Page.PluginTimerDictionary.Remove(Gate.Ref);
-
+            if (WhoIsBeingPolled.Contains(Gate.Ref.ToString())){
+                return;
 
             }
-            if (Gateway != null)
-            {
-           //     Console.WriteLine("Polling Gateway: " + Gate.Ref);
-
-                var EDO = Gate.Extra;
-                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                if (bool.Parse(parts["Enabled"]))
+            else {
+                lock (WhoIsBeingPolled) //keep subdevice level locks
                 {
-                    
-                    //Get list of devices
-                    //If they're enabled, poll them
-                    //Use the time-between and retry things
-                        foreach (var subId in parts["LinkedDevices"].Split(','))
-                    {
-                        if (!WhoIsBeingPolled.Contains(subId))
-                        {
-                            try
-                            {
-                                lock (WhoIsBeingPolled) //keep subdevice level locks
-                                {
-                                    WhoIsBeingPolled.Add(subId);
-                                }
-                                SiidDevice Subset = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
-                                if (Subset != null)
-                                {
-                                    var EDO2 = Subset.Extra;
-                                    var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
-                                    if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
-                                    {
-                                          //OneAtATime.WaitOne();
+                    WhoIsBeingPolled.Add(Gate.Ref.ToString());
+                }
+                //Check if gate is active
+                try {
+                Scheduler.Classes.DeviceClass Gateway = null;
+                try
+                {
+                    Gate.Device.get_Ref(Instance.host);
+                    Gateway = Gate.Device;
 
-                                        try
-                                        {
-                                            Console.WriteLine("         Polling Device: " + subId);
-                                            ReadFromModbusDevice(Subset);
-                                            ProcessCalculator(Subset);
-
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine("Exception: " + e.StackTrace);
-                              
-                                            if (Subset.Device.get_devValue(Instance.host) == 2 || Subset.Device.get_devValue(Instance.host) == 1)
-                                            {
-                                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
-                                            }
-                                            else
-                                            {
-                                                Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
-                                                Instance.host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
-                                            }
-
-
-                                        }
-                                        finally
-                                        {
-                                            //OneAtATime.ReleaseMutex();
-                                            lock (WhoIsBeingPolled)
-                                            {
-                                                WhoIsBeingPolled.Remove(subId);
-                                            }
-                                        }
-                                        System.Threading.Thread.Sleep(Convert.ToInt32(parts["Delay"]));
-                                        //add delay between each address poll here
-
-                                    }
-                                    else
-                                    {
-                                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 0, true);
-                                    }
-                                }
-                            }
-
-                            catch
-                            {
-
-                            }
-                        }
-
-
-                    }
+                }
+                catch
+                {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
+                    SIID_Page.PluginTimerDictionary[Gate.Ref].Dispose();
+                    SIID_Page.PluginTimerDictionary.Remove(Gate.Ref);
 
 
                 }
-            }
+                if (Gateway != null)
+                {
 
+
+                    var EDO = Gate.Extra;
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    if (bool.Parse(parts["Enabled"]))
+                    {
+                        Console.WriteLine("Polling Gateway: " + Gate.Ref);
+
+                        //Get list of devices
+                        //If they're enabled, poll them
+                        //Use the time-between and retry things
+
+                        List<string> GatewaysStatus = new List<string>();
+                        foreach (var subId in parts["LinkedDevices"].Split(','))
+                        {
+                            try
+                            {
+                                SiidDevice Subset = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
+                                //IDEA, store in a list all the registers we want to poll
+                                //then grab all of them from a single modbus connection
+                                var EDO2 = Subset.Extra;
+                                var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+                                if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
+                                {
+                                    GatewaysStatus.Add(subId);
+                                }
+                            }
+                            catch
+                            {
+                            }
+
+                        }
+                        PollAllDevices(GatewaysStatus); //Takes each ID, figures out everything, does all the polling in a single modbus network call
+                                                        //returns the statuses.
+
+
+
+                        /*
+
+                            if (!WhoIsBeingPolled.Contains(subId))
+                            {
+                                try
+                                {
+                                    lock (WhoIsBeingPolled) //keep subdevice level locks
+                                    {
+                                        WhoIsBeingPolled.Add(subId);
+                                    }
+                                    SiidDevice Subset = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(subId));
+                                    if (Subset != null)
+                                    {
+                                        var EDO2 = Subset.Extra;
+                                        var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
+                                        if (bool.Parse(parts2["DeviceEnabled"])) //Device exists and is enabled
+                                        {
+                                              //OneAtATime.WaitOne();
+
+                                            try
+                                            {
+                                                Console.WriteLine("         Polling Device: " + subId);
+                                                ReadFromModbusDevice(Subset);
+                                                ProcessCalculator(Subset);
+
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine("Exception: " + e.StackTrace);
+
+                                                if (Subset.Device.get_devValue(Instance.host) == 2 || Subset.Device.get_devValue(Instance.host) == 1)
+                                                {
+                                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 2, true);
+                                                }
+                                                else
+                                                {
+                                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 3, true);
+                                                    Instance.host.SetDeviceString(Convert.ToInt32(subId), e.Message, true);
+                                                }
+
+
+                                            }
+                                            finally
+                                            {
+                                                //OneAtATime.ReleaseMutex();
+                                                lock (WhoIsBeingPolled)
+                                                {
+                                                    WhoIsBeingPolled.Remove(subId);
+                                                }
+                                            }
+                                            System.Threading.Thread.Sleep(Convert.ToInt32(parts["Delay"]));
+                                            //add delay between each address poll here
+
+                                        }
+                                        else
+                                        {
+                                            Instance.host.SetDeviceValueByRef(Convert.ToInt32(subId), 0, true);
+                                        }
+                                    }
+                                }
+
+                                catch
+                                {
+
+                                }
+                            }
+                                }
+                            */
+
+
+
+
+
+                    }
+                    else
+                    {
+
+                        SIID_Page.PluginTimerDictionary[Gate.Ref].Dispose();
+                        SIID_Page.PluginTimerDictionary.Remove(Gate.Ref);
+
+                    }
+                }
+            }
+                 finally
+                {
+                    lock (WhoIsBeingPolled) //keep subdevice level locks
+                    {
+                        WhoIsBeingPolled.Remove(Gate.Ref.ToString());
+                    }
+
+                }
+            }
+           
         }
 
         public ushort[] FlipByts(ushort[] Input)
@@ -1058,8 +1121,16 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                     break;
                                 }
                             }
+                            if (status != "")
+                            {
+                                OutValue = status;
+                            }
+                            else
+                            {
+                                OutValue = FinalString.ToString();
+                            }
 
-                            OutValue = status;
+                           
                         }
                         catch { }
 
@@ -1216,7 +1287,319 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         }
 
-            public void ReadFromModbusDevice(SiidDevice SIIDDev) //Takes device ID, does a read action on it and puts it in the RawValue component of the extra data
+
+
+        public void PollAllDevices(List<string> GatewaysStatus)
+        {
+            ushort[] OffsetArray = new ushort[] { 10000, 0, 30000, 40000 };
+
+            //GatewaysStatus key is device ID, value is what we return from the modbus devices
+            //Need to make Modbus calls
+            List<Tuple<bool, ushort, ushort,string>> GatewayInputs = new List<Tuple<bool, ushort, ushort,string>>();
+            //is coil, startaddress,numInputs, hs device id
+
+            SiidDevice device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(GatewaysStatus[0]));
+
+
+            var parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+            int GatewayID = Int32.Parse(parts["GateID"]);
+            SiidDevice Gateway = SiidDevice.GetFromListByID(Instance.Devices, GatewayID);
+            var EDOGate = Gateway.Extra;
+            var partsGate = HttpUtility.ParseQueryString(EDOGate.GetNamed("SSIDKey").ToString());
+            bool flipwords = false;
+            bool flipbits = false;
+            try
+            {
+                var A = partsGate["BigE"];
+                var B = partsGate["RevByte"];
+                flipwords = bool.Parse(partsGate["BigE"]); //reverse word order 
+                flipbits = bool.Parse(partsGate["RevByte"]);
+            }
+            catch { }
+
+            foreach (String key in GatewaysStatus)
+            {
+
+                device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(key));
+                parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+
+
+
+                int Offset = 0;
+                if (bool.Parse(partsGate["ZeroB"]))
+                {
+                    Offset = -1;
+                }
+                if (Int32.Parse(parts["RegisterType"]) < 3)
+                {
+                    Offset -= 1; //Seems to be a bug where coil are offset by 1 (i.e. coil 1 tries to write to register 2)
+                }
+
+
+                // int Taddress = Int32.Parse(parts["RegisterAddress"]) + Offset + OffsetArray[Int32.Parse(parts["RegisterType"])];
+                // ushort startAddress = (ushort)Math.Max(0, Taddress);
+                int Taddress = Int32.Parse(parts["RegisterAddress"]) + Offset;
+                ushort startAddress = (ushort)Math.Max(0, Taddress);
+
+                //Use bigE to reverse or not the retuned bytes before passing them up to wherever they're going, (or down in case of write)
+
+                ushort[] NumRegArrray = new ushort[] { 1, 1, 2, 2, 4, 4, 1, 2, 3, 4 };
+                //0=Bool,1 = Int16, 2=Int32,3=Float32,4=Int64,5=double64, 6=string2,7=string4,8=string6,9=string8
+                //tells us how many registers to read/write and also how to parse returns
+                //note that coils and descrete inputs are bits, registers are 16 bits = 2 bytes
+                //So coil and discrete are bool ONLY
+                //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
+
+          
+                ushort numInputs = NumRegArrray[Int32.Parse(parts["ReturnType"])];
+
+
+                if (Int32.Parse(parts["RegisterType"]) < 3)
+                {
+                    GatewayInputs.Add(new Tuple<bool, ushort, ushort, string>(true, startAddress, 1,key));
+
+
+                }
+                else
+                {
+                    GatewayInputs.Add(new Tuple<bool, ushort, ushort, string>(false, startAddress, numInputs,key));
+
+                }
+
+            }
+            //OK now GatewayInputs is a list of our connections to make. So open the modbus tcp connection and make all the calls:
+            Dictionary<string, ushort[]> Return = new Dictionary<string, ushort[]>();
+            Dictionary<string, string> Errors = new Dictionary<string, string>();
+            using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
+            {
+
+                ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
+                master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
+                master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
+                master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
+
+                foreach (var Call in GatewayInputs)
+                {try
+                    {
+                        if (Call.Item1)
+                        {
+                            bool Returned = master.ReadCoils(Call.Item2, Call.Item3)[0];
+                            if (Returned)
+                                Return[Call.Item4] = new ushort[] { 1 };
+                            else
+                                Return[Call.Item4] = new ushort[] { 0 };
+                        }
+                        else
+                        {
+                            Return[Call.Item4] = master.ReadHoldingRegisters(Call.Item2, Call.Item3);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        Errors[Call.Item4] = e.Message;
+                    }
+
+                }
+
+                client.Close();
+            }
+            //Now parse our returns back to value strings in GatewaysStatus
+
+            foreach (string key in GatewaysStatus) {
+                if(Return.Keys.Contains(key)){
+
+
+                    device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(key));
+                    parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+                    bool Signed = bool.Parse(parts["SignedValue"]);
+
+                    var TheReturned = Return[key];
+                    if (flipwords)
+                    { //Note according to blog here: https://ctlsys.com/common_modbus_protocol_misconceptions/
+                      //Each register is in Big Endian and the little endienness is the order we read the registers
+                      //so::
+                        TheReturned = TheReturned.Reverse().ToArray();
+                   
+                    }
+                    if (flipbits)
+                    {
+                        TheReturned = FlipByts(TheReturned);
+                    }
+
+                    string RawString = "";
+
+                    string RetType = parts["ReturnType"];
+                    if (Convert.ToInt32(parts["RegisterType"]) < 3) // Then its a bool
+                    {
+                        RetType = "0";
+                    }
+                    switch (RetType)
+                    {
+                        case ("0"):
+                            {
+                                RawString = "true";
+                                if (TheReturned[0] == 0)
+                                {
+                                    RawString = "false";
+                                }
+
+                                break;
+                            }
+                        case ("1"):
+                        case ("2"):
+                        case ("4")://Ints
+                            {
+                                byte[] Bytes = new byte[TheReturned.Count() * 2];
+                                int index = 0;
+                                foreach (ushort Item in TheReturned)
+                                {
+                                    byte[] temp = BitConverter.GetBytes(Item);
+                                    Bytes[index] = temp[0];
+                                    index++;
+                                    Bytes[index] = temp[1];
+                                    index++;
+
+                                }
+                                if (Signed) //bits aren't any different for signed or unsigned,. so 
+                                {
+                                    switch (TheReturned.Count())
+                                    {
+                                        case (1):
+                                            {
+                                                RawString = BitConverter.ToInt16(Bytes, 0).ToString();
+                                                break;
+                                            }
+                                        case (2):
+                                            {
+                                                RawString = BitConverter.ToInt32(Bytes, 0).ToString();
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                RawString = BitConverter.ToInt64(Bytes, 0).ToString();
+                                                break;
+                                            }
+
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    switch (TheReturned.Count())
+                                    {
+                                        case (1):
+                                            {
+                                                RawString = BitConverter.ToUInt16(Bytes, 0).ToString();
+                                                break;
+                                            }
+                                        case (2):
+                                            {
+                                                RawString = BitConverter.ToUInt32(Bytes, 0).ToString();
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                RawString = BitConverter.ToUInt64(Bytes, 0).ToString();
+                                                break;
+                                            }
+
+
+                                    }
+                                }
+
+                                break;
+                            }
+
+                        case ("3"): //float
+                            {
+                                byte[] Bytes = new byte[TheReturned.Count() * 2];
+                                int index = 0;
+                                foreach (ushort Item in TheReturned)
+                                {
+                                    byte[] temp = BitConverter.GetBytes(Item);
+                                    Bytes[index] = temp[0];
+                                    index++;
+                                    Bytes[index] = temp[1];
+                                    index++;
+
+                                }
+                                RawString = BitConverter.ToSingle(Bytes, 0).ToString();
+                                break;
+                            }
+                        case ("5")://double
+                            {
+                                byte[] Bytes = new byte[TheReturned.Count() * 2];
+                                int index = 0;
+                                foreach (ushort Item in TheReturned)
+                                {
+                                    byte[] temp = BitConverter.GetBytes(Item);
+                                    Bytes[index] = temp[0];
+                                    index++;
+                                    Bytes[index] = temp[1];
+                                    index++;
+
+                                }
+                                RawString = BitConverter.ToDouble(Bytes, 0).ToString();
+                                break;
+
+                            }
+                        default:
+                            {//string
+                                StringBuilder OUT = new StringBuilder();
+
+                                foreach (ushort Item in TheReturned)
+                                {
+                                    byte[] temp = BitConverter.GetBytes(Item);
+                                    Array.Reverse(temp);
+                                    OUT.Append(System.Text.Encoding.Default.GetString(temp));
+
+
+                                }
+                                RawString = OUT.ToString();
+                                break;
+                            }
+
+
+
+                    }
+
+                    // parts["RawValue"] = RawString;
+                    //  parts["ProcessedValue"] = "0";
+                    device.UpdateExtraData("RawValue", RawString);
+                    ProcessCalculator(device);
+                }
+                else{
+
+
+                    string Exception = "";
+                    if(Errors.Keys.Contains(key)){
+                        Exception = "EXCEPTION: "+Errors[key];
+                    }
+                    else{
+                        Exception = "EXCEPTION: Uncaught error when reading from modbus device." ;
+                    }
+
+
+                    if (device.Device.get_devValue(Instance.host) == 2 || device.Device.get_devValue(Instance.host) == 1)
+                    {
+                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 2, true);
+                    }
+                    else
+                    {
+                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 3, true);
+                        Instance.host.SetDeviceString(Convert.ToInt32(key), Exception, true);
+                    }
+                }
+
+            }
+
+
+        }
+
+       
+
+        public void ReadFromModbusDevice(SiidDevice SIIDDev) //Takes device ID, does a read action on it and puts it in the RawValue component of the extra data
         {
             int devID = SIIDDev.Ref;
             Scheduler.Classes.DeviceClass ModDev = SIIDDev.Device;
