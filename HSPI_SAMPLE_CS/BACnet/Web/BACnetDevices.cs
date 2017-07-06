@@ -357,7 +357,7 @@ namespace HSPI_SIID.BACnet
 
                 //parentDeviceRef = Instance.bacnetHomeSeerDevices.getExistingHomeseerBacnetNodeDevice(bacnetNodeData.ToString(), "device");
 
-            int parentDeviceRef = Int32.Parse(bacnetNodeData["bacnet_object_hs_device"]);
+            int parentDeviceRef = Int32.Parse(bacnetNodeData["bacnet_device_hs_device"]);
 
 
             BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
@@ -383,127 +383,139 @@ namespace HSPI_SIID.BACnet
                 lock(bno.BacnetProperties)  //TODO: find out where this is used
                 foreach (var bacnetProperty in bno.BacnetProperties)
                 {
-                    BacnetPropertyIds propId = bacnetProperty.Key;
 
-                    if (propId == BacnetPropertyIds.PROP_OBJECT_IDENTIFIER || propId == BacnetPropertyIds.PROP_OBJECT_TYPE)     //don't list these; they are displayed in device/object details above
-                        continue;
+                        try
+                        {
 
+                            BacnetPropertyIds propId = bacnetProperty.Key;
 
-
-                    var propIdNum = (int)propId;
-                    BACnetProperty prop = bacnetProperty.Value;
-
-                    if (prop.BacnetPropertyValue == null)
-                        continue;
-
-                    IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
-                    BacnetApplicationTags propTag = vals[0].Tag;
+                            if (propId == BacnetPropertyIds.PROP_OBJECT_IDENTIFIER || propId == BacnetPropertyIds.PROP_OBJECT_TYPE)     //don't list these; they are displayed in device/object details above
+                                continue;
 
 
+                            if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                                throw new Exception("");
 
-                    //if (propId == BacnetPropertyIds.PROP_OBJECT_NAME)
-                    //{
-                    //    var devName = device.get_Name(Instance.host);
-                    //    if (devName.EndsWith(dv1.ToString()))   //replace with object name...
-                    //    {
-                    //        devName = devName.Replace(dv1.ToString(), vals[0].ToString());
-                    //        device.set_Name(Instance.host, devName);
-                    //    }
 
-                    //}
+                            var propIdNum = (int)propId;
+                            BACnetProperty prop = bacnetProperty.Value;
+
+                            if (prop.BacnetPropertyValue == null)           //should cover all cases of not reading, but still put try/catch around
+                                continue;
+
+                            IList<BacnetValue> vals = prop.BacnetPropertyValue.Value.value;
+                            BacnetApplicationTags propTag = vals[0].Tag;
 
 
 
-                    object prop_val = vals[0].Value;
-                    //Type t = prop_val.GetType();      //doesn't work if null, but pretty sure this was just debugging anyway
+                            //if (propId == BacnetPropertyIds.PROP_OBJECT_NAME)
+                            //{
+                            //    var devName = device.get_Name(Instance.host);
+                            //    if (devName.EndsWith(dv1.ToString()))   //replace with object name...
+                            //    {
+                            //        devName = devName.Replace(dv1.ToString(), vals[0].ToString());
+                            //        device.set_Name(Instance.host, devName);
+                            //    }
 
-                    String propElemId = dv1 + "__" + propIdNum;
-
-                    String propElem;
-                    switch (propTag)
-                    {
-                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
-
-                            clsJQuery.jqCheckBox CB1 = new clsJQuery.jqCheckBox(propElemId, "", Instance.bacnetDevices.PageName, true, false);
-
-                            if ((Boolean)prop_val)
-                                CB1.@checked = true;
-
-                            propElem = CB1.Build();
-                            break;
+                            //}
 
 
-                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
 
-                            clsJQuery.jqDropList DL = new clsJQuery.jqDropList(propElemId, Instance.bacnetDevices.PageName, false);
+                            object prop_val = vals[0].Value;
+                            //Type t = prop_val.GetType();      //doesn't work if null, but pretty sure this was just debugging anyway
 
-                            var editor = (Utilities.BacnetEnumValueDisplay)(prop.PropertyDescriptor.GetEditor());
-                            var valsList = editor.GetValues();
+                            String propElemId = dv1 + "__" + propIdNum;
 
-                            foreach (var item in valsList)
+                            String propElem;
+                            switch (propTag)
                             {
-                                var value = item.Key;
-                                var displayString = item.Value;
-                                var isSelected = (value == Convert.ToInt32(prop_val));
+                                case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
 
-                                DL.AddItem(displayString, value.ToString(), isSelected);
+                                    clsJQuery.jqCheckBox CB1 = new clsJQuery.jqCheckBox(propElemId, "", Instance.bacnetDevices.PageName, true, false);
+
+                                    if ((Boolean)prop_val)
+                                        CB1.@checked = true;
+
+                                    propElem = CB1.Build();
+                                    break;
+
+
+                                case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+
+                                    clsJQuery.jqDropList DL = new clsJQuery.jqDropList(propElemId, Instance.bacnetDevices.PageName, false);
+
+                                    var editor = (Utilities.BacnetEnumValueDisplay)(prop.PropertyDescriptor.GetEditor());
+                                    var valsList = editor.GetValues();
+
+                                    foreach (var item in valsList)
+                                    {
+                                        var value = item.Key;
+                                        var displayString = item.Value;
+                                        var isSelected = (value == Convert.ToInt32(prop_val));
+
+                                        DL.AddItem(displayString, value.ToString(), isSelected);
+                                    }
+
+                                    propElem = DL.Build();
+
+                                    break;
+
+
+
+
+                                case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:       //this does work if you just let it default to string...but not very user-friendly
+
+
+                                    var flagsDiv = "<div>";
+
+
+                                    var editor2 = (Utilities.BacnetBitStringToEnumListDisplay)(prop.PropertyDescriptor.GetEditor());
+                                    var flagsList = editor2.GetFlagNames();
+
+
+
+                                    String bitString = ((BacnetBitString)prop_val).ToString();  //TODO: check that this is the type it comes in as...or can be parsed to.
+
+
+                                    for (int i = 0; i < flagsList.Count; i++)
+                                    {
+                                        var flagName = flagsList[i];
+                                        var bitStringChar = bitString.ToCharArray()[i];
+                                        var isFlagSet = (bitStringChar == '1');
+
+                                        clsJQuery.jqCheckBox CB = new clsJQuery.jqCheckBox(propElemId + "_" + i, flagName, this.PageName, true, false);
+                                        if (isFlagSet)
+                                            CB.@checked = true;
+
+                                        flagsDiv += CB.Build() + "<br />";
+                                    }
+
+                                    flagsDiv += "</div>";
+
+
+                                    propElem = flagsDiv;
+
+                                    break;
+
+                                default:
+
+
+                                    clsJQuery.jqTextBox TB = new clsJQuery.jqTextBox(propElemId, "string", prop.ValueString(), this.PageName, 16, false);
+                                    propElem = TB.Build();
+
+                                    break;
+
                             }
 
-                            propElem = DL.Build();
 
-                            break;
-
+                            confHtml.add(prop.Name + ": ", propElem);
 
 
 
-                        case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:       //this does work if you just let it default to string...but not very user-friendly
-
-
-                            var flagsDiv = "<div>";
-
-
-                            var editor2 = (Utilities.BacnetBitStringToEnumListDisplay)(prop.PropertyDescriptor.GetEditor());
-                            var flagsList = editor2.GetFlagNames();
-
-
-
-                            String bitString = ((BacnetBitString)prop_val).ToString();  //TODO: check that this is the type it comes in as...or can be parsed to.
-
-
-                            for (int i = 0; i < flagsList.Count; i++)
-                            {
-                                var flagName = flagsList[i];
-                                var bitStringChar = bitString.ToCharArray()[i];
-                                var isFlagSet = (bitStringChar == '1');
-
-                                clsJQuery.jqCheckBox CB = new clsJQuery.jqCheckBox(propElemId + "_" + i, flagName, this.PageName, true, false);
-                                if (isFlagSet)
-                                    CB.@checked = true;
-
-                                flagsDiv += CB.Build() + "<br />";
-                            }
-
-                            flagsDiv += "</div>";
-
-
-                            propElem = flagsDiv;
-
-                            break;
-
-                        default:
-
-
-                            clsJQuery.jqTextBox TB = new clsJQuery.jqTextBox(propElemId, "string", prop.ValueString(), this.PageName, 16, false);
-                            propElem = TB.Build();
-
-                            break;
-
-                    }
-
-
-                    confHtml.add(prop.Name + ": ", propElem);
-
-
+                        } catch (Exception ex)
+                        {
+                            var t = 2;  //do nothing; just continue to next property.
+                        }
                 }
 
             }
@@ -635,29 +647,32 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
-            public void updateDevicePollTimer(int devId, int newVal = 5000)
+        public void updateDevicePollTimer(int devId, int newVal = 5000)
+        {
+
+            //Update timer dictionary
+            //int PollVal = Math.Max(newVal, 10000);
+
+            int PollVal = newVal;
+
+
+            if (SIID_Page.PluginTimerDictionary.ContainsKey(devId))
             {
+                //SIID_Page.PluginTimerDictionary[devId].Change(0, PollVal);
+                //SIID_Page.PluginTimerDictionary[devId].Change(PollVal, System.Threading.Timeout.Infinite);
 
-                //Update timer dictionary
-                //int PollVal = Math.Max(newVal, 10000);
-
-                int PollVal = newVal;
-
-
-                if (SIID_Page.PluginTimerDictionary.ContainsKey(devId))
-                {
-                    SIID_Page.PluginTimerDictionary[devId].Change(0, PollVal);
-                }
-                else
-                {
-                    var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
-                    System.Threading.Timer GateTimer = new System.Threading.Timer(PollBacnetDevice, NewDevice, 0, PollVal);     //or start right away?
-                    SIID_Page.PluginTimerDictionary[devId] = GateTimer;
-                }
-
-
+                SIID_Page.PluginTimerDictionary[devId].Dispose();
+                SIID_Page.PluginTimerDictionary.Remove(devId);
 
             }
+            //else
+            //{
+                var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, devId);
+                System.Threading.Timer GateTimer = new System.Threading.Timer(PollBacnetDevice, NewDevice, PollVal, System.Threading.Timeout.Infinite);     //or start right away?
+                SIID_Page.PluginTimerDictionary[devId] = GateTimer;
+            //}
+
+        }
 
 
 
@@ -884,6 +899,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
+
             //TODO: this was copied over from modbus
             public void PollBacnetDevice(object RawID)
             {
@@ -892,22 +908,29 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 SiidDevice SiidDev = (SiidDevice)RawID;
 
 
-                //var hsParentDev = SiidDev.Device;
 
 
-                NameValueCollection hsParentBacnetNodeData;
+
+            //var hsParentDev = SiidDev.Device;
+
+
+            NameValueCollection hsParentBacnetNodeData;
 
                 //Check if gate is active
                 Scheduler.Classes.DeviceClass hsParentDev = null;
                 try
                 {
-                    hsParentDev = SiidDev.Device;
+                SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
+                SIID_Page.PluginTimerDictionary.Remove(SiidDev.Ref);
+
+
+                hsParentDev = SiidDev.Device;
                     hsParentBacnetNodeData = getBacnetNodeData(hsParentDev);
                 }
                 catch
                 {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
-                    SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
-                    SIID_Page.PluginTimerDictionary.Remove(SiidDev.Ref);
+                    //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
+                   // SIID_Page.PluginTimerDictionary.Remove(SiidDev.Ref);
 
                     SiidDevice.Update(Instance);
 
@@ -1114,7 +1137,23 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
-            }
+           //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
+            //SIID_Page.PluginTimerDictionary.Remove(SiidDev.Ref);
+
+            var pi = Int32.Parse(hsParentBacnetNodeData["polling_interval"]);
+
+
+            //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Change(pi, System.Threading.Timeout.Infinite)
+
+
+            System.Threading.Timer GateTimer = new System.Threading.Timer(PollBacnetDevice, SiidDev, pi, System.Threading.Timeout.Infinite);
+            //just run it once.
+            SIID_Page.PluginTimerDictionary[SiidDev.Ref] = GateTimer;
+
+
+
+
+        }
 
 
 

@@ -219,7 +219,7 @@ namespace HSPI_SIID.ScratchPad
             }
             //Make sure all modbus gateway's have timer. Had problem where gateways would be added but somehow not appear in the timer.
            Instance.siidPage.InitializeModbusGatewayTimers();
-           Instance.siidPage.InitializeBacnetDeviceTimers();
+           //Instance.siidPage.InitializeBacnetDeviceTimers();      //No, can't do this here, since this method itself is called on a timer
             
         }
 

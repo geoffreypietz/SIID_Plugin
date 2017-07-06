@@ -1400,7 +1400,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 bacnetDiscoveryFiltersHtml.add("IP Addresses:", BacnetBuilder.radioButton(bdp + "filter_ip_address",
                     new string[] { "All", "Filter by IP Address (below)" }, 0).print());
                 bacnetDiscoveryFiltersHtml.add("Selected IP:", BacnetBuilder.stringInput(bdp + "selected_ip_address", "").print());
-                bacnetDiscoveryFiltersHtml.add("UDP Port:", BacnetBuilder.stringInput(bdp + "udp_port", "BAC0").print());
+                bacnetDiscoveryFiltersHtml.add("UDP Port:", BacnetBuilder.stringInput(bdp + "udp_port", "47808").print());
 
 
                 bacnetDiscoveryFiltersHtml.addT("Device Settings");
