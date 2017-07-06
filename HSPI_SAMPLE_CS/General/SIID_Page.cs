@@ -1129,7 +1129,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                
                     ScratchTable.addArrayRow(Row.ToArray(), Back);
 
-                    var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
+                 /*   var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
                     if (ASSOCIATES != null)
                     {
                         foreach (string IDstr in ASSOCIATES.Split(','))
@@ -1158,31 +1158,6 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                                 Row.Add("<div/>");
 
 
-                            /*    ComplexCell = new StringBuilder();
-
-                                ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
-                                ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
-                                ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
-                                ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
-                                ComplexCell.Append(@"<script>
-UpdateDisplay=function(id){
-console.log('UPDATING DISPLAY '+id);
-$('#0_'+id)[0].style.display='none';
-$('#1_'+id)[0].style.display='none';
-$('#2_'+id)[0].style.display='none';
-$('#3_'+id)[0].style.display='none';
-V = $('#ResetType_'+id)[0].value;
-$('#'+V+'_'+id)[0].style.display='';
-}
-DoChange=function(){
-console.log('DoChange');
-console.log(this);
-UpdateDisplay(this.id.split('_')[1]);
-}
-UpdateDisplay(" + ID + @");
-$('#ResetType_" + ID + @"').change(DoChange); //OK HERE
-
-</script>");*/
                                 // Row.Add(ComplexCell.ToString());
                                 Row.Add("<div/>");
 
@@ -1208,7 +1183,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                         }
                  
 
-                    }
+                    }*/
 
                     }
 
