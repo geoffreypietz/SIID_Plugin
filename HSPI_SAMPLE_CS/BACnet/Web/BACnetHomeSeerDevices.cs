@@ -1359,18 +1359,21 @@ namespace HSPI_SIID.BACnet
                 //Control.RangeEnd = 100000;
                 //Control.Render = Enums.CAPIControlType.TextBox_Number;
                 //var IS = Instance.host.DeviceVSP_AddPair(dv, Control);
-          
+
 
                 //TODO: so now the object HS device has to look at the present value of 
 
 
+                bacnetNodeData["bacnet_device_hs_device"] = dv.ToString();
+                //bacnetNodeData["bacnet_object_hs_device"] = dv.ToString();
 
             }
             else
             {
                 //bacnetNodeData["parent_hs_device"] = parentDv.ToString();
 
-
+                bacnetNodeData["bacnet_device_hs_device"] = parentDv.ToString();
+                bacnetNodeData["bacnet_object_hs_device"] = dv.ToString();
 
                 bacnetNodeData["write_priority"] = "0";  
 
@@ -1747,7 +1750,7 @@ namespace HSPI_SIID.BACnet
                 }
 
 
-                Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(dv);
+                //Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(dv);
 
 
             }
@@ -1765,6 +1768,10 @@ namespace HSPI_SIID.BACnet
 
             Instance.Devices.Add(new SiidDevice(Instance, newDevice));
 
+
+
+            if (nodeType == "object")
+                Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(dv);
 
 
             if (nodeType == "device")

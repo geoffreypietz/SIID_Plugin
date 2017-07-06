@@ -97,18 +97,18 @@ namespace HSPI_SIID.BACnet
         {
             DevicesDiscovered = false;
 
-            int udpPort = int.Parse(BacnetGlobalNetwork.UdpPort, System.Globalization.NumberStyles.HexNumber);
+            //int udpPort = int.Parse(BacnetGlobalNetwork.UdpPort, System.Globalization.NumberStyles.HexNumber);
             //String adr = Properties.Settings.Default.DefaultUdpIp;
             if (IpAddress.Contains(':'))
-                BacnetClient = new BacnetClient(new BacnetIpV6UdpProtocolTransport(udpPort, Yabe.Properties.Settings.Default.YabeDeviceId, Yabe.Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Yabe.Properties.Settings.Default.Udp_DontFragment, Yabe.Properties.Settings.Default.Udp_MaxPayload, IpAddress), BacnetGlobalNetwork.TimeoutValue, BacnetGlobalNetwork.RetriesValue);
+                BacnetClient = new BacnetClient(new BacnetIpV6UdpProtocolTransport(BacnetGlobalNetwork.UdpPort, Yabe.Properties.Settings.Default.YabeDeviceId, Yabe.Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Yabe.Properties.Settings.Default.Udp_DontFragment, Yabe.Properties.Settings.Default.Udp_MaxPayload, IpAddress), BacnetGlobalNetwork.TimeoutValue, BacnetGlobalNetwork.RetriesValue);
             else
-                BacnetClient = new BacnetClient(new BacnetIpUdpProtocolTransport(udpPort, Yabe.Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Yabe.Properties.Settings.Default.Udp_DontFragment, Yabe.Properties.Settings.Default.Udp_MaxPayload, IpAddress), BacnetGlobalNetwork.TimeoutValue, BacnetGlobalNetwork.RetriesValue);
+                BacnetClient = new BacnetClient(new BacnetIpUdpProtocolTransport(BacnetGlobalNetwork.UdpPort, Yabe.Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Yabe.Properties.Settings.Default.Udp_DontFragment, Yabe.Properties.Settings.Default.Udp_MaxPayload, IpAddress), BacnetGlobalNetwork.TimeoutValue, BacnetGlobalNetwork.RetriesValue);
 
             BacnetDeviceLine = new BacnetDeviceLine(BacnetClient);
 
             GetDevices();
 
-            System.Threading.Thread.Sleep(1000);    //wait for OnIam's...
+            System.Threading.Thread.Sleep(3000);    //wait for OnIam's...
 
             DevicesDiscovered = true;
         }

@@ -301,7 +301,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private void setDeviceStatus(int devId, int status, int? parentDevId = null)
+        public void setDeviceStatus(int devId, int status)//, int? parentDevId = null)
         {
 
             //if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
@@ -314,7 +314,7 @@ namespace HSPI_SIID.BACnet
                     statusString = "Connected";
                     break;
                 case 2:
-                    statusString = "Connection interrupted";
+                    statusString = "Connection interrupted";    //can only be set when initially populating...
                     break;
                 case 3:
                     statusString = "Not connected";
@@ -326,11 +326,11 @@ namespace HSPI_SIID.BACnet
             Instance.host.SetDeviceString(devId, statusString, true);
 
 
-            if (parentDevId != null)
-            {
-                Instance.host.SetDeviceValueByRef((int)parentDevId, status, true);
-                Instance.host.SetDeviceString((int)parentDevId, statusString, true);
-            }
+            //if (parentDevId != null)
+            //{
+            //    Instance.host.SetDeviceValueByRef((int)parentDevId, status, true);
+            //    Instance.host.SetDeviceString((int)parentDevId, statusString, true);
+            //}
 
 
         }
@@ -353,10 +353,11 @@ namespace HSPI_SIID.BACnet
 
 
             var nodeType = bacnetNodeData["node_type"];
-            int? parentDeviceRef = null;
+            //int? parentDeviceRef = null;
 
-            if (nodeType == "object")
-                parentDeviceRef = Instance.bacnetHomeSeerDevices.getExistingHomeseerBacnetNodeDevice(bacnetNodeData.ToString(), "device");
+                //parentDeviceRef = Instance.bacnetHomeSeerDevices.getExistingHomeseerBacnetNodeDevice(bacnetNodeData.ToString(), "device");
+
+            int parentDeviceRef = Int32.Parse(bacnetNodeData["bacnet_object_hs_device"]);
 
 
             BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
@@ -366,15 +367,16 @@ namespace HSPI_SIID.BACnet
                 
 
                 if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
-                    setDeviceStatus(dv1, 2, parentDeviceRef);
+                    //setDeviceStatus(dv1, 2, parentDeviceRef);
+                    setDeviceStatus(parentDeviceRef, 2);
                 else
-                    setDeviceStatus(dv1, 3, parentDeviceRef);
+                    setDeviceStatus(parentDeviceRef, 3);
 
             }
 
             else
             {
-                setDeviceStatus(dv1, 1, parentDeviceRef);
+                setDeviceStatus(parentDeviceRef, 1);
 
                 bno.FetchProperties();  //force refresh, even if already fetched
 
@@ -728,6 +730,14 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                         {
 
                             Instance.host.SetDeviceString(hsBacnetDevRef, "Could not read object property", true);      //same as setting value?
+
+                            //todo: also set parent device status.
+                            //Based on stored parent dev id.  Don't need to re-poll
+
+                            //For now, no.  Because it may recover...
+
+                        
+
                             return;
                         }
 
@@ -735,12 +745,12 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                         bno.FetchProperties();
 
 
-                        String presentValString = "";
+                        //String presentValString = "";
 
 
                         lock (bno.BacnetProperties)
                         {
-                            var hasPresentVal = false;
+                            //var hasPresentVal = false;
                             foreach (var kvp in bno.BacnetProperties)       //TODO: delay in between tasks, not just constant refresh.
                             //TODO: collection was modified; enumeration operation may not execute
                             {
@@ -750,19 +760,36 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                                 if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
                                 {
-                                    hasPresentVal = true;
-                                    Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(prop.ValueString()), true);
+                                    //hasPresentVal = true;
+
+                                     var vs = prop.ValueString();
+
+
+                        try { 
+
+                                
+                                    Instance.host.SetDeviceValueByRef(hsBacnetDevRef, Double.Parse(vs), true);
+
+
+                                    Instance.host.SetDeviceString(hsBacnetDevRef, vs, true);
+
+
+                        } catch (Exception ex)
+                        {
+
+
+                        }
 
 
                                     //can keep this.
 
-                                    //TODO: here would be the place to add in the script which would update the write priority device options, the multi-state value inputs, etc.
-                                    //This is the only place the status string is set
+                        //TODO: here would be the place to add in the script which would update the write priority device options, the multi-state value inputs, etc.
+                        //This is the only place the status string is set
 
-                                    //The only problem is that this isn't called immediately after device creation....but it could be, if you make it a function....
+                        //The only problem is that this isn't called immediately after device creation....but it could be, if you make it a function....
 
 
-                                    presentValString += prop.ValueString();
+                        //presentValString += vs;
 
                                     //Instance.host.SetDeviceString(hsBacnetDevRef, prop.ValueString(), true);
                                     //break;
@@ -813,10 +840,13 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                             }
 
-                            if (!hasPresentVal)
-                                Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
-                            else
-                                Instance.host.SetDeviceString(hsBacnetDevRef, presentValString, true);
+                            //if (!hasPresentVal)
+                            //    Instance.host.SetDeviceString(hsBacnetDevRef, "Could not retrieve present value", true);
+                            //else
+                            //    Instance.host.SetDeviceString(hsBacnetDevRef, presentValString, true);
+
+
+
                                 //Instance.host.SetDeviceString(hsBacnetDevRef, presentValString + BacnetObjectUpdateJs(hsBacnetNodeData), true);
 
                             //so update its displayed value by reading the present value from it.

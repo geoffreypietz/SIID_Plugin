@@ -67,7 +67,7 @@ namespace HSPI_SIID.BACnet
                     this.Instance,
                     Boolean.Parse(nodeData["filter_ip_address"] ?? "false"),
                     nodeData["selected_ip_address"],
-                    nodeData["udp_port"] ?? "BAC0",
+                    Int32.Parse(nodeData["udp_port"] ?? "47808"),
                     Boolean.Parse(nodeData["filter_device_instance"] ?? "false"),
                     Int32.Parse(nodeData["device_instance_min"] ?? "0"),
                     Int32.Parse(nodeData["device_instance_max"] ?? "4194303"));

@@ -17,7 +17,7 @@ namespace HSPI_SIID.BACnet
     public class BACnetGlobalNetwork : IBACnetTreeDataObject
     {
 
-        public BACnetGlobalNetwork(InstanceHolder instance, Boolean filterIpAddress = false, String selectedIpAddress = "", String udpPort = "UDP0",
+        public BACnetGlobalNetwork(InstanceHolder instance, Boolean filterIpAddress = false, String selectedIpAddress = "", Int32 udpPort = 47808,
             Boolean filterDeviceInstance = false, Int32 deviceInstanceMin = 0, Int32 deviceInstanceMax = 4194303)
         {
             this.Instance = instance;
@@ -44,11 +44,13 @@ namespace HSPI_SIID.BACnet
 
         public int RetriesValue = 2;
 
-        public int TimeoutValue = 3000;
+        public int TimeoutValue = 1000;
 
 
 
-        public String UdpPort = "BAC0";
+        //public String UdpPort = "BAC0";
+
+        public Int32 UdpPort = 47808;
 
 
         public Boolean FilterDeviceInstance = false;
