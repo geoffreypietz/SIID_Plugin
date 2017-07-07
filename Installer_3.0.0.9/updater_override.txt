@@ -1,5 +1,5 @@
 'Name,  			Updater version, 	File version, 	Notices version
-HomeSeer Updates File,		3.0.0.5,		87,		1
+HomeSeer Updates File,		3.0.0.18,		87,		1
 homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 '    UC = Use Code, bit 1 = S, bit 2 = PS, bit 4 = HW bit 8 = HomeTroller 16 = Windows 32 = Linux  (bit mapped)
@@ -25,7 +25,18 @@ homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 ' Package Name                  Existing Version Info Binary	This Version	 UC PC   Server      Svr Loc      Zip File                      Type     Cost                    			Provider                        License ID              Icon File               Description File                SKU    Learn More
 ' ============================= =============================== ================ == == ============ ============ ============================== ====    ======================  			==============================  ======================= ======================  ==========================================================================
 
+%<HS TYPE=SUBCAT>RACHIOSIID Plugin
+' -------------------------------------------------------------
+RACHIOSIID, 	HSPI_RACHIOSIID.exe,		,0.9.6389.16501,	 63, 2, local, Zips,	RachioSIID-0.9.6389.16501.zip,	4,	Free,			Siemens,					RACHIOSIID,					,						,,
+
+%<HS TYPE=SUBCAT>NESTSIID Plugin
+' -------------------------------------------------------------
+NESTSIID, 	HSPI_NESTSIID.exe,		,0.9.6381.30587,	 63, 2, local, Zips,	NestSIID-0.9.6381.30587.zip,	4,	Free,			Siemens,					NESTSIID,					,						,,
+
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
-SIID,	HSPI_SIID.exe,		,3.0.0.11,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.11.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
+SIID,	HSPI_SIID.exe,		,3.0.0.13,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.13.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
 
+%<HS TYPE=SUBCAT>ECOBEESIID Plugin
+' -------------------------------------------------------------
+ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,0.9.6381.33431,	 63, 2, local, Zips,	EcobeeSIID-0.9.6381.33431.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,

@@ -1370,38 +1370,47 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //OK now GatewayInputs is a list of our connections to make. So open the modbus tcp connection and make all the calls:
             Dictionary<string, ushort[]> Return = new Dictionary<string, ushort[]>();
             Dictionary<string, string> Errors = new Dictionary<string, string>();
-            using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
+            try
             {
+                using (TcpClient client = new TcpClient(partsGate["Gateway"], Int32.Parse(partsGate["TCP"])))
+                {
 
-                ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
-                master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
-                master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
-                master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
+                    ModbusIpMaster master = ModbusIpMaster.CreateIp(client);
+                    master.Transport.ReadTimeout = Int32.Parse(partsGate["RWTime"]);
+                    master.Transport.Retries = Int32.Parse(partsGate["RWRetry"]);
+                    master.Transport.WaitToRetryMilliseconds = Int32.Parse(partsGate["Delay"]);
 
-                foreach (var Call in GatewayInputs)
-                {try
+                    foreach (var Call in GatewayInputs)
                     {
-                        if (Call.Item1)
+                        try
                         {
-                            bool Returned = master.ReadCoils(Call.Item2, Call.Item3)[0];
-                            if (Returned)
-                                Return[Call.Item4] = new ushort[] { 1 };
+                            if (Call.Item1)
+                            {
+                                bool Returned = master.ReadCoils(Call.Item2, Call.Item3)[0];
+                                if (Returned)
+                                    Return[Call.Item4] = new ushort[] { 1 };
+                                else
+                                    Return[Call.Item4] = new ushort[] { 0 };
+                            }
                             else
-                                Return[Call.Item4] = new ushort[] { 0 };
+                            {
+                                Return[Call.Item4] = master.ReadHoldingRegisters(Call.Item2, Call.Item3);
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-                            Return[Call.Item4] = master.ReadHoldingRegisters(Call.Item2, Call.Item3);
+                            Errors[Call.Item4] = e.Message;
                         }
-                    }
-                    catch(Exception e)
-                    {
-                        Errors[Call.Item4] = e.Message;
+
                     }
 
+                    client.Close();
                 }
+            }
+            catch(Exception e) //The gateway connection is bad, so set gateway to red status
+            {
+                pingGateway(Gateway.Ref);
 
-                client.Close();
             }
             //Now parse our returns back to value strings in GatewaysStatus
 
