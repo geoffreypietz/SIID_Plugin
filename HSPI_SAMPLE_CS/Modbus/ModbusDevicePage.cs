@@ -455,7 +455,51 @@ public string GetReg(string instring)
             }
 
             string dv = "" + dv1 + "";
-      
+
+            bool Enabled = false;
+            bool RevOrd = false;
+            bool RevByt = false;
+            bool ZeroByt = false;
+            try
+            {
+                 Enabled = Boolean.Parse(parts["Enabled"]);
+            }
+            catch (Exception)
+            {
+
+                
+            }
+
+            try
+            {
+                 RevOrd = Boolean.Parse(parts["BigE"]);
+            }
+            catch (Exception)
+            {
+
+               
+            }
+            try
+            {
+                 RevByt = Boolean.Parse(parts["RevByte"]);
+            }
+            catch (Exception)
+            {
+
+             
+            }
+            try
+            {
+                 ZeroByt = Boolean.Parse(parts["ZeroB"]);
+            }
+            catch (Exception)
+            {
+
+            }
+
+          
+           
+
             StringBuilder stb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGateTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
@@ -463,11 +507,11 @@ public string GetReg(string instring)
             ModbusConfHtml.add("Modbus Gateway hostname or IP address: ", ModbusBuilder.stringInput(dv+"_Gateway", parts["Gateway"]).print());
             ModbusConfHtml.add("TCP Port:", ModbusBuilder.numberInput(dv+"_TCP", Int32.Parse(parts["TCP"])).print());
             ModbusConfHtml.add("Poll Interval:", ModbusBuilder.numberInput(dv+"_Poll", Int32.Parse(parts["Poll"])).print());
-            ModbusConfHtml.add("Gateway Enabled:", ModbusBuilder.checkBoxInput(dv+"_Enabled", Boolean.Parse(parts["Enabled"])).print());
+            ModbusConfHtml.add("Gateway Enabled:", ModbusBuilder.checkBoxInput(dv+"_Enabled", Enabled).print());
             ModbusConfHtml.addT("Advanced Settings");
-            ModbusConfHtml.add("Reverse Register word order:", ModbusBuilder.checkBoxInput(dv+"_BigE", Boolean.Parse(parts["BigE"])).print());
-            ModbusConfHtml.add("Reverse word byte order:", ModbusBuilder.checkBoxInput(dv + "_RevByte", Boolean.Parse(parts["RevByte"])).print());
-            ModbusConfHtml.add("Zero-based Addressing:", ModbusBuilder.checkBoxInput(dv+"_ZeroB", Boolean.Parse(parts["ZeroB"])).print());
+            ModbusConfHtml.add("Reverse Register word order:", ModbusBuilder.checkBoxInput(dv+"_BigE",RevOrd).print());
+            ModbusConfHtml.add("Reverse word byte order:", ModbusBuilder.checkBoxInput(dv + "_RevByte", RevByt).print());
+            ModbusConfHtml.add("Zero-based Addressing:", ModbusBuilder.checkBoxInput(dv+"_ZeroB", ZeroByt).print());
             ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry", Int32.Parse(parts["RWRetry"])).print());
             ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime", Int32.Parse(parts["RWTime"])).print());
             ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay", Int32.Parse(parts["Delay"])).print());
