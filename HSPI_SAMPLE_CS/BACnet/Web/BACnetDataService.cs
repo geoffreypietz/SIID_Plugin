@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using HSPI_SIID.General;
 using Scheduler;
-using HSPI_SIID;
-using HomeSeerAPI;
-using System.Web;
 using System.Web.Script.Serialization;
 using System.IO.BACnet;
 
 namespace HSPI_SIID.BACnet
 {
-   public class BACnetDataService : PageBuilderAndMenu.clsPageBuilder
+    public class BACnetDataService : PageBuilderAndMenu.clsPageBuilder
     {
         public InstanceHolder Instance { get; set; }
         //public htmlBuilder BACnetBuilder { get; set; }

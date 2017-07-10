@@ -1,3 +1,37 @@
+updater_override.txt
+DETAILS
+ACTIVITY
+updater_override.txt
+Sharing Info
+G
+
+R
+S
+S
++3
+General Info
+Type
+Text
+Size
+4 KB (3,695 bytes)
+Storage used
+0 bytesOwned by someone else
+Location
+Siemens SIID Plugins
+Owner
+Geoffrey Pietz
+Modified
+Jul 7, 2017 by me
+Opened
+Jul 7, 2017 by me
+Created
+Jun 29, 2017
+Description
+Add a description
+Download permissions
+Viewers can download
+Maximized All selections cleared 
+
 'Name,  			Updater version, 	File version, 	Notices version
 HomeSeer Updates File,		3.0.0.18,		87,		1
 homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
@@ -35,7 +69,7 @@ NESTSIID, 	HSPI_NESTSIID.exe,		,0.9.6381.30587,	 63, 2, local, Zips,	NestSIID-0.
 
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
-SIID,	HSPI_SIID.exe,		,3.0.0.13,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.13.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
+SIID,	HSPI_SIID.exe,		,3.0.0.15,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.15.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
 
 %<HS TYPE=SUBCAT>ECOBEESIID Plugin
 ' -------------------------------------------------------------

@@ -1,7 +1,6 @@
 ﻿using HSPI_SIID.BACnet;
 using HSPI_SIID.General;
 using HSPI_SIID.ScratchPad;
-using HSPI_SIID;
 using HSPI_SIID.Modbus;
 using System;
 using System.Collections.Generic;
@@ -11,8 +10,8 @@ using System.Web;
 
 namespace HSPI_SIID
 {
-   
-        public class HomeSeerDevice
+
+    public class HomeSeerDevice
         {
             public Dictionary<string, object> Values = new Dictionary<string, object>();
 

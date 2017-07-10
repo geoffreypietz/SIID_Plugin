@@ -1,16 +1,9 @@
 ﻿using Microsoft.VisualBasic;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using HSCF;
 using HomeSeerAPI;
 using Scheduler;
-using HSCF.Communication.ScsServices.Service;
 using System.Reflection;
 using System.Text;
-using HSPI_SIID.Modbus;
 using HSPI_SIID.BACnet;
 using System.Web;
 

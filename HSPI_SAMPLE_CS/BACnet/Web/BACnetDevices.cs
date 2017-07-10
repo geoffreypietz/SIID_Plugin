@@ -5,17 +5,12 @@ using System.Linq;
 using System.Text;
 using HSPI_SIID.General;
 using Scheduler;
-using HSPI_SIID;
-using HomeSeerAPI;
 using System.Web;
-using System.Web.Script.Serialization;
-using System.IO;
 using System.IO.BACnet;
-using System.Reflection;
 
 namespace HSPI_SIID.BACnet
 {
-   public class BACnetDevices : PageBuilderAndMenu.clsPageBuilder
+    public class BACnetDevices : PageBuilderAndMenu.clsPageBuilder
     {
         public InstanceHolder Instance { get; set; }
         //public htmlBuilder BACnetBuilder { get; set; }

@@ -1,14 +1,9 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
+﻿using System;
 
 namespace HSPI_SIID
 {
-	
-	static class Classes
+
+    static class Classes
 	{
 
 	// ==========================================================================

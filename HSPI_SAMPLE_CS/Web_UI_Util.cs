@@ -1,21 +1,10 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
+﻿using System;
 using System.Text;
-using System.Threading;
-using System.Globalization;
-using VB = Microsoft.VisualBasic;
-using System.Web;
-using HomeSeerAPI;
 
 namespace HSPI_SIID
 {
-	
-	static internal class Web_UI_Util
+
+    static internal class Web_UI_Util
 	{
 	// HTTP constants
 	public const string HTML_StartHead = "<head>\r\n";

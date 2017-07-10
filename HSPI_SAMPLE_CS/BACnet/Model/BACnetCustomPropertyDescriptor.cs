@@ -1,18 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Utilities;
-
-
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.BACnet;
-using System.Globalization;
-
-using System.Drawing.Design;
 
 
 namespace HSPI_SIID.BACnet.Model

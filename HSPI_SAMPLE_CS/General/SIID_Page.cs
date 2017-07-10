@@ -6,15 +6,14 @@ using Scheduler;
 using System.Web;
 
 using System.Threading;
-using HSPI_SIID.Modbus;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using HomeSeerAPI;
 using Microsoft.VisualBasic.FileIO;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
 using System.Reflection;
 using System.IO.BACnet;
+using System.Text.RegularExpressions;
 
 namespace HSPI_SIID
 {
@@ -94,7 +93,12 @@ namespace HSPI_SIID
 
                 Dictionary<int, List<string>> RowByHeaderID = new Dictionary<int, List<string>>();
                 Dictionary<int, int> OldToNew = new Dictionary<int, int>();
-                string[] CSVRows = RawCsv.Split('\n');
+
+                Regex r = new Regex(@"(?m)^[^""\r\n]*(?:(?:""[^""]*"")+[^""\r\n]*)*");
+                MatchCollection MA = r.Matches(RawCsv);
+                string[] CSVRows = MA.Cast<Match>().Select(m => m.Value).ToArray();
+                // string[] CSVRows = RawCsv.Split(new String[]{"\r\n"},StringSplitOptions.None); //God damnit. problem is this CSV file has carrage return line breaks in it.
+                //So problem here in the export. Exporting a pretty code block causing problems on import.
                 List<string> Headers = new List<string>();
                 bool HasHeader = false;
 

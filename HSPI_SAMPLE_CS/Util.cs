@@ -1,25 +1,13 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics;
-using HomeSeerAPI;
-using Scheduler;
-using Scheduler.Classes;
-using System.Reflection;
-using System.Text;
+﻿using System;
 
 
 using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters;
 
 
 namespace HSPI_SIID
 {
-	
-	static class Util
+
+    static class Util
 	{
 
 

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
 using System.Threading;

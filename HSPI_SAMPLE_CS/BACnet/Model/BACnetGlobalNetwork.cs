@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
-using System.Web.Script.Serialization;
 using System.IO.BACnet;
 using System.IO.BACnet.Storage;
-using Yabe;
-using HomeSeerAPI;
-using HSPI_SIID;
 
 
 namespace HSPI_SIID.BACnet

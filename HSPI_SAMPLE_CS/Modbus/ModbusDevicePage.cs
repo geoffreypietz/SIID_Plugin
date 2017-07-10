@@ -5,13 +5,8 @@ using System.Text;
 using Scheduler;
 using System.Web;
 using HomeSeerAPI;
-using Modbus.Data;
 using Modbus.Device;
-using Modbus.Utility;
-
-using System.Net;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 //using System.Data;
 using HSPI_SIID.General;
 
@@ -613,18 +608,21 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public string pingGateway(int deviceId)
         {
-            var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, deviceId);
-            Scheduler.Classes.DeviceClass Gateway = NewDevice.Device;
-            var EDO = NewDevice.Extra;
-            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-            string ip = parts["Gateway"];
-            int port = Convert.ToInt32(parts["TCP"]);
+     
+          
+           
             //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
        
               //  System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
                
                 try
                 {
+                    var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, deviceId);
+                    Scheduler.Classes.DeviceClass Gateway = NewDevice.Device;
+                    var EDO = NewDevice.Extra;
+                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                    string ip = parts["Gateway"];
+                    int port = Convert.ToInt32(parts["TCP"]);
                     System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient(ip, port);
                     /*
                    var Rep= Ping.Send(ip);
@@ -814,8 +812,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             }
 
                         }
-                        PollAllDevices(GatewaysStatus); //Takes each ID, figures out everything, does all the polling in a single modbus network call
-                                                        //returns the statuses.
+                            if (GatewaysStatus.Count > 0)
+                            {
+                                PollAllDevices(GatewaysStatus); //Takes each ID, figures out everything, does all the polling in a single modbus network call
+                            }  //returns the statuses.
 
 
 
@@ -1291,6 +1291,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public void PollAllDevices(List<string> GatewaysStatus)
         {
+            
+
             ushort[] OffsetArray = new ushort[] { 10000, 0, 30000, 40000 };
 
             //GatewaysStatus key is device ID, value is what we return from the modbus devices
@@ -1298,8 +1300,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             List<Tuple<bool, ushort, ushort,string>> GatewayInputs = new List<Tuple<bool, ushort, ushort,string>>();
             //is coil, startaddress,numInputs, hs device id
 
-            SiidDevice device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(GatewaysStatus[0]));
-
+            
+                SiidDevice device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(GatewaysStatus[0]));
+          
 
             var parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
             int GatewayID = Int32.Parse(parts["GateID"]);

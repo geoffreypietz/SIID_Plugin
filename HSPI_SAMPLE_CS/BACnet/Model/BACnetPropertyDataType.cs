@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace HSPI_SIID.BACnet
+﻿namespace HSPI_SIID.BACnet
 {
 
     //each property contains one of these.
