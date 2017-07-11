@@ -222,8 +222,13 @@ namespace HSPI_SIID
                                         HomeSeerAPI.VSVGPairs.VSPair[] NewActions = HomeSeerDevice.DecodeVSPairs(FetchAttribute(CodeLookup, "vsp"));
                                         foreach (var pair in NewActions)
                                         {
-                                            Instance.host.DeviceVSP_AddPair(OldToNew[int.Parse(CodeLookup["id"])], pair);
-                                            hasStatus = true;
+                                             var REEF = OldToNew[int.Parse(CodeLookup["id"])];
+                                       
+                                
+                                            var Z = Instance.host.DeviceVSP_AddPair(OldToNew[int.Parse(CodeLookup["id"])], pair);
+                                       
+                                            Console.WriteLine(Z);
+                                           hasStatus = true;
                                         }
                                     }
                                     catch { }
@@ -379,6 +384,7 @@ namespace HSPI_SIID
                                         }
                                       
                                     }
+                                    newDevice.MISC_Set(Instance.host, Enums.dvMISC.SHOW_VALUES);
                                     HomeSeerAPI.PlugExtraData.clsPlugExtraData EDO = new PlugExtraData.clsPlugExtraData();
                                     switch (CodeLookup["type"])
                                     {
@@ -441,17 +447,18 @@ namespace HSPI_SIID
                                             {
                                                 try
                                                 {
+                                                
                                                     var parts = HttpUtility.ParseQueryString(string.Empty);
-                                                    parts["Type"] = FetchAttribute(CodeLookup, "type"); ;
-                                                    parts["IsEnabled"] = FetchAttribute(CodeLookup, "isenabled"); ;
-                                                    parts["IsAccumulator"] = FetchAttribute(CodeLookup, "isaccumulator"); ;
+                                                    parts["Type"] = FetchAttribute(CodeLookup, "type"); 
+                                                    parts["IsEnabled"] = FetchAttribute(CodeLookup, "isenabled"); 
+                                                    parts["IsAccumulator"] = FetchAttribute(CodeLookup, "isaccumulator"); 
                                                     //    parts["UpdateInterval"] = "30000"; //Global every 30 seconds for all rules
-                                                    parts["ResetType"] = FetchAttribute(CodeLookup, "resettype"); ;
-                                                    parts["ResetInterval"] = FetchAttribute(CodeLookup, "resetinterval"); ;
+                                                    parts["ResetType"] = FetchAttribute(CodeLookup, "resettype"); 
+                                                    parts["ResetInterval"] = FetchAttribute(CodeLookup, "resetinterval"); 
 
-                                                    parts["ResetTime"] = FetchAttribute(CodeLookup, "resettime"); ;
-                                                    parts["DayOfWeek"] = FetchAttribute(CodeLookup, "dayofweek"); ;
-                                                    parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); ;
+                                                    parts["ResetTime"] = FetchAttribute(CodeLookup, "resettime"); 
+                                                    parts["DayOfWeek"] = FetchAttribute(CodeLookup, "dayofweek"); 
+                                                    parts["DayOfMonth"] = FetchAttribute(CodeLookup, "dayofmonth"); 
 
                                                     string ScratchString = FetchAttribute(CodeLookup, "ScratchpadString");
                                                     string liveString= FetchAttribute(CodeLookup, "liveupdateiD");
@@ -466,10 +473,10 @@ namespace HSPI_SIID
                                                     }
 
                                                     parts["ScratchPadString"] = ScratchString;
-                                                    parts["DisplayString"] = FetchAttribute(CodeLookup, "displaystring"); ;
-                                                    parts["OldValue"] = FetchAttribute(CodeLookup, "oldvalue"); ;
-                                                    parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); ;
-                                                    parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); ;
+                                                    parts["DisplayString"] = FetchAttribute(CodeLookup, "displaystring"); 
+                                                    parts["OldValue"] = FetchAttribute(CodeLookup, "oldvalue"); 
+                                                    parts["NewValue"] = FetchAttribute(CodeLookup, "newvalue"); 
+                                                    parts["DisplayedValue"] = FetchAttribute(CodeLookup, "displayedvalue"); 
                                                     parts["DateOfLastReset"] = FetchAttribute(CodeLookup, "dateoflastreset");
 
                                                     parts["LiveUpdateID"] = liveString;
@@ -482,8 +489,10 @@ namespace HSPI_SIID
 
                                                     var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
                                                     DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
-
-                                                    Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                   if (!hasStatus)
+                                                    {
+                                                        Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
+                                                    }
                                                 }
                                                 catch (Exception e)
                                                 {
@@ -1129,7 +1138,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
                     Row.Add(ScratchBuilder.button("R_"+ID.ToString(),"Reset").print());
                     Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
-                    Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
+                  //  Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
                
                     ScratchTable.addArrayRow(Row.ToArray(), Back);
 

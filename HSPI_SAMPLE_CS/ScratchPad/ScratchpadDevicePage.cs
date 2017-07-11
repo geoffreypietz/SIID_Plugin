@@ -303,15 +303,15 @@ namespace HSPI_SIID.ScratchPad
 
 
        public void MakeStewardVSP(int deviceID) {
-       // Instance.host.DeviceVSP_ClearAll(deviceID, true);
-
-            var Control = new VSVGPairs.VSPair(ePairStatusControl.Control);
+           
+            var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
             Control.PairType = VSVGPairs.VSVGPairType.Range;
             Control.RangeStart = -100;
             Control.RangeEnd = 1000;
             Control.Render = Enums.CAPIControlType.TextBox_Number;
           var IS =  Instance.host.DeviceVSP_AddPair(deviceID, Control);
-          
+
+        
 
         }
 
