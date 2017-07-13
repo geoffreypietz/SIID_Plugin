@@ -28,9 +28,9 @@ namespace HSPI_SIID.ScratchPad
             double OutValue = 0;
             try
             {
-               
 
-                    OutValue = GeneralHelperFunctions.Evaluate(FinalString.ToString());
+
+                OutValue = GeneralHelperFunctions.Evaluate(FinalString.ToString());
 
 
 
@@ -39,6 +39,12 @@ namespace HSPI_SIID.ScratchPad
             {
                 OutValue = 0;
             }
+
+                if (Math.Abs(OutValue) < .00001)
+                {
+                    OutValue = 0;
+                }
+
             return OutValue;
         }
         public void doLiveRule(SiidDevice Rule)
