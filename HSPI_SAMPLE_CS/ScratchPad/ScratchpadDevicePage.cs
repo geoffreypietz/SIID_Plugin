@@ -40,10 +40,7 @@ namespace HSPI_SIID.ScratchPad
                 OutValue = 0;
             }
 
-                if (Math.Abs(OutValue) < .00001)
-                {
-                    OutValue = 0;
-                }
+             
 
             return OutValue;
         }
@@ -57,9 +54,15 @@ namespace HSPI_SIID.ScratchPad
             {
                 double Rate = Double.Parse(parts["RateValue"]);
                 CalculatedString = CalculatedString * Rate;
+
+          
             }
             catch
             {
+            }
+            if (Math.Abs(CalculatedString) < .00001) 
+            {
+                CalculatedString = 0;
             }
             Rule.UpdateExtraData("LiveValue", "" + CalculatedString.ToString());
 
