@@ -555,7 +555,14 @@ namespace HSPI_SIID.BACnet
                 var EDO = device.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 var bacnetNodeDataString = parts["BACnetNodeData"];
-                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+
+
+
+                //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+
+
+                var bacnetNodeData = ParseJsonString(bacnetNodeDataString);
+
 
 
                 if (bacnetNodeData["node_type"] == "root")
@@ -608,7 +615,19 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 var EDO = device.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                 var bacnetNodeDataString = parts["BACnetNodeData"];
-                var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+
+                //Console.WriteLine("Get BACnet Node Data: " + bacnetNodeDataString);
+
+                //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+                var bacnetNodeData = BACnetDevices.ParseJsonString(bacnetNodeDataString);
+
+                //Console.WriteLine("BACnet Node Data Keys:");
+
+                //foreach (var key in bacnetNodeData.Keys)
+                //{
+                //    Console.WriteLine("key: " + key);
+                //    Console.WriteLine("value: " + bacnetNodeData[key.ToString()]);
+                //}
 
                 return bacnetNodeData;
             }
@@ -904,7 +923,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
-
+                
 
             //var hsParentDev = SiidDev.Device;
 
@@ -921,6 +940,9 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                 hsParentDev = SiidDev.Device;
                     hsParentBacnetNodeData = getBacnetNodeData(hsParentDev);
+
+
+
                 }
                 catch
                 {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
@@ -1415,6 +1437,84 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 EDO.AddNamed("SSIDKey", parts.ToString());
                 Device.set_PlugExtraData_Set(Instance.host, EDO);
 
+            }
+
+
+
+            public static NameValueCollection ParseJsonString(String json)     //can't handle nested objects, I guess
+            {
+
+                var nvc = new NameValueCollection();
+
+                json = json.Trim("{} ".ToCharArray());
+
+
+                //var s = System.Text.RegularExpressions.Regex.Split("(?<!\\)");
+
+
+                var reg = new System.Text.RegularExpressions.Regex("(?<!\\\\),");
+
+                var reg2 = new System.Text.RegularExpressions.Regex("(?<!\\\\):");            //and what if it has ampersand, equals sign?
+
+                
+
+
+
+                //json = json.Replace("\\", "");
+
+
+                var pairs = reg.Split(json);
+
+                //var pairs = json.Split("&".ToCharArray());
+
+
+
+                //dynamic foo = new ExpandoObject();
+                //foo.Bar = "something";
+                //string json = Newtonsoft.Json.JsonConvert.SerializeObject(foo);
+
+
+
+                foreach (var pair in pairs)
+                {
+                    if (String.IsNullOrEmpty(pair))
+                        continue;
+
+                    var parts = reg2.Split(pair);
+                    var key = parts[0].Trim().Replace("\\", "");
+                    var val = parts[1].Trim().Replace("\\", "");
+                    nvc[key] = val;
+                }
+
+
+                return nvc;
+
+            }
+
+
+            public static String BuildJsonString(NameValueCollection nvc)
+            {
+                var json = "{";
+
+
+
+                //replace in keys commas, colons, brackets
+
+                foreach (var key in nvc.Keys)
+                {
+                    var jsonKey = key.ToString().Replace(",", "\\,").Replace(":", "\\:");
+                    var jsonVal = nvc[key.ToString()].Replace(",", "\\,").Replace(":", "\\:");
+
+
+
+                    json += jsonKey + ": " + jsonVal + ", ";
+                }
+                json = json.TrimEnd(", ".ToCharArray());
+
+
+
+                json += "}";
+                return json;
             }
 
 

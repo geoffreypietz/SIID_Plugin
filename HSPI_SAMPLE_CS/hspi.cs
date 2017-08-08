@@ -470,6 +470,7 @@ namespace HSPI_SIID
         //TODO: do we need to add instance name to these pageNames?
 
 
+
 		//If you have more than one web page, use pageName to route it to the proper GetPagePlugin
 		Console.WriteLine("GetPagePlugin pageName: " + pageName +" "+queryString);
             // get the correct page
@@ -533,6 +534,9 @@ namespace HSPI_SIID
                 //return Instance.bacnetDataService.GetData(queryString);
 
             }
+
+
+
 
 
        

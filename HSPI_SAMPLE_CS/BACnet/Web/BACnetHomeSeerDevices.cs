@@ -734,7 +734,7 @@ namespace HSPI_SIID.BACnet
             
 
 
-            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString(), true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData, true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
@@ -1237,7 +1237,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString(), true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData, true)); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
@@ -1755,13 +1755,34 @@ namespace HSPI_SIID.BACnet
             }
 
 
+            Console.WriteLine("Creating new HS bacnet device w/ node data: ");
 
 
-            EDO.AddNamed("SSIDKey", siidDeviceData(bacnetNodeData.ToString())); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
+
+            Console.WriteLine(bacnetNodeData.ToString());
+
+
+
+            //var siidData = siidDeviceData(BACnetDevices.BuildJsonString(bacnetNodeData));
+
+            var siidData = siidDeviceData(bacnetNodeData);
+
+            Console.WriteLine("All SIID Data for this device: " + siidData);
+
+
+            EDO.AddNamed("SSIDKey", siidData); //Made it so all SIID devices have all their device data in the extra data store under the key SIIDKey
             //Could be BACnet device or object, but either way turns into a HomeSeer device
 
 
             newDevice.set_PlugExtraData_Set(Instance.host, EDO);
+
+
+
+            var ped = newDevice.get_PlugExtraData_Get(Instance.host);
+
+            Console.WriteLine("Retrieved SIID Data for this device: " + ped.ToString());
+
+            Console.WriteLine(EDO.GetNamed("SSIDKey"));
 
 
 
@@ -1790,8 +1811,16 @@ namespace HSPI_SIID.BACnet
 
         private Boolean isMatchingHomeseerBacnetNode(String bacnetNodeData, String homeseerNodeData, String nodeType)      //we may want to fetch an existing homeseer device node based on an incoming object node
         {
-            var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
-            var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
+
+
+            //var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
+            var bacnetNode = BACnetDevices.ParseJsonString(homeseerNodeData);
+
+
+            //var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
+            var homeseerNode = BACnetDevices.ParseJsonString(homeseerNodeData);
+
+
 
             foreach (var nodeProp in (nodeType == "device" ? BACnetTreeNode.DeviceNodeProperties : BACnetTreeNode.ObjectNodeProperties))
                 if (bacnetNode[nodeProp] != homeseerNode[nodeProp])
@@ -1802,13 +1831,18 @@ namespace HSPI_SIID.BACnet
 
 
 
+
+
         //Generates the plugin extra data stuff for BACnet Devices
         //Really only thing I want these to have at minimum is type, rawvalue,processedvalue
-        public string siidDeviceData(String bacnetNodeDataString, Boolean isWritePriorityDev = false)
+        public string siidDeviceData(NameValueCollection bacnetNodeData, Boolean isWritePriorityDev = false)
         {
             var parts = HttpUtility.ParseQueryString(string.Empty);
 
-            var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+
+            //.var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+            //var bacnetNodeData = BACnetDevices.ParseJsonString(bacnetNodeDataString);
+
 
             var bacnetTypeString = (bacnetNodeData["node_type"] == "device" ? "BACnet Device" : "BACnet Object");
 
@@ -1821,7 +1855,10 @@ namespace HSPI_SIID.BACnet
             //...
 
 
-            parts["BACnetNodeData"] = bacnetNodeDataString;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
+            //parts["BACnetNodeData"] = bacnetNodeDataString;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
+
+            parts["BACnetNodeData"] = BACnetDevices.BuildJsonString(bacnetNodeData);
+
             //ex. ip_address=192.168.1.1&device_instance=400001
 
             //within here, "node_type" indicates whether device or object...
@@ -1840,6 +1877,51 @@ namespace HSPI_SIID.BACnet
             return parts.ToString();
 
         }
+
+
+
+
+        ////Generates the plugin extra data stuff for BACnet Devices
+        ////Really only thing I want these to have at minimum is type, rawvalue,processedvalue
+        //public string siidDeviceData(String bacnetNodeDataString, Boolean isWritePriorityDev = false)
+        //{
+        //    var parts = HttpUtility.ParseQueryString(string.Empty);
+
+
+        //    //.var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+        //    var bacnetNodeData = BACnetDevices.ParseJsonString(bacnetNodeDataString);
+
+
+        //    var bacnetTypeString = (bacnetNodeData["node_type"] == "device" ? "BACnet Device" : "BACnet Object");
+
+
+        //    if (isWritePriorityDev)
+        //        bacnetTypeString += " (write priority)";
+
+
+        //    parts["Type"] = bacnetTypeString;
+        //    //...
+
+
+        //    parts["BACnetNodeData"] = bacnetNodeDataString;   //this is string representation of nodeData from original node in tree, representing BACnet device or object
+        //    //ex. ip_address=192.168.1.1&device_instance=400001
+
+        //    //within here, "node_type" indicates whether device or object...
+
+
+
+        //    //enough information to be able to uniquely identify it in network.
+        //    //also tells us whether this is a BACnet device or a BACnet object.
+
+
+        //    //sure, for now...will have to tap into Present_Value property if present.  Won't apply for devices.
+        //    parts["RawValue"] = "0";
+        //    parts["ProcessedValue"] = "0";
+
+
+        //    return parts.ToString();
+
+        //}
 
 
 

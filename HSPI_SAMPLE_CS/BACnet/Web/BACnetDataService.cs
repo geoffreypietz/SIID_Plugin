@@ -149,6 +149,7 @@ namespace HSPI_SIID.BACnet
 
             catch (Exception ex)
             {
+                Console.WriteLine("Exception in GetBacnetObject: " + ex.StackTrace);
                 return null;
 
                 //ModbusConfHtml.add("Error: ", "Could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
@@ -290,6 +291,8 @@ namespace HSPI_SIID.BACnet
             }
             catch (Exception ex)
             {
+                Console.WriteLine("exception in GetPagePlugin");
+                Console.WriteLine(ex.StackTrace);
                 //return emptyResult;
             }
 

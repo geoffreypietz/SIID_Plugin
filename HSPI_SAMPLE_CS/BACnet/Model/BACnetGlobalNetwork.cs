@@ -124,12 +124,17 @@ namespace HSPI_SIID.BACnet
             System.Net.NetworkInformation.NetworkInterface[] interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
             foreach (System.Net.NetworkInformation.NetworkInterface inf in interfaces)
             {
+
+                Console.WriteLine(inf.Name);
+
                 if (!inf.IsReceiveOnly && inf.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && inf.SupportsMulticast && inf.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
                 {
                     System.Net.NetworkInformation.IPInterfaceProperties ipinfo = inf.GetIPProperties();
                     //if (ipinfo.GatewayAddresses == null || ipinfo.GatewayAddresses.Count == 0 || (ipinfo.GatewayAddresses.Count == 1 && ipinfo.GatewayAddresses[0].Address.ToString() == "0.0.0.0")) continue;
                     foreach (System.Net.NetworkInformation.UnicastIPAddressInformation addr in ipinfo.UnicastAddresses)
                     {
+                        Console.WriteLine(addr.Address);
+
                         if ((addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork))  // ||
                         // ((addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) && Yabe.Properties.Settings.Default.IPv6_Support))   //for now, no IPv6...
                         {

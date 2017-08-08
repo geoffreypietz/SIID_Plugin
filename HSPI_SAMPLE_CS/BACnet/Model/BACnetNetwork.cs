@@ -157,17 +157,22 @@ namespace HSPI_SIID.BACnet
 
                 BacnetClient.Start();
 
+
+                Console.WriteLine("type:" + BacnetClient.Transport.Type);
+
                 //start search
                 if (BacnetClient.Transport.Type == BacnetAddressTypes.IP || BacnetClient.Transport.Type == BacnetAddressTypes.Ethernet
                     || BacnetClient.Transport.Type == BacnetAddressTypes.IPV6
                     || (BacnetClient.Transport is BacnetMstpProtocolTransport && ((BacnetMstpProtocolTransport)BacnetClient.Transport).SourceAddress != -1)
                     || BacnetClient.Transport.Type == BacnetAddressTypes.PTP)
                 {
+                    Console.WriteLine("Starting device search");
                     System.Threading.ThreadPool.QueueUserWorkItem((o) =>
                     {
                         for (int i = 0; i < BacnetClient.Retries; i++)
                         {
                             BacnetClient.WhoIs();
+                            Console.WriteLine("Sent WhoIs");
                             System.Threading.Thread.Sleep(BacnetClient.Timeout);
                         }
                     }, null);
@@ -182,10 +187,19 @@ namespace HSPI_SIID.BACnet
             }
             catch (Exception ex)
             {
+                Console.WriteLine("Error getting devices:" + ex.Message + "\n" + ex.StackTrace);
+
+
                 //m_devices.Remove(bacnetClient);
                 //node.Remove();
                 //MessageBox.Show(this, "Couldn't start Bacnet bacnetClientunication: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            //BacnetClient.WhoIs();
+            //System.Threading.Thread.Sleep(BacnetClient.Timeout);
+
+
+            Console.WriteLine("Done getting devices");
         }
 
 
