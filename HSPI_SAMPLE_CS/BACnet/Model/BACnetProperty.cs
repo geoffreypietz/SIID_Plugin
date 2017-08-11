@@ -217,6 +217,9 @@ namespace HSPI_SIID.BACnet
 
         public bool WriteValue(object new_value, int writePriority = 0)
         {
+            Console.WriteLine(this.BacnetPropertyId + " - Writing value: " + new_value.ToString() + " with write priority: " + writePriority);
+
+
             var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;
             var adr = BacnetObject.BacnetDevice.BacnetAddress;
             var object_id = BacnetObject.BacnetObjectId;
@@ -316,17 +319,21 @@ namespace HSPI_SIID.BACnet
 
                 if (!comm.WritePropertyRequest(adr, object_id, BacnetPropertyId, b_value))
                 {
+                    Console.WriteLine(this.BacnetPropertyId + " - error writing property.  WritePropertyRequest returned false");
                     success = false;
                     //MessageBox.Show(this, "Couldn't write property", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine(this.BacnetPropertyId + " - error writing property: " + ex.StackTrace + " " + ex.Message);
                 success = false;
                 //MessageBox.Show(this, "Error during write: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             //success = true;
+            if (success)
+                Console.WriteLine(this.BacnetPropertyId + " - Successful writing property");
 
             //ReadValue();            //or do we let the webpage do this?  Once write callback has returned, read the value again?
 

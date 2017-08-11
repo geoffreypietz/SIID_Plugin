@@ -62,7 +62,9 @@ namespace HSPI_SIID.BACnet
             {
                 var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+
+                var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+                //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
 
                 var DevRef = hsBacnetDevice.get_Ref(Instance.host);
 
@@ -164,7 +166,11 @@ namespace HSPI_SIID.BACnet
 
                     var EDO2 = bacnetObject.get_PlugExtraData_Get(Instance.host);
                     var parts2 = HttpUtility.ParseQueryString(EDO2.GetNamed("SSIDKey").ToString());
-                    var bacnetNodeData2 = HttpUtility.ParseQueryString(parts2["BACnetNodeData"]);
+
+                    //var bacnetNodeData2 = HttpUtility.ParseQueryString(parts2["BACnetNodeData"]);
+                    var bacnetNodeData2 = BACnetDevices.ParseJsonString(parts2["BACnetNodeData"]);
+
+
                     var subDeviceRef = bacnetObject.get_Ref(Instance.host);
 
 
@@ -241,7 +247,8 @@ namespace HSPI_SIID.BACnet
                     var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
-                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
                     if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "device")
                         listOfDevices.Add(Dev);
                 }
@@ -273,7 +280,9 @@ namespace HSPI_SIID.BACnet
                     var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
-                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+
                     if (parts["Type"] == "BACnet Object" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
                         listOfDevices.Add(Dev);
                 }
@@ -310,7 +319,11 @@ namespace HSPI_SIID.BACnet
                     var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     string s = parts["Type"];
-                    var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    
+                    //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                    var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+
+
                     if (parts["Type"] == "BACnet Object" && belongsToThisInstance(hsBacnetDevice) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
                         //listOfDevices.Add(hsBacnetDevice);
                         devIds.Add(Dev.Ref);
@@ -368,17 +381,19 @@ namespace HSPI_SIID.BACnet
 
 
             System.Collections.Specialized.NameValueCollection bacnetNodeData = null;
-            bacnetNodeData = System.Web.HttpUtility.ParseQueryString(bacnetNodeDataString);
+            bacnetNodeData = System.Web.HttpUtility.ParseQueryString(bacnetNodeDataString);     //No, here this actually is a query string.
+            //bacnetNodeData = BACnetDevices.ParseJsonString(bacnetNodeDataString);
+
 
             var nodeType = bacnetNodeData["node_type"];
 
 
             int? dv;
 
-            dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeDataString, "device") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "device");
+            dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeData, "device") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeData, "device");
 
             if (nodeType == "object")
-                dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeDataString, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeDataString, "object", dv);
+                dv = getExistingHomeseerBacnetNodeDevice(bacnetNodeData, "object") ?? makeNewHomeseerBacnetNodeDevice(bacnetNodeData, "object", dv);
 
 
 
@@ -401,7 +416,8 @@ namespace HSPI_SIID.BACnet
 
 
 
-        public int? getExistingHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
+        //public int? getExistingHomeseerBacnetNodeDevice(String bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
+        public int? getExistingHomeseerBacnetNodeDevice(NameValueCollection bacnetNodeData, String nodeType)      //now using 'node' to mean a bacnet device or object
         {
             //List<Scheduler.Classes.DeviceClass> listOfDevices = new List<Scheduler.Classes.DeviceClass>();
 
@@ -417,11 +433,13 @@ namespace HSPI_SIID.BACnet
                     //TODO: strip out weird numerical thing that gets added on...
                     var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
 
+                    var hsBacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+
                     if (parts["Type"] == bacnetTypeString)   //parts["BacnetTreeNodeData"]
                     {
                         if ((Dev.get_Interface(Instance.host).ToString() == Util.IFACE_NAME.ToString()) && (Dev.get_InterfaceInstance(Instance.host) == Instance.name)) //Then it's one of ours
                         {
-                            if (isMatchingHomeseerBacnetNode(bacnetNodeData, parts["BACnetNodeData"], nodeType))
+                            if (isMatchingHomeseerBacnetNode(bacnetNodeData, hsBacnetNodeData, nodeType))
                                 return Dev.get_Ref(Instance.host);
                             //could probably store instance stuff in the tree as well...
                             //listOfDevices.Add(Dev);
@@ -1272,7 +1290,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private int? makeNewHomeseerBacnetNodeDevice(String bacnetNodeDataString, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
+        private int? makeNewHomeseerBacnetNodeDevice(NameValueCollection bacnetNodeData, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
         {
 
             var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
@@ -1285,7 +1303,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-            var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
+            //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);    //this actually should be OK; coming from query string in URL
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
                 bacnetNodeData["node_type"] = "device";       //now done in calling function
@@ -1809,21 +1827,22 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private Boolean isMatchingHomeseerBacnetNode(String bacnetNodeData, String homeseerNodeData, String nodeType)      //we may want to fetch an existing homeseer device node based on an incoming object node
+        //private Boolean isMatchingHomeseerBacnetNode(String bacnetNodeData, String homeseerNodeData, String nodeType)      //we may want to fetch an existing homeseer device node based on an incoming object node
+        private Boolean isMatchingHomeseerBacnetNode(NameValueCollection bacnetNodeData, NameValueCollection hsBacnetNodeData, String nodeType)
         {
 
 
             //var bacnetNode = HttpUtility.ParseQueryString(bacnetNodeData);
-            var bacnetNode = BACnetDevices.ParseJsonString(homeseerNodeData);
+            //var bacnetNode = BACnetDevices.ParseJsonString(homeseerNodeData);
 
 
             //var homeseerNode = HttpUtility.ParseQueryString(homeseerNodeData);
-            var homeseerNode = BACnetDevices.ParseJsonString(homeseerNodeData);
+            //var homeseerNode = BACnetDevices.ParseJsonString(homeseerNodeData);
 
 
 
             foreach (var nodeProp in (nodeType == "device" ? BACnetTreeNode.DeviceNodeProperties : BACnetTreeNode.ObjectNodeProperties))
-                if (bacnetNode[nodeProp] != homeseerNode[nodeProp])
+                if (bacnetNodeData[nodeProp] != hsBacnetNodeData[nodeProp])
                     return false;
 
             return true;

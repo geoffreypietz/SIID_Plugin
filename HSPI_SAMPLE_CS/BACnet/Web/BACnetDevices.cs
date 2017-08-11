@@ -388,8 +388,8 @@ namespace HSPI_SIID.BACnet
                                 continue;
 
 
-                            if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
-                                throw new Exception("");
+                            //if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                                //throw new Exception("");
 
 
                             var propIdNum = (int)propId;
@@ -617,6 +617,9 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 var bacnetNodeDataString = parts["BACnetNodeData"];
 
                 //Console.WriteLine("Get BACnet Node Data: " + bacnetNodeDataString);
+
+
+
 
                 //var bacnetNodeData = HttpUtility.ParseQueryString(bacnetNodeDataString);
                 var bacnetNodeData = BACnetDevices.ParseJsonString(bacnetNodeDataString);
@@ -1415,6 +1418,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
             //this would be used if we eventually let them edit device or object instance #'s
+        // is used for editing device polling interval...
             public void updateBacnetNodeData(Scheduler.Classes.DeviceClass Device, string Key, string value)
             {
 
@@ -1422,9 +1426,12 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 var EDO = Device.get_PlugExtraData_Get(Instance.host);
                 var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
 
-                var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+
+
                 bacnetNodeData[Key] = value;
-                parts["BACnetNodeData"] = bacnetNodeData.ToString();
+                parts["BACnetNodeData"] = BACnetDevices.BuildJsonString(bacnetNodeData);
 
                 //parts[Key] = value;
 

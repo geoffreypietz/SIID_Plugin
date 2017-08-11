@@ -740,6 +740,13 @@ namespace HSPI_SIID.BACnet
             if (!BACnetObject.SupportedPropertyIds.Contains(id))
                 return;
 
+
+            //Console.WriteLine("Read property: " + id.ToString() + " (value: " + prop.ValueString() + ")");
+
+            if (id == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                Console.WriteLine(this.BacnetObjectId +    ": present value = " + prop.ValueString());
+
+
             var kvp = new KeyValuePair<BacnetPropertyIds, BACnetProperty>(id, prop);
             BacnetProperties.Add(kvp);
         }
