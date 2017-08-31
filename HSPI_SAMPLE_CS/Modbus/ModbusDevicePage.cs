@@ -464,37 +464,37 @@ public string GetReg(string instring)
             {
                  Enabled = Boolean.Parse(parts["Enabled"]);
             }
-            catch (Exception)
+            catch (Exception E)
             {
+                Instance.hspi.Log("Problem building Modbus Gateway page " + E.Message, 1);
 
-                
             }
 
             try
             {
                  RevOrd = Boolean.Parse(parts["BigE"]);
             }
-            catch (Exception)
+            catch (Exception E)
             {
+                Instance.hspi.Log("Problem building Modbus Gateway page " + E.Message, 1);
 
-               
             }
             try
             {
                  RevByt = Boolean.Parse(parts["RevByte"]);
             }
-            catch (Exception)
+            catch (Exception E)
             {
 
-             
+                Instance.hspi.Log("Problem building Modbus Gateway page " + E.Message, 1);
             }
             try
             {
                  ZeroByt = Boolean.Parse(parts["ZeroB"]);
             }
-            catch (Exception)
+            catch (Exception E)
             {
-
+                Instance.hspi.Log("Problem building Modbus Gateway page " + E.Message, 1);
             }
 
           
@@ -705,7 +705,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public string parseModbusGatewayTab( string data)
         {
-            Console.WriteLine("ConfigDevicePost: " + data);
+          //  Console.WriteLine("ConfigDevicePost: " + data);
 
  
             System.Collections.Specialized.NameValueCollection changed = null;
@@ -749,7 +749,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
         {
 
 
-            Console.WriteLine("ConfigDevicePost: " + data);
+          //  Console.WriteLine("ConfigDevicePost: " + data);
 
 
             System.Collections.Specialized.NameValueCollection changed = null;
@@ -831,12 +831,13 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                     if (bool.Parse(parts["Enabled"]))
                     {
                         Console.WriteLine("Polling Gateway: " + Gate.Ref);
+                            Instance.hspi.Log("Polling Gateway: " + Gate.Ref, 0);
 
-                        //Get list of devices
-                        //If they're enabled, poll them
-                        //Use the time-between and retry things
+                            //Get list of devices
+                            //If they're enabled, poll them
+                            //Use the time-between and retry things
 
-                        List<string> GatewaysStatus = new List<string>();
+                            List<string> GatewaysStatus = new List<string>();
                         foreach (var subId in parts["LinkedDevices"].Split(','))
                         {
                             try
@@ -1013,9 +1014,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                     throw new Exception("Device is set to be read only. Write commands disabled");
                                 }
                                 Console.WriteLine("         Writing to Device: " + devID);
+                                Instance.hspi.Log("         Writing to Device: " + devID, 0);
                                 while (WhoIsBeingPolled.Contains(devID.ToString()))
                                 {
                                     Console.WriteLine("Device currently being polled, waiting for it to be free");
+                                    Instance.hspi.Log("Device currently being polled, waiting for it to be free: " + devID, 0);
                                     System.Threading.Thread.Sleep(1000); //Dont try to write until we aren't reading from the register
                                 }
                                 lock (WhoIsBeingPolled)
@@ -1023,9 +1026,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                     WhoIsBeingPolled.Add(devID.ToString());
                                 }
                                 Console.WriteLine("         Writing " + Send + " To device " + devID);
+                                Instance.hspi.Log("         Writing " + Send + " To device " + devID, 0);
                                 WriteToModbusDevice(NewDevice, Send);
 
                                 Console.WriteLine("         Reading from Device: " + devID);
+                                Instance.hspi.Log("         Reading from Device: " + devID, 0);
                                 ReadFromModbusDevice(NewDevice);
                                 ProcessCalculator(NewDevice);
 
@@ -1033,6 +1038,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                             catch (Exception e)
                             {
                                 Console.WriteLine("Exception: " + e.StackTrace);
+                                Instance.hspi.Log("Problem writing to Modbus Device " + e.Message, 1);
                                 String OldM = Instance.host.DeviceString(Convert.ToInt32(devID));
                                 OldM = OldM.Replace("Sending command to device. Old value: ", "");
 
@@ -1195,6 +1201,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
             catch(Exception e) {
                 OutValue = "Calculator parse error: " + e.Message+" \nFinal string:"+ FinalString.ToString();
+                Instance.hspi.Log("Calculator parse error " + e.Message, 1);
             }
 
             NewDevice.UpdateExtraData( "ProcessedValue", OutValue);
@@ -1202,7 +1209,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Instance.host.SetDeviceString(devID,ValueString,true);
             Instance.host.SetDeviceValueByRef(devID, 1, true);
-            Console.WriteLine(devID+ " : " + ValueString);
+           // Console.WriteLine(devID+ " : " + ValueString);
 
             Instance.host.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
 

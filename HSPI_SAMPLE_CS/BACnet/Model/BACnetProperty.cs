@@ -16,15 +16,15 @@ namespace HSPI_SIID.BACnet
 
 
 
-        private void Initialize(BACnetObject bno, BacnetPropertyIds property_id)
+        private void Initialize(BACnetObject bno, BacnetPropertyIds property_id )
         {
             this.BacnetObject = bno;
             this.BacnetPropertyId = property_id;        //this is how these are indexed within the object
-
+            
             this.Id = (Int32)property_id;
             SetName();
 
-
+            
 
         }
 
@@ -299,6 +299,7 @@ namespace HSPI_SIID.BACnet
                 }
                 catch (Exception ex)
                 {
+                   // Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                     //MessageBox.Show(this, "Couldn't convert property: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
@@ -326,6 +327,7 @@ namespace HSPI_SIID.BACnet
             }
             catch (Exception ex)
             {
+                //Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                 Console.WriteLine(this.BacnetPropertyId + " - error writing property: " + ex.StackTrace + " " + ex.Message);
                 success = false;
                 //MessageBox.Show(this, "Error during write: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -436,7 +438,7 @@ namespace HSPI_SIID.BACnet
             }
             catch (Exception ex)
             {
-
+                //Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                 return "";
             }
 

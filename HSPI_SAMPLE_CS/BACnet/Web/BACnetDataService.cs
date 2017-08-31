@@ -149,6 +149,7 @@ namespace HSPI_SIID.BACnet
 
             catch (Exception ex)
             {
+                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                 Console.WriteLine("Exception in GetBacnetObject: " + ex.StackTrace);
                 return null;
 
@@ -291,6 +292,7 @@ namespace HSPI_SIID.BACnet
             }
             catch (Exception ex)
             {
+                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                 Console.WriteLine("exception in GetPagePlugin");
                 Console.WriteLine(ex.StackTrace);
                 //return emptyResult;

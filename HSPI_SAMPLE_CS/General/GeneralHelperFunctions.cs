@@ -74,9 +74,9 @@ namespace HSPI_SIID.General
                             throw new Exception();
                         FinalString.Replace("$(" + dv + ")", Rep); 
                     }
-                    catch
+                    catch(Exception E)
                     {
-
+                        Instance.hspi.Log("Error parsing scratchpad string: Could not retrive device value for device: "+dv, 2);
                     }
 
                 }

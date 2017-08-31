@@ -10,16 +10,16 @@ namespace HSPI_SIID.BACnet
     public class BACnetDevice : IBACnetTreeDataObject
     {
 
-        public BACnetDevice(BACnetNetwork bnn, BacnetAddress bna, uint deviceId ) //  : base()  //: base(BACnetDevice bnd, BacnetObjectId boi)
+        public BACnetDevice(BACnetNetwork bnn, BacnetAddress bna, uint deviceId, InstanceHolder I ) //  : base()  //: base(BACnetDevice bnd, BacnetObjectId boi)
         {
 
             this.BacnetNetwork = bnn;   //may be multiple devices on one network
             this.BacnetAddress = bna;   //each device has single bacnet network
             this.InstanceNumber = deviceId; //pretty much just for internal use
-
+            Instance = I;
         }
 
-
+        InstanceHolder Instance;
 
 
 
@@ -332,8 +332,9 @@ namespace HSPI_SIID.BACnet
                 }
                 return ret == null || ret.Count == 0 ? null : ret;
             }
-            catch (Exception)
+            catch (Exception E)
             {
+                Instance.hspi.Log("BACnetDevice Exception " + E.Message, 2);
                 //Trace.TraceInformation("Got exception from 'Structured Object List'");
                 return null;
             }
@@ -356,9 +357,10 @@ namespace HSPI_SIID.BACnet
                     value_list = null;
                 }
             }
-            catch (Exception ex)
+            catch (Exception E)
             {
                 //Trace.TraceWarning("Got exception from 'Object List'");
+                Instance.hspi.Log("BACnetDevice Exception " + E.Message, 2);
                 value_list = null;
             }
 
@@ -455,9 +457,10 @@ namespace HSPI_SIID.BACnet
                 }
                 catch (Exception ex)
                 {
-                    //MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    //return;
-                }
+                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                //MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //return;
+            }
 
                 return all_values_list;
 
@@ -506,6 +509,7 @@ namespace HSPI_SIID.BACnet
                 }
                 catch (Exception ex)
                 {
+                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                     //MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }

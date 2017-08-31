@@ -55,18 +55,21 @@ namespace HSPI_SIID
 
         public void LoadINISettings()
         {
-            Console.WriteLine("IN LOAD "+ OurPageName);
+           // Console.WriteLine("IN LOAD "+ OurPageName);
             selectedPlugin = Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Selected_Plugin", "1", OurPageName.Replace(":", "") + ".INI"));
+       
+            Instance.hspi.LogLevel = (HSPI_SIID.HSPI.LogType)Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Log_Level", "2" , OurPageName.Replace(":", "") + ".INI"));
             Instance.modAjax.loadModbusConfig();
-
+    
 
             SaveAllINISettings();
         }
 
         public void SaveAllINISettings()
         {
-            Console.WriteLine("IN SAVE " + OurPageName);
+           // Console.WriteLine("IN SAVE " + OurPageName);
             Instance.host.SaveINISetting("CONFIG", "Selected_Plugin", selectedPlugin.ToString(), OurPageName.Replace(":","") + ".INI");
+            Instance.host.SaveINISetting("CONFIG", "Log_Level", ((int)Instance.hspi.LogLevel).ToString(), OurPageName.Replace(":", "") + ".INI");
 
             Instance.modAjax.saveModbusConfig();
             //modbus specific config
@@ -150,7 +153,7 @@ namespace HSPI_SIID
                         
 
                     }
-                    Console.WriteLine(FileString.ToString());
+                 //   Console.WriteLine(FileString.ToString());
                     // byte[] byteArray = Encoding.ASCII.GetBytes(FileString.ToString());
                     // MemoryStream stream = new MemoryStream(byteArray);
                     StringReader sr = new StringReader(FileString.ToString());
@@ -164,7 +167,7 @@ namespace HSPI_SIID
                         string[] HeaderArray = null;
                         while (!parser.EndOfData)
                         {
-                            Console.WriteLine("Reading line:");
+                          //  Console.WriteLine("Reading line:");
                             string[] fieldRow = null;
                             try
                             {
@@ -176,6 +179,7 @@ namespace HSPI_SIID
 
                                 Console.WriteLine("Error in reading file:");
                                 Console.WriteLine(e.ToString());
+                                Instance.hspi.Log("Error in import" + e.Message, 2);
                                 continue;
                             }
                             
@@ -199,8 +203,13 @@ namespace HSPI_SIID
                                 try
                                 {
                                     Console.WriteLine("Configuring imported device "+int.Parse(CodeLookup["id"])); //Having a failure at CodeLookup["id"]
+                                    Instance.hspi.Log("Configuring imported device " + int.Parse(CodeLookup["id"]), 0);
+
                                     Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(OldToNew[int.Parse(CodeLookup["id"])]);
                                     Console.WriteLine("Device imported to ID " + OldToNew[int.Parse(CodeLookup["id"])]);
+                                    Instance.hspi.Log("Device imported to ID " + OldToNew[int.Parse(CodeLookup["id"])], 0);
+
+
                                     newDevice.set_Name(Instance.host, FetchAttribute(CodeLookup, "Name"));
                                     newDevice.set_Location2(Instance.host, FetchAttribute(CodeLookup, "Floor"));
                                     newDevice.set_Location(Instance.host, FetchAttribute(CodeLookup, "Room"));
@@ -227,7 +236,7 @@ namespace HSPI_SIID
                                 
                                             var Z = Instance.host.DeviceVSP_AddPair(OldToNew[int.Parse(CodeLookup["id"])], pair);
                                        
-                                            Console.WriteLine(Z);
+                                          //  Console.WriteLine(Z);
                                            hasStatus = true;
                                         }
                                     }
@@ -362,6 +371,7 @@ namespace HSPI_SIID
                                     catch(Exception e)
                                     {
                                         Console.WriteLine("Failed setting device type.");
+                                        Instance.hspi.Log("Error in import, failed setting device type. " + e.Message, 2);
                                         Console.WriteLine(e.ToString());
                                     }
                                     //Now replace associated devices with their new ID:
@@ -379,6 +389,7 @@ namespace HSPI_SIID
                                             catch(Exception e)
                                             {
                                                 Console.WriteLine("Failed adding associated device.");
+                                                Instance.hspi.Log("Error in import, Failed adding associated device. " + e.Message, 2);
                                                 Console.WriteLine(e.ToString());
                                             }
                                         }
@@ -438,6 +449,7 @@ namespace HSPI_SIID
                                                 catch(Exception e)
                                                 {
                                                     Console.WriteLine("Failed to add specific BACnet information.");
+                                                    Instance.hspi.Log("Error in import, failed to add specific BACnet information. " + e.Message, 2);
                                                     Console.WriteLine(e.ToString());
                                                 }
 
@@ -497,6 +509,7 @@ namespace HSPI_SIID
                                                 catch (Exception e)
                                                 {
                                                     Console.WriteLine("Failed to add specific Scratchpad Rule information.");
+                                                    Instance.hspi.Log("Error in import, failed to add specific Scratchpad Rule information. " + e.Message, 2);
                                                     Console.WriteLine(e.ToString());
                                                 }
                                                 break;
@@ -539,6 +552,7 @@ namespace HSPI_SIID
                                                         catch (Exception e)
                                                         {
                                                             Console.WriteLine("Associated linked device does not exist for Modbus Gateway.");
+                                                            Instance.hspi.Log("Error in import, associated linked device does not exist for Modbus Gateway.  " + e.Message, 2);
                                                             Console.WriteLine(e.ToString());
                                                         }
                                                     }
@@ -551,6 +565,7 @@ namespace HSPI_SIID
                                                 catch (Exception e)
                                                 {
                                                     Console.WriteLine("Failed to add specific Modbus Gateway information.");
+                                                    Instance.hspi.Log("Error in import, failed to add specific Modbus Gateway information. " + e.Message, 2);
                                                     Console.WriteLine(e.ToString());
                                                 }
 
@@ -618,6 +633,7 @@ namespace HSPI_SIID
                                                 catch (Exception e)
                                                 {
                                                     Console.WriteLine("Failed to add specific Modbus Device information.");
+                                                    Instance.hspi.Log("Error in import, Failed to add specific Modbus Device information. " + e.Message, 2);
                                                     Console.WriteLine(e.ToString());
                                                 }
                                                 break;
@@ -633,6 +649,7 @@ namespace HSPI_SIID
                                 catch (Exception e)
                                 {
                                     Console.WriteLine("Failed while importing device ");
+                                    Instance.hspi.Log("Error in import, failed to import a device. " + e.Message, 2);
                                     Console.WriteLine(e.ToString());
                                 }
 
@@ -658,6 +675,7 @@ namespace HSPI_SIID
             catch (Exception e)
             {
                 Console.WriteLine("Failed out of uppermost level of Import function");
+                Instance.hspi.Log("Error in import, failed to read import file. " + e.Message, 2);
                 Console.WriteLine(e.ToString());
             }
 
@@ -741,6 +759,7 @@ namespace HSPI_SIID
                 }
                 catch (Exception e)
                 {
+                    Instance.hspi.Log("Error in export function, " + e.Message, 2);
                     Console.WriteLine(e.ToString());
                 }
 
@@ -796,7 +815,7 @@ namespace HSPI_SIID
 
         public string postbackSSIDConfigPage(string page, string data, string user, int userRights)
         {
-            Console.WriteLine("AM in the SIID postbackConfig for some reason");
+            
             System.Collections.Specialized.NameValueCollection parts = null;
             parts = HttpUtility.ParseQueryString(data); //problem happens when we have nested query strings
             string ID = parts["id"].Split('_')[0];
@@ -838,6 +857,18 @@ namespace HSPI_SIID
                     {
                         selectedPlugin = Convert.ToInt32(parts["pluginSelection"]);
                         SaveAllINISettings();
+                        Instance.hspi.Log("Plugin selection changed to:" + selectedPlugin, 0);
+                        break;
+                    }
+
+                case "LogLevel":
+                    {
+        
+                        Instance.hspi.LogLevel = (HSPI_SIID.HSPI.LogType)Convert.ToInt32(parts["value"]);
+                        SaveAllINISettings();
+                        Instance.hspi.Log("Logging level changed to:" + Instance.hspi.LogLevel, 0);
+
+                  
                         break;
                     }
             }
@@ -877,7 +908,8 @@ namespace HSPI_SIID
 
                         System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 10000, Convert.ToInt32(parts["Poll"]));
                         Console.WriteLine("Starting Polling timer for gateway: " + Siid.Ref);
-                        PluginTimerDictionary.Add(Siid.Ref, GateTimer);
+                    Instance.hspi.Log("Starting Polling timer for gateway: " + Siid.Ref, 0);
+                    PluginTimerDictionary.Add(Siid.Ref, GateTimer);
                 }
             }
 
@@ -909,6 +941,7 @@ namespace HSPI_SIID
                 }
                 catch (Exception e)
                 {
+                    Instance.hspi.Log("Failed to add initialize timer for BACnet device "+Siid.Ref+" " + e.Message, 2);
                     Console.WriteLine(e.ToString());
                 }
                 //if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
@@ -965,6 +998,7 @@ namespace HSPI_SIID
                     }
                     catch (Exception e)
                     {
+                        Instance.hspi.Log("Error collecting all modbus devices associated with gateway "  + e.Message, 1);
                         Console.WriteLine(e.ToString());
                     }
 
@@ -1211,7 +1245,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
         public string GetPagePlugin(string pageName, string user, int userRights, string queryString)
         {
-            Console.WriteLine("started the genpage");
+        //    Console.WriteLine("started the genpage");
             StringBuilder stb = new StringBuilder();
             SIID_Page page = this;
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBus" + Instance.ajaxName);
@@ -1231,6 +1265,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 stb.Append(GeneralPageStuff.Uploadbutton("Import", "Import SIID Devices from CSV File").print());
                 stb.Append(GeneralPageStuff.Downloadbutton("Export", "Export SIID Devices to CSV File").print());
                 stb.Append(GeneralPageStuff.button("Scratchpad", "Make new Scratchpad Rule").print());
+                stb.Append("<div>Log Level:"+ GeneralPageStuff.selectorInput(new string[] { "Info", "Warning", "Error", "None" }, "LogLevel", "LogLevel", (int)Instance.hspi.LogLevel).print()+"</div>");
                 //stb.Append(GeneralPageStuff.button("Instance", "Switch Instances").print());
                 stb.Append("</div>");
 
@@ -1521,6 +1556,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
             catch (Exception ex)
             {
+                Instance.hspi.Log("Error building SIID page: " + ex.Message, 2);
                 stb.Append("Test page error: " + ex.Message);
             }
             stb.Append("<br>");

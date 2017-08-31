@@ -123,7 +123,7 @@ namespace HSPI_SIID.ScratchPad
             }
             catch (Exception e)
             {
-
+                Instance.hspi.Log("Problem updating scratchpad display " + e.Message, 2);
             }
 
             //Check if rule is an accumulator, if so do NewValue - OldValue
@@ -586,7 +586,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
         {
 
 
-            Console.WriteLine("ConfigDevicePost: " + data);
+          //  Console.WriteLine("ConfigDevicePost: " + data);
 
 
             System.Collections.Specialized.NameValueCollection changed = null;

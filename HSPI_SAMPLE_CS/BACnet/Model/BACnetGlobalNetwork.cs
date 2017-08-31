@@ -168,7 +168,7 @@ namespace HSPI_SIID.BACnet
             foreach (String ipAddress in ipAddresses)
             {
                 if (!FilterIpAddress || (ipAddress == SelectedIpAddress))
-                    BacnetNetworks.Add(ipAddress, new BACnetNetwork(this, ipAddress));
+                    BacnetNetworks.Add(ipAddress, new BACnetNetwork(this, ipAddress,Instance));
             }
 
 

@@ -509,6 +509,7 @@ namespace HSPI_SIID.BACnet
 
                         } catch (Exception ex)
                         {
+                            Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 1);
                             var t = 2;  //do nothing; just continue to next property.
                         }
                 }
@@ -808,7 +809,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                         } catch (Exception ex)
                         {
-
+                            Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 1);
 
                         }
 
@@ -944,7 +945,10 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 hsParentDev = SiidDev.Device;
                     hsParentBacnetNodeData = getBacnetNodeData(hsParentDev);
 
-
+                if (hsParentBacnetNodeData.Count == 0)
+                {
+                    return;
+                }
 
                 }
                 catch
@@ -995,7 +999,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 foreach (int hsBacnetDevRef in childDevs)
                 {
 
-
+                
                     Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(hsBacnetDevRef);
 
 
@@ -1157,11 +1161,14 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
 
-           //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
+            //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Dispose();
             //SIID_Page.PluginTimerDictionary.Remove(SiidDev.Ref);
-
-            var pi = Int32.Parse(hsParentBacnetNodeData["polling_interval"]);
-
+            var pi = 300000; //dont know where default is, so putting it as 5 minutes
+            try
+            {
+                 pi = Int32.Parse(hsParentBacnetNodeData["polling_interval"]);
+            }
+            catch { }
 
             //SIID_Page.PluginTimerDictionary[SiidDev.Ref].Change(pi, System.Threading.Timeout.Infinite)
 
@@ -1450,7 +1457,8 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
             public static NameValueCollection ParseJsonString(String json)     //can't handle nested objects, I guess
             {
-
+            try
+            {
                 var nvc = new NameValueCollection();
 
                 json = json.Trim("{} ".ToCharArray());
@@ -1461,10 +1469,10 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                 var reg = new System.Text.RegularExpressions.Regex("(?<!\\\\),");
 
-                var reg2 = new System.Text.RegularExpressions.Regex("(?<!\\\\):");            //and what if it has ampersand, equals sign?
+                var reg2 = new System.Text.RegularExpressions.Regex("(?<!\\\\):");            //and what if it has ampersand, equals sign?  !!!!!! DUH BEN! Thats how trhe old stuff is stored. ITs not backwards compatable!
 
-                
-
+                var reg3 = new System.Text.RegularExpressions.Regex("(?<!\\\\)&");
+                var reg4 = new System.Text.RegularExpressions.Regex("(?<!\\\\)=");
 
 
                 //json = json.Replace("\\", "");
@@ -1488,13 +1496,31 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                         continue;
 
                     var parts = reg2.Split(pair);
+                    if (parts.Count() < 2) //Clearly something went wrong. Maybe it's formatted in the old way
+                    {
+                        parts = reg3.Split(pair);
+                    }
+                    if (parts.Count() < 2) //Clearly something went wrong. Maybe it's formatted in the old way
+                    {
+                        parts = reg4.Split(pair);
+                    }
+                    if (parts.Count() < 2) //Clearly something went wrong. Maybe it's formatted in the old way
+                    {
+                        continue;
+                    }
+
                     var key = parts[0].Trim().Replace("\\", "");
-                    var val = parts[1].Trim().Replace("\\", "");
+                    var val = parts[1].Trim().Replace("\\", ""); //Getting a problem when importing from old BACnet objects. having a hard crash here
                     nvc[key] = val;
                 }
 
 
                 return nvc;
+            }
+            catch
+            {
+                return null;
+            }
 
             }
 

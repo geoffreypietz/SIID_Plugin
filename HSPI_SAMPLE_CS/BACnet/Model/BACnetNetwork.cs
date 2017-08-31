@@ -12,10 +12,11 @@ namespace HSPI_SIID.BACnet
     public class BACnetNetwork : IBACnetTreeDataObject
     {
 
-        public BACnetNetwork(BACnetGlobalNetwork bgn, String ipAddr) //, BACnetGlobalNetwork bgn)
+        public BACnetNetwork(BACnetGlobalNetwork bgn, String ipAddr, InstanceHolder I) //, BACnetGlobalNetwork bgn)
         {
             this.IpAddress = ipAddr;
             this.BacnetGlobalNetwork = bgn;
+            Instance = I;
             //this.BacnetTreeNode = new TreeNode(this);
 
             //Discover();   //no, not until user clicks on node to get child devices.
@@ -31,6 +32,7 @@ namespace HSPI_SIID.BACnet
 
         public Boolean DevicesDiscovered = false;
 
+        public InstanceHolder Instance;
 
 
         //can be multiple devices...just need one client to communicate on one IP endpoint
@@ -188,7 +190,7 @@ namespace HSPI_SIID.BACnet
             catch (Exception ex)
             {
                 Console.WriteLine("Error getting devices:" + ex.Message + "\n" + ex.StackTrace);
-
+                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
 
                 //m_devices.Remove(bacnetClient);
                 //node.Remove();
@@ -234,7 +236,7 @@ namespace HSPI_SIID.BACnet
             if (BacnetGlobalNetwork.FilterDeviceInstance && (device_id < BacnetGlobalNetwork.DeviceInstanceMin || device_id > BacnetGlobalNetwork.DeviceInstanceMax))
                 return;
 
-            var device = new BACnetDevice(this, adr, device_id);
+            var device = new BACnetDevice(this, adr, device_id, Instance);
             BacnetDevices.Add(device_id, device);
 
         }
@@ -254,8 +256,9 @@ namespace HSPI_SIID.BACnet
                     else
                         sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                     sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                 }
             }
@@ -287,8 +290,9 @@ namespace HSPI_SIID.BACnet
                     sender.ReadPropertyMultipleResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), values);
 
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
                     sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                 }
             }

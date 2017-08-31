@@ -181,6 +181,7 @@ namespace HSPI_SIID
                     }
                     catch (Exception ex)
                     {
+                 
                         Console.WriteLine("Error getting API version from host object: " + ex.Message + "->" + ex.StackTrace);
                         //Return
                     }

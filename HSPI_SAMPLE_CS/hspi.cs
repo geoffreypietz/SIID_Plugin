@@ -34,13 +34,77 @@ namespace HSPI_SIID
       
 
         public  string MainSiidPageName = "";
-        
-
-      //  public string Instance = "";
 
 
+        //  public string Instance = "";
 
-	public static bool bShutDown = false;
+
+
+
+
+
+        public enum LogType
+        {
+            LOG_TYPE_INFO = 0,
+            LOG_TYPE_ERROR = 2,
+            LOG_TYPE_WARNING = 1,
+            LOG_TYPE_NONE = 3,
+        }
+
+        public LogType LogLevel = LogType.LOG_TYPE_ERROR;
+
+
+        public void Log(Exception E)
+        {
+            Log(E.Message, 2);
+        }
+
+        public void Log(string msg)
+        {
+            Log(msg, 0);
+        }
+
+        public void Log(string msg, int logType)
+        {
+            Log(msg, (LogType)logType);
+        }
+
+        public void Log(string msg, LogType logType)
+        {
+
+            try
+            {
+                if (msg == null)
+                    msg = "";
+                if (!Enum.IsDefined(typeof(LogType), logType))
+                {
+                    logType = LogType.LOG_TYPE_ERROR;
+                }
+                Console.WriteLine(msg);
+                if (logType >= LogLevel)
+                {
+                    switch (logType)
+                    {
+                        case LogType.LOG_TYPE_ERROR:
+                            Instance.host.WriteLog(Util.IFACE_NAME + " Error", msg);
+                            break;
+                        case LogType.LOG_TYPE_WARNING:
+                            Instance.host.WriteLog(Util.IFACE_NAME + " Warning", msg);
+                            break;
+                        case LogType.LOG_TYPE_INFO:
+                            Instance.host.WriteLog(Util.IFACE_NAME, msg);
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception in LOG of " + Util.IFACE_NAME + ": " + ex.Message);
+            }
+
+        }
+
+        public static bool bShutDown = false;
 
         #region "Externally Accessible Methods/Procedures - e.g. Script Commands"
         /*
@@ -416,7 +480,7 @@ namespace HSPI_SIID
 
 	public Enums.ConfigDevicePostReturn ConfigDevicePost(int dvRef, string data, string user, int userRights) //this what we need to do?
 	{ //changes made to the special tab do ajax callbacks to here
-            Console.WriteLine("In Configure Device Post");
+      //      Console.WriteLine("In Configure Device Post");
           /*  Scheduler.Classes.DeviceClass ourDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dvRef);
             var EDO = ourDevice.get_PlugExtraData_Get(Instance.host);
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
@@ -453,12 +517,12 @@ namespace HSPI_SIID
 	// ================================================================================================
 	public string GenPage(string link)
 	{
-            Console.WriteLine("ALSO AM HERE "+link); //for some reason, Ajax calls from other instances going here
+          //  Console.WriteLine("ALSO AM HERE "+link); //for some reason, Ajax calls from other instances going here
             return "Generated from GenPage in plugin " + Util.IFACE_NAME;
 	}
 	public string PagePut(string data)
 	{
-            Console.WriteLine("In Page Put");
+          //  Console.WriteLine("In Page Put");
 		return "";
 	}
 	// ================================================================================================
@@ -547,7 +611,7 @@ namespace HSPI_SIID
 	public string PostBackProc(string pageName, string data, string user, int userRights)
 	{
             //If you have more than one web page, use pageName to route it to the proper postBackProc
-            Console.WriteLine("PostBackProc pageName: " + pageName);
+          //  Console.WriteLine("PostBackProc pageName: " + pageName);
             
             if (pageName == "SIIDPage"+Instance.ajaxName)
             {
