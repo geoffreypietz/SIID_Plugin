@@ -1603,14 +1603,12 @@ namespace HSPI_SIID.BACnet
                 $(function() {
                 
                         $('#dv_Control" + dv + @" span.ui-button-text').filter(function(){
-                      return ($(this).text() == 'Submit');
-                    }).text('Command');
+                            return ($(this).text() == 'Submit');
+                        }).text('Command');
 
                         $('#dv_Control" + dv + @" span.ui-button-text').each(function(){
-
                             $(this).children().first().removeClass('button_selected');
-
-                    });
+                        });
 
 
                     //.closest('form').css('display','');
@@ -1797,7 +1795,8 @@ namespace HSPI_SIID.BACnet
 
                         //console.log($('#dv_Control" + writePriorityHsDv + @" select'));
 
-                        $('#dv_Control" + writePriorityHsDv + @" select').val('16');
+                        var wp = $('#dv_Status" + writePriorityHsDv + @" div').text();
+                        $('#dv_Control" + writePriorityHsDv + @" select').val(wp);
                 
                 });
 

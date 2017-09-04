@@ -81,7 +81,7 @@ $('#bacnetDiscoveryTree').fancytree({
 			var node = data.node;
 			var nodeData = node.data;
 
-			if (nodeData.type == 'global_network')
+			if (nodeData['node_type'] == 'global_network')
 			{
 			    var bgn = 'bacnetGlobalNetwork__';
 
