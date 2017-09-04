@@ -374,7 +374,7 @@ namespace HSPI_SIID.BACnet
                 if (val.Value == null)
                     valString = "null";
                 else
-                    valString = val.ToString();
+                    valString = Math.Round(Double.Parse(val.ToString()), 2).ToString();
 
                 tblString += "<td>" + valString + "</td>";
 
