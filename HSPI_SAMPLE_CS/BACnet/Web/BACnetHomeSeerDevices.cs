@@ -471,9 +471,13 @@ namespace HSPI_SIID.BACnet
 
         private int bacnetObjectWritePriorityDevice(int deviceDv, int objDv, NameValueCollection bacnetNodeData, String name)      //parentDv is for the device device
         {
+            bacnetNodeData = new NameValueCollection(bacnetNodeData);   //don't want to change in calling function
+
             var dv = Instance.host.NewDeviceRef("BACnet Object (write priority)");
 
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
+            //Scheduler.Classes.DeviceClass newDevice = SiidDevice.GetFromListByID(Instance.Devices, dv); // would need to add first
+
             newDevice.set_InterfaceInstance(Instance.host, Instance.name);
 
 
@@ -591,8 +595,8 @@ namespace HSPI_SIID.BACnet
                 newDevice.set_Status_Support(Instance.host, true);      //not entirely sure about this yet.
 
 
-                Instance.host.SetDeviceValueByRef(dv, 0, false);
-                Instance.host.SetDeviceString(dv, "0", false);
+                Instance.host.SetDeviceValueByRef(dv, 16, false);
+                Instance.host.SetDeviceString(dv, "16", false);
 
                 //but shouldn't it update when you change?
 
@@ -609,7 +613,7 @@ namespace HSPI_SIID.BACnet
 
 
                 var strs = new String[] { 
-                    "0 (No Priority)", 
+                    //"0 (No Priority)",        //doesn't really exist.  16 is lowest priority
                     "1 (Manual Life Safety)",
                     "2 (Automatic Life Safety)",
                     "3",
@@ -643,7 +647,7 @@ namespace HSPI_SIID.BACnet
 
                     //
 
-                    Control.Value = i;
+                    Control.Value = i + 1;
                     Control.Status = strs[i];
 
                     Control.IncludeValues = false;
@@ -1041,6 +1045,8 @@ namespace HSPI_SIID.BACnet
 
         private int bacnetObjectPriorityArrayDevice(int deviceDv, int objDv, NameValueCollection bacnetNodeData, String name)      //parentDv is for the device device
         {
+            bacnetNodeData = new NameValueCollection(bacnetNodeData);   //don't want to change in calling function
+
             var dv = Instance.host.NewDeviceRef("BACnet Object (priority array)");
 
             Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
@@ -1169,7 +1175,7 @@ namespace HSPI_SIID.BACnet
 
 
             //Instance.host.SetDeviceValueByRef(dv, 0, false);
-            Instance.host.SetDeviceString(dv, "{null, null, 3}", false);
+            Instance.host.SetDeviceString(dv, "{}", false);
 
             //but shouldn't it update when you change?
 
@@ -1293,6 +1299,8 @@ namespace HSPI_SIID.BACnet
         private int? makeNewHomeseerBacnetNodeDevice(NameValueCollection bacnetNodeData, String nodeType, int? parentDv = null)    //only supplied if nodeType is object.
         {
 
+            bacnetNodeData = new NameValueCollection(bacnetNodeData);   //create copy so this is not changed in calling function
+
             var bacnetTypeString = (nodeType == "device" ? "BACnet Device" : "BACnet Object");
 
             var dv = Instance.host.NewDeviceRef(bacnetTypeString);  
@@ -1338,10 +1346,11 @@ namespace HSPI_SIID.BACnet
             bacnetNodeData["object_identifier"] = objectId;     //want this whether device or object
             bacnetNodeData["object_type_string"] = objectId.Split(":".ToCharArray())[0];
 
-            
+
             //bacnetNodeData["write_priority"] = "0";         //not really a persistent parameter; just useful when on config page, writing to properties
 
-
+            VSVGPairs.VSPair Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
+            String statusText = "";
 
             if (nodeType == "device")   //bacnetNodeData will come in as the node data of the child node, so we need to overwrite
             {
@@ -1396,7 +1405,16 @@ namespace HSPI_SIID.BACnet
 
 
                 var parentDevId = (int)parentDv;
-                var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
+
+                Scheduler.Classes.DeviceClass parentHomeseerDevice = null;
+
+                while (parentHomeseerDevice == null)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
+                }
+
+                //var parentHomeseerDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(parentDevId);
 
                 parentHomeseerDevice.AssociatedDevice_Add(Instance.host, dv);
                 parentHomeseerDevice.set_Relationship(Instance.host, Enums.eRelationship.Parent_Root);
@@ -1415,7 +1433,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-                VSVGPairs.VSPair Control;
+                //VSVGPairs.VSPair Control;
                 bool IS;
 
                 if (bacnetObject.BacnetObjectId.Type == BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE)
@@ -1423,6 +1441,22 @@ namespace HSPI_SIID.BACnet
 
                     //string list will be list of state text
 
+
+                //    statusText += @"
+                
+                //<script>
+                //$(function() {
+                
+                //        $('#devicecontrol_" + dv + @" select').click($(this).change()); 
+
+                
+                //});
+
+                //</script>
+                
+                
+                
+                //";
 
 
                     var stateTextProp = bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_STATE_TEXT);
@@ -1563,7 +1597,7 @@ namespace HSPI_SIID.BACnet
 
 
 
-                var statusText = "Release" + @"
+                statusText = "Release" + @"
                 
                 <script>
                 $(function() {
@@ -1590,10 +1624,10 @@ namespace HSPI_SIID.BACnet
                 
                 
                 
-                ";
+                " + statusText;
 
 
-                Control.Status = statusText;
+                //Control.Status = statusText;
 
 
 
@@ -1610,12 +1644,12 @@ namespace HSPI_SIID.BACnet
 
                 //Control.Render_Location = Enums.CAPIControlLocation.
 
-                //Control.Render = Enums.CAPIControlType.Button;
-                Control.Render = Enums.CAPIControlType.Button_Script;
+                Control.Render = Enums.CAPIControlType.Button;
+                //Control.Render = Enums.CAPIControlType.Button_Script;
 
 
 
-                IS = Instance.host.DeviceVSP_AddPair(dv, Control);
+                //IS = Instance.host.DeviceVSP_AddPair(dv, Control);
                 //doesn't show up for multi-state value, for some reason
 
 
@@ -1750,13 +1784,35 @@ namespace HSPI_SIID.BACnet
 
 
 
-                bacnetObjectWritePriorityDevice((int)parentDv, dv, bacnetNodeData, bacnetTypeString + " - " + objectName);
+                var writePriorityHsDv = bacnetObjectWritePriorityDevice((int)parentDv, dv, bacnetNodeData, bacnetTypeString + " - " + objectName);
+
+                statusText += @"
+                
+                <script>
+                $(function() {
+                
+                        //$('#devicecontrol_" + writePriorityHsDv + @" select').val('16');    //default
+                        //$('select[name*=""droplist_" + writePriorityHsDv + @"""]').val('16');    //default
+
+
+                        //console.log($('#dv_Control" + writePriorityHsDv + @" select'));
+
+                        $('#dv_Control" + writePriorityHsDv + @" select').val('16');
+                
+                });
+
+                </script>
+                
+                
+                
+                ";
 
 
                 var thisObjType = Int32.Parse(bacnetNodeData["object_type"]);
                 var msv = (int)(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE);
 
-                if (Int32.Parse(bacnetNodeData["object_type"]) == (int)(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                //if (Int32.Parse(bacnetNodeData["object_type"]) == (int)(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                if (bacnetObject.GetBacnetProperty(BacnetPropertyIds.PROP_PRIORITY_ARRAY) != null)
                 {
                     var priorityArrayHsDv = bacnetObjectPriorityArrayDevice((int)parentDv, dv, bacnetNodeData, bacnetTypeString + " - " + objectName);
 
@@ -1766,6 +1822,10 @@ namespace HSPI_SIID.BACnet
 
                 }
 
+
+
+                Control.Status = statusText;
+                Instance.host.DeviceVSP_AddPair(dv, Control);
 
                 //Instance.bacnetDevices.UpdateBacnetObjectHsDeviceStatus(dv);
 

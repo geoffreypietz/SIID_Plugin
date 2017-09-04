@@ -762,7 +762,7 @@ namespace HSPI_SIID
                                 var hsDev = NewDevice.Device;
 
 
-                                if (CC.Label == "Release")
+                                if (CC.Label.StartsWith("Release"))
                                     Instance.bacnetDevices.ReadWriteBacnet(hsDev, null);
                                 else
                                 {

@@ -217,7 +217,9 @@ namespace HSPI_SIID.BACnet
 
         public bool WriteValue(object new_value, int writePriority = 0)
         {
-            Console.WriteLine(this.BacnetPropertyId + " - Writing value: " + new_value.ToString() + " with write priority: " + writePriority);
+            var newValStr = ((new_value == null) ? "null" : new_value.ToString());
+
+            Console.WriteLine(this.BacnetPropertyId + " - Writing value: " + newValStr + " with write priority: " + writePriority);
 
 
             var comm = BacnetObject.BacnetDevice.BacnetNetwork.BacnetClient;

@@ -829,7 +829,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                                 }
 
 
-                                if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
+                                if (propId == BacnetPropertyIds.PROP_PRIORITY_ARRAY)// && (Int32.Parse(hsBacnetNodeData["object_type"]) == (int)BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE))
                                 {
 
                                     try
