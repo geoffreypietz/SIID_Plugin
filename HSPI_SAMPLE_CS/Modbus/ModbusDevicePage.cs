@@ -195,9 +195,9 @@ public string GetReg(string instring)
                     }
                 }
                 GateWay.UpdateExtraData("LinkedDevices", NL.ToString());
-
+                
                 Gateway.AssociatedDevice_Remove(Instance.host, DeviceId);
-
+                 
             }
         }
         public void AddDeviceToGateway(int DeviceId, int GatewayId)
@@ -211,6 +211,7 @@ public string GetReg(string instring)
                 parts["LinkedDevices"] += DeviceId + ",";
                 GateWay.UpdateExtraData("LinkedDevices", parts["LinkedDevices"]);
                 Gateway.AssociatedDevice_Add(Instance.host, DeviceId);
+                 
             }
 
             
@@ -237,7 +238,7 @@ public string GetReg(string instring)
                 
                 Device.UpdateExtraData("Gateway", "none");
             }
-           
+             
 
 
 
@@ -738,6 +739,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
 
             }
+             
             return "True";
          
  
@@ -782,7 +784,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             NewDevice.UpdateExtraData(partID, changed["value"]);
             Instance.host.SetDeviceValueByRef(devId, 0, false);
             //  ModbusTcpMasterReadInputs();
-
+             
             return "True";
         }
       public static System.Threading.Mutex OneAtATime = new System.Threading.Mutex();
@@ -1205,13 +1207,15 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             }
 
             NewDevice.UpdateExtraData( "ProcessedValue", OutValue);
-         
+             
+
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Instance.host.SetDeviceString(devID,ValueString,true);
             Instance.host.SetDeviceValueByRef(devID, 1, true);
            // Console.WriteLine(devID+ " : " + ValueString);
 
             Instance.host.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
+             
 
         }
 
@@ -1654,7 +1658,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                         Instance.host.SetDeviceString(Convert.ToInt32(key), Exception, true);
                     }
                 }
-
+                 
             }
 
 
@@ -1811,8 +1815,8 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             // parts["RawValue"] = RawString;
             //  parts["ProcessedValue"] = "0";
             SIIDDev.UpdateExtraData("RawValue", RawString);
-          //  addSSIDExtraData(ModDev, "RawValue", RawString);
-           
+            //  addSSIDExtraData(ModDev, "RawValue", RawString);
+             
 
         }
 

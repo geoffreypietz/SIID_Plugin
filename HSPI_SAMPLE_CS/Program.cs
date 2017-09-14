@@ -238,10 +238,20 @@ namespace HSPI_SIID
                     //   plugIn.OurInstanceFriendlyName = Util.Instance;
                     // connect to HS so it can register a callback to us
                     //   host.Connect(Util.IFACE_NAME, Util.Instance);
-
+                    int Count = 0;
                     do
                     {
-                        System.Threading.Thread.Sleep(1000); 
+                        System.Threading.Thread.Sleep(1000);
+                        Count = (Count + 1) % 60;
+                        if (Count == 0)
+                        {
+                            foreach (var Instance in AllInstances)
+                            {
+                                Instance.Value.hspi.Log("Saving devices for Instance "+Instance.Key, 0);
+                                Instance.Value.host.SaveEventsDevices();
+                            }
+                        }
+                       
                     } while (client.CommunicationState == HSCF.Communication.Scs.Communication.CommunicationStates.Connected & !HSPI.bShutDown);
                     Console.WriteLine("Connection lost, exiting");
 

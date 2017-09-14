@@ -157,6 +157,7 @@ namespace HSPI_SIID.BACnet
                 //{
                     UpdateExtraData(hsBacnetDev, "RawValue", prop.ValueString());
                     UpdateExtraData(hsBacnetDev, "ProcessedValue", prop.ValueString());
+                 
                 //}
 
 
@@ -1342,7 +1343,8 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                     {
                         UpdateExtraData(device, "RawValue", vals[0].ToString());
                         UpdateExtraData(device, "ProcessedValue", vals[0].ToString());
-                    }
+                     
+                }
 
 
 

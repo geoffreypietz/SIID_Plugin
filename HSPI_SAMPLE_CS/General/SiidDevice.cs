@@ -74,6 +74,7 @@ namespace HSPI_SIID.General
             Extra.RemoveNamed("SSIDKey");
             Extra.AddNamed("SSIDKey", parts.ToString());
             Device.set_PlugExtraData_Set(Instance.host, Extra);
+            
 
         }
     

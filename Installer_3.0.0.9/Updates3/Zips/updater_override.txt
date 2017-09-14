@@ -4,6 +4,40 @@ ACTIVITY
 updater_override.txt
 Sharing Info
 G
+A
+B
+
+R
++2
+General Info
+Type
+Text
+Size
+4 KB (4,091 bytes)
+Storage used
+0 bytesOwned by someone else
+Location
+Siemens SIID Plugins
+Owner
+Geoffrey Pietz
+Modified
+Aug 24, 2017 by Ben Johnke
+Opened
+Aug 30, 2017 by me
+Created
+Jun 29, 2017
+Description
+Add a description
+Download permissions
+Viewers can download
+Maximized 
+
+updater_override.txt
+DETAILS
+ACTIVITY
+updater_override.txt
+Sharing Info
+G
 
 R
 S
@@ -33,7 +67,7 @@ Viewers can download
 Maximized All selections cleared 
 
 'Name,  			Updater version, 	File version, 	Notices version
-HomeSeer Updates File,		3.0.0.18,		87,		1
+HomeSeer Updates File,		3.0.0.20,		87,		1
 homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 '    UC = Use Code, bit 1 = S, bit 2 = PS, bit 4 = HW bit 8 = HomeTroller 16 = Windows 32 = Linux  (bit mapped)
@@ -61,16 +95,16 @@ homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 %<HS TYPE=SUBCAT>RACHIOSIID Plugin
 ' -------------------------------------------------------------
-RACHIOSIID, 	HSPI_RACHIOSIID.exe,		,0.9.6389.16501,	 63, 2, local, Zips,	RachioSIID-0.9.6389.16501.zip,	4,	Free,			Siemens,					RACHIOSIID,					,						,,
+RACHIOSIID, 	HSPI_RACHIOSIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	RachioSIID-3.0.1.4.zip,	4,	Free,			Siemens,					RACHIOSIID,					,						,,
 
 %<HS TYPE=SUBCAT>NESTSIID Plugin
 ' -------------------------------------------------------------
-NESTSIID, 	HSPI_NESTSIID.exe,		,0.9.6381.30587,	 63, 2, local, Zips,	NestSIID-0.9.6381.30587.zip,	4,	Free,			Siemens,					NESTSIID,					,						,,
+NESTSIID, 	HSPI_NESTSIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	NestSIID-3.0.1.4.zip,	4,	Free,			Siemens,					NESTSIID,					,						,,
 
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
-SIID,	HSPI_SIID.exe,		,3.0.0.19,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.19.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
+SIID,	HSPI_SIID.exe,		,3.0.0.21,	 63, 2, local, Zips,	HSPI_SIID_3.0.0.21.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
 
 %<HS TYPE=SUBCAT>ECOBEESIID Plugin
 ' -------------------------------------------------------------
-ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,0.9.6381.33431,	 63, 2, local, Zips,	EcobeeSIID-0.9.6381.33431.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,
+ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	EcobeeSIID-3.0.1.4.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,

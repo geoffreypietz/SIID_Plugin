@@ -65,8 +65,8 @@ namespace HSPI_SIID.ScratchPad
                 CalculatedString = 0;
             }
             Rule.UpdateExtraData("LiveValue", "" + CalculatedString.ToString());
+             
 
-   
 
         }
         public void UpdateDisplay(SiidDevice Rule)
@@ -129,6 +129,7 @@ namespace HSPI_SIID.ScratchPad
             //Check if rule is an accumulator, if so do NewValue - OldValue
 
             //String Format the value, put results in display
+             
             doLiveRule(Rule);
         }
         public void Reset(SiidDevice Rule)
@@ -467,7 +468,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
             Instance.host.SetDeviceValueByRef(newDevice.Ref, ActionIn.ControlValue, true);
             Instance.host.SetDeviceString(newDevice.Ref, ""+ActionIn.ControlValue, true);
             newDevice.UpdateExtraData("ScratchPadString", ""+ActionIn.ControlValue);
-
+             
 
         }
         public void SetRate(SiidDevice Device, double RatePlus200) {
@@ -507,6 +508,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 newDevice.UpdateExtraData("ResetType", "3");
                 newDevice.UpdateExtraData("DayOfMonth", ""+ActionIn.ControlValue+"");
             }
+             
 
         }
 
@@ -633,7 +635,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 }
             }
 
-            
+             
             return "True";
         }
 
