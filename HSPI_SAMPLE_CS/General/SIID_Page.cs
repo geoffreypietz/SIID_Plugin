@@ -14,6 +14,8 @@ using HSPI_SIID.General;
 using System.Reflection;
 using System.IO.BACnet;
 using System.Text.RegularExpressions;
+using System.Collections.Specialized;
+using HSPI_SIID.BACnet;
 
 namespace HSPI_SIID
 {
@@ -85,6 +87,29 @@ namespace HSPI_SIID
 
         }
 
+        string RemoveBetween(string s, string begin, string end)
+        {
+            Regex regex = new Regex(string.Format("\\{0}.*?\\{1}", begin, end));
+            return regex.Replace(s, string.Empty);
+        }
+
+     
+
+
+        //Remove substrings beginning with '//' and ending with /r/n
+        //Done to clean up bad comments that were added to VSP status text in BACnet side.
+        public string cleanInput(String row)
+        {
+            int Ind = row.IndexOf("//");
+            while (Ind > -1)
+            {
+                row = RemoveBetween(row, "//", "\r\n");
+                int B = row.Count();
+                Ind = row.IndexOf("//");
+            }
+
+            return row;
+        }
 
         public void ImportDevices(string RawCsv)
         {
@@ -105,8 +130,9 @@ namespace HSPI_SIID
                 List<string> Headers = new List<string>();
                 bool HasHeader = false;
 
-                foreach (string row in CSVRows) //keep track of subsection's headers. we must use those
+                foreach (string Rrow in CSVRows) //keep track of subsection's headers. we must use those
                 {
+                    string row = cleanInput(Rrow);
                     //Console.WriteLine("***"+row);
                     //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
                     int CellCount = row.Split(',').Count();
@@ -161,6 +187,7 @@ namespace HSPI_SIID
                     {
                         parser.TextFieldType = FieldType.Delimited;
                         parser.SetDelimiters(",");
+                        parser.CommentTokens = new String[] { "//"};
                         parser.TrimWhiteSpace = true;
                         parser.HasFieldsEnclosedInQuotes = true;
                         bool hasHeader = false;
@@ -410,8 +437,9 @@ namespace HSPI_SIID
 
                                                     parts["Type"] = CodeLookup["type"];    //unless we've already set this?
 
-                                                    var bacnetNodeData = HttpUtility.ParseQueryString(string.Empty);
-
+                                                    //BACnet is not querystring anymore, it's JSON. Change should have been made here also but that was forgotton
+                                                    NameValueCollection bacnetNodeData = new NameValueCollection();
+                                                  //  BACnetDevices.BuildJsonString(bacnetNodeData);
 
                                                     bacnetNodeData["node_type"] = CodeLookup["type"].Split(" ".ToCharArray())[1].ToLower();
 
@@ -437,7 +465,7 @@ namespace HSPI_SIID
                                                     bacnetNodeData["polling_interval"] = FetchAttribute(CodeLookup, "PollInterval");
 
 
-                                                    parts["BACnetNodeData"] = bacnetNodeData.ToString();
+                                                    parts["BACnetNodeData"] = BACnetDevices.BuildJsonString(bacnetNodeData);
 
 
                                                     parts["RawValue"] = FetchAttribute(CodeLookup, "RawValue");            //not much point importing these, but...

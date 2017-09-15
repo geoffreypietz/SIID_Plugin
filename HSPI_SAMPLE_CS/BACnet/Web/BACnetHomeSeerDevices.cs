@@ -246,9 +246,10 @@ namespace HSPI_SIID.BACnet
                 {
                     var EDO = Dev.get_PlugExtraData_Get(Instance.host);
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string s = parts["Type"];
+       
                     //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
                     var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+                
                     if (parts["Type"] == "BACnet Device" && belongsToThisInstance(Dev) && bacnetNodeData["node_type"] == "device")
                         listOfDevices.Add(Dev);
                 }
@@ -1784,16 +1785,19 @@ namespace HSPI_SIID.BACnet
 
                 var writePriorityHsDv = bacnetObjectWritePriorityDevice((int)parentDv, dv, bacnetNodeData, bacnetTypeString + " - " + objectName);
 
-                statusText += @"
-                
-                <script>
-                $(function() {
-                
+                //These comments break input. Don't include them in the div
+                /*                
                         //$('#devicecontrol_" + writePriorityHsDv + @" select').val('16');    //default
                         //$('select[name*=""droplist_" + writePriorityHsDv + @"""]').val('16');    //default
 
 
-                        //console.log($('#dv_Control" + writePriorityHsDv + @" select'));
+                        //console.log($('#dv_Control" + writePriorityHsDv + @" select'));*/
+
+                statusText += @"
+                
+                <script>
+                $(function() {
+
 
                         var wp = $('#dv_Status" + writePriorityHsDv + @" div').text();
                         $('#dv_Control" + writePriorityHsDv + @" select').val(wp);

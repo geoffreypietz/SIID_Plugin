@@ -631,7 +631,7 @@ namespace HSPI_SIID
                         Orderlist = BACnetObject.Attributes;
 
 
-                        System.Collections.Specialized.NameValueCollection bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                        System.Collections.Specialized.NameValueCollection bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]) ;// HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
 
 
 
