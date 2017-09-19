@@ -103,10 +103,11 @@ namespace HSPI_SIID
             int Ind = row.IndexOf("//");
             while (Ind > -1)
             {
-                row = RemoveBetween(row, "//", "\r\n");
+                row = RemoveBetween(row, "//", "\rn");
                 int B = row.Count();
                 Ind = row.IndexOf("//");
             }
+   
 
             return row;
         }
@@ -116,6 +117,7 @@ namespace HSPI_SIID
           
             try
             {
+             
                 //    int commonrowOffset =  new HSPI_SIID.HomeSeerDevice().listOfAttributes.Count();
                 List<Tuple<int, int, string>> DevicesToImport = new List<Tuple<int, int, string>>(); //Dv to replace, header index, row
 
@@ -132,7 +134,8 @@ namespace HSPI_SIID
 
                 foreach (string Rrow in CSVRows) //keep track of subsection's headers. we must use those
                 {
-                    string row = cleanInput(Rrow);
+                    string row = Regex.Replace(Rrow, @"(?!(([^""]*""){2})*[^""]*$)\r\n+", "");
+                    //string row = Rrow;// cleanInput(Rrow);
                     //Console.WriteLine("***"+row);
                     //Is a valid device if the first cell is an integer. Is a header for the following valid rows if the first cell is not an integer but there are more than one cells in the line.
                     int CellCount = row.Split(',').Count();

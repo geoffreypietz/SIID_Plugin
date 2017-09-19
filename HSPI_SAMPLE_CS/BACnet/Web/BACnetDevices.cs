@@ -284,7 +284,8 @@ namespace HSPI_SIID.BACnet
             stb.Append(confHtml.print());
 
 
-            var readOnlyProperties = new String[] { "ip_address", "device_instance", "object_instance", "object_type" };      //should probably make this constant somewhere
+            //var readOnlyProperties = new String[] { "ip_address", "device_instance", "object_instance", "object_type" };      //should probably make this constant somewhere
+            var readOnlyProperties = new String[] {  "device_instance", "object_instance", "object_type" };
             foreach (var nodeDataProp in readOnlyProperties)
             {
                 stb.Append(String.Format("<script>$('#{0}__{1}').prop('disabled', true);</script>", dv1, nodeDataProp));
@@ -1287,12 +1288,13 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                 }
 
-                //return "";
+            //return "";
 
 
 
 
 
+         
 
 
                 var writePriority = Int32.Parse(bacnetNodeData["write_priority"] ?? "0");   //is this a good default?
@@ -1304,8 +1306,12 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                 if (bacnetNodeDataProps.Contains(propIdKeys))
                 {
-                    //var readOnlyProperties = new String[]{"ip_address", "device_instance", "object_type", "object_instance"};
-                    //if (!readOnlyProperties.Contains(propIdKeys))
+                //var readOnlyProperties = new String[]{"ip_address", "device_instance", "object_type", "object_instance"};
+                //if (!readOnlyProperties.Contains(propIdKeys))
+                if (propIdKeys == "ip_address")
+                {
+                    updateBacnetNodeData(device, "device_ip_address", newVal);
+                }
                         updateBacnetNodeData(device, propIdKeys, newVal);
 
                         //if (propIdKeys == "write_priority")

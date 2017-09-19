@@ -125,7 +125,7 @@ namespace HSPI_SIID.BACnet
                 row = new StringBuilder();
                 row.Append(String.Format(tdString, "class='tableroweven'", "", deviceImage));
                 row.Append(String.Format(tdString, "class='tableroweven'", "colspan='2'", deviceLink));
-                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_ip_address"]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["ip_address"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_udp_port"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_type_string"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_instance"]));

@@ -88,6 +88,7 @@ namespace HSPI_SIID.BACnet
             //bacnetGlobalNetwork.BacnetNetworks.TryGetValue(nodeData["ip_address"], out bacnetNetwork);  //sometimes BacnetNetwork can be null, if discovery not initiated.
             //return bacnetNetwork;
             return bacnetGlobalNetwork.GetBacnetNetwork(nodeData["ip_address"]);
+        
         }
 
 
