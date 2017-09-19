@@ -191,15 +191,22 @@ namespace HSPI_SIID.BACnet
             if (!NetworksDiscovered)
                 Discover();
 
+       
             foreach (var kvp in BacnetNetworks)
             {
+                
                 String thisIpAddress = kvp.Key;
-                if (thisIpAddress.Equals(ipAddress))
+                if (thisIpAddress.Equals(ipAddress)) 
                     return kvp.Value;
 
+            
             }
+            //If we get here, then the ipAddress is not one of the BACnet networks. Return a 0 network to stop a crash
 
-            return null;
+
+            return new BACnetNetwork(new BACnetGlobalNetwork(Instance), "0", Instance);
+
+        
 
 
         }

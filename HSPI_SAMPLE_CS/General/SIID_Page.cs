@@ -442,6 +442,7 @@ namespace HSPI_SIID
                                                   //  BACnetDevices.BuildJsonString(bacnetNodeData);
 
                                                     bacnetNodeData["node_type"] = CodeLookup["type"].Split(" ".ToCharArray())[1].ToLower();
+                                                    bacnetNodeData["bacnet_device_hs_device"] = dv.ToString(); 
 
                                                     bacnetNodeData["ip_address"] = FetchAttribute(CodeLookup, "NetworkIPAddress");
 

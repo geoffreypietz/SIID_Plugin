@@ -78,6 +78,9 @@ namespace HSPI_SIID.BACnet
         public BACnetNetwork GetBacnetNetwork(NameValueCollection nodeData, Boolean refresh = false)
         {
             var bacnetGlobalNetwork = GetBacnetGlobalNetwork(nodeData, refresh);
+    
+
+
             if (refresh)    //if calling from API, children won't exist yet.
                 bacnetGlobalNetwork.Discover();
 
@@ -97,6 +100,10 @@ namespace HSPI_SIID.BACnet
             if (refresh)
                 bacnetNetwork.Discover();
 
+            if (bacnetNetwork == null)
+            {
+                return null;
+            }
             //BACnetDevice bacnetDevice;
             //bacnetNetwork.BacnetDevices.TryGetValue(uint.Parse(nodeData["device_instance"]), out bacnetDevice);
             //return bacnetDevice;
@@ -111,13 +118,18 @@ namespace HSPI_SIID.BACnet
             if (refresh)
                 bacnetDevice.GetObjects();
 
+            if (bacnetDevice != null)
+            {
 
-            BacnetObjectTypes objType = (BacnetObjectTypes)(Int32.Parse(nodeData["object_type"]));
-            UInt32 objInstance = UInt32.Parse(nodeData["object_instance"]);
-            var bacnetObjectId = new BacnetObjectId(objType, objInstance);
 
-            var bacnetObject = bacnetDevice.GetBacnetObject(bacnetObjectId);
-            return bacnetObject;
+                BacnetObjectTypes objType = (BacnetObjectTypes)(Int32.Parse(nodeData["object_type"]));
+                UInt32 objInstance = UInt32.Parse(nodeData["object_instance"]);
+                var bacnetObjectId = new BacnetObjectId(objType, objInstance);
+
+                var bacnetObject = bacnetDevice.GetBacnetObject(bacnetObjectId);
+                return bacnetObject;
+            }
+            return null;
 
         }
 
@@ -133,7 +145,11 @@ namespace HSPI_SIID.BACnet
                 if (bacnetNodeData["node_type"] == "device")
                 {
                     var d = GetBacnetDevice(bacnetNodeData);//, true);  //still bug in this, somehow...
-                    bno = d.DeviceObject;
+                    if (d != null)
+                    {
+                        bno = d.DeviceObject;
+                    }
+
 
                     //for now, just have to refresh when getting anything device or above...since network, globalnetwork may be null
                 }
