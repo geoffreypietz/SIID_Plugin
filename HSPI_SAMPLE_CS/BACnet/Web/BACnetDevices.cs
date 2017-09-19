@@ -353,6 +353,7 @@ namespace HSPI_SIID.BACnet
 
                 //parentDeviceRef = Instance.bacnetHomeSeerDevices.getExistingHomeseerBacnetNodeDevice(bacnetNodeData.ToString(), "device");
 
+            int parentDeviceRef = Int32.Parse(bacnetNodeData["bacnet_device_hs_device"]); 
 
 
             BACnetObject bno = Instance.bacnetDataService.GetBacnetObjectOrDeviceObject(bacnetNodeData);
