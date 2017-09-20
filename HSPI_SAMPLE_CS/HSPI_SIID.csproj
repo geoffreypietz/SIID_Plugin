@@ -122,8 +122,6 @@
     <Compile Include="ScratchPad\ScratchpadDevice.cs" />
     <Compile Include="ScratchPad\ScratchpadDevicePage.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="WebAddDevice.cs" />
-    <Compile Include="Web_UI_Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
