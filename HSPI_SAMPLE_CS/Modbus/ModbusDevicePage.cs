@@ -653,51 +653,55 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
         public string pingGateway(int deviceId)
         {
-     
-          
-           
+
+
+
             //Do check, if good, set to 1, if bad set to 0, if good and disabled set to 2
-       
-              //  System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
-               
-                try
-                {
-                    var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, deviceId);
-                    Scheduler.Classes.DeviceClass Gateway = NewDevice.Device;
-                    var EDO = NewDevice.Extra;
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string ip = parts["Gateway"];
-                    int port = Convert.ToInt32(parts["TCP"]);
-                    System.Net.Sockets.TcpClient Socket = new System.Net.Sockets.TcpClient(ip, port);
-                    /*
-                   var Rep= Ping.Send(ip);
-                    //  Socket.Connect(ip, port);
-                    //  Socket.Close();
-                    if (Rep.Status.ToString() == "Success") {
-                        Instance.host.SetDeviceValueByRef(deviceId, 1, true);
-                        return "Connection Successfull.";
-                    }
-                    else{
-                        Instance.host.SetDeviceValueByRef(deviceId, 0, true);
-                        return "Failed connectivty test: "+ Rep.Status.ToString();
-                    }*/
-                    if (Socket.Connected)
-                    {
-                        Instance.host.SetDeviceValueByRef(deviceId, 1, true);
-                        return "Connection Successfull.";
-                    }
-                    else
-                    {
-                        Instance.host.SetDeviceValueByRef(deviceId, 0, true);
-                        return "Failed connectivty test: ";
-                    }
+
+            //  System.Net.NetworkInformation.Ping Ping = new System.Net.NetworkInformation.Ping();
+            System.Net.Sockets.TcpClient Socket = null;
+            try
+            {
+                var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, deviceId);
+                Scheduler.Classes.DeviceClass Gateway = NewDevice.Device;
+                var EDO = NewDevice.Extra;
+                var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                string ip = parts["Gateway"];
+                int port = Convert.ToInt32(parts["TCP"]);
+                Socket = new System.Net.Sockets.TcpClient(ip, port);
+                /*
+               var Rep= Ping.Send(ip);
+                //  Socket.Connect(ip, port);
+                //  Socket.Close();
+                if (Rep.Status.ToString() == "Success") {
+                    Instance.host.SetDeviceValueByRef(deviceId, 1, true);
+                    return "Connection Successfull.";
                 }
-                catch(Exception e)
+                else{
+                    Instance.host.SetDeviceValueByRef(deviceId, 0, true);
+                    return "Failed connectivty test: "+ Rep.Status.ToString();
+                }*/
+                if (Socket.Connected)
+                {
+                    Instance.host.SetDeviceValueByRef(deviceId, 1, true);
+                    Socket.Close();
+                    return "Connection Successfull.";
+                }
+                else
                 {
                     Instance.host.SetDeviceValueByRef(deviceId, 0, true);
-                    return "Failed connectivty test: " + e.Message;
-
+                    Socket.Close();
+                    return "Failed connectivity test: ";
                 }
+            }
+            catch (Exception e)
+            {
+                Instance.host.SetDeviceValueByRef(deviceId, 0, true);
+                Socket.Close();
+                return "Failed connectivity test: " + e.Message;
+
+            }
+        
       
             
           

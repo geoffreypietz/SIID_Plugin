@@ -240,3 +240,6 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+Installer/
+Installer_3.0.0.9/

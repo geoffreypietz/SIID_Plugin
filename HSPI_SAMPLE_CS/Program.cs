@@ -156,7 +156,7 @@ namespace HSPI_SIID
 
                 string sIp = "127.0.0.1";
                 // plugIn.OurInstanceFriendlyName = InstanceName;
-                HSCF.Communication.ScsServices.Client.IScsServiceClient<IHSApplication> client = ScsServiceClientBuilder.CreateClient<IHSApplication>(new ScsTcpEndPoint(sIp, 10400), plugIn); //Maybe need to distinguish instance here for callbacks to work correctly
+                HSCF.Communication.ScsServices.Client.IScsServiceClient<IHSApplication> client = ScsServiceClientBuilder.CreateClient<IHSApplication>(new ScsTcpEndPoint(sIp, 10400), plugIn); 
                 HSCF.Communication.ScsServices.Client.IScsServiceClient<IAppCallbackAPI> clientCallback = ScsServiceClientBuilder.CreateClient<IAppCallbackAPI>(new ScsTcpEndPoint(sIp, 10400), plugIn);
                 HomeSeerAPI.IHSApplication host = null;
                 IAppCallbackAPI callback;
