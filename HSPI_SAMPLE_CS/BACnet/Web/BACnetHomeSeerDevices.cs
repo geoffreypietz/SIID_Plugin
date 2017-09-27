@@ -101,6 +101,8 @@ namespace HSPI_SIID.BACnet
                 row.Append(String.Format(tdString, "class='columnheader'", "", "Object Type"));
                 row.Append(String.Format(tdString, "class='columnheader'", "", "Instance No."));
                 row.Append(String.Format(tdString, "class='columnheader'", "", "Object Name"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Device ID"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", "Device Value"));
                 //row.Append(String.Format(tdString, "class='columnheader'", "", "BACnet Object Identifier"));
                 bacnetConfHtml.addRow(row.ToString());
 
@@ -130,6 +132,8 @@ namespace HSPI_SIID.BACnet
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_type_string"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["device_instance"]));
                 row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData["object_name"]));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", DevRef));
+                row.Append(String.Format(tdString, "class='tableroweven'", "", parts["RawValue"]));
                 //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
                 bacnetConfHtml.addRow(row.ToString());
 
@@ -150,6 +154,8 @@ namespace HSPI_SIID.BACnet
                 row.Append(String.Format(tdString, "", "", ""));
                 row.Append(String.Format(tdString, "class='columnheader'", "", "Enabled"));
                 row.Append(String.Format(tdString, "class='columnheader'", "", "BACnet Object"));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
+                row.Append(String.Format(tdString, "class='columnheader'", "", ""));
                 row.Append(String.Format(tdString, "class='columnheader'", "", ""));
                 row.Append(String.Format(tdString, "class='columnheader'", "", ""));
                 row.Append(String.Format(tdString, "class='columnheader'", "", ""));
@@ -193,6 +199,8 @@ namespace HSPI_SIID.BACnet
                     row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_type_string"]));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_instance"]));
                     row.Append(String.Format(tdString, "class='tableroweven'", "", bacnetNodeData2["object_name"]));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", subDeviceRef));
+                    row.Append(String.Format(tdString, "class='tableroweven'", "", parts2["RawValue"]));
                     //row.Append(String.Format(tdString, "class='columnheader'", "", bacnetNodeData["object_identifier"]));
                     bacnetConfHtml.addRow(row.ToString());
 

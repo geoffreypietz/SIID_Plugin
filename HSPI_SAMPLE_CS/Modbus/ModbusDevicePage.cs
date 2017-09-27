@@ -697,7 +697,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             catch (Exception e)
             {
                 Instance.host.SetDeviceValueByRef(deviceId, 0, true);
-                Socket.Close();
+                if (Socket != null)
+                {
+                    Socket.Close();
+                }
                 return "Failed connectivity test: " + e.Message;
 
             }
