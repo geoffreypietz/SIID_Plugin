@@ -798,6 +798,8 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                                     //hasPresentVal = true;
 
                                      var vs = prop.ValueString();
+                        UpdateExtraData(hsBacnetDevice, "RawValue", vs);
+                        UpdateExtraData(hsBacnetDevice, "ProcessedValue", vs);
 
 
                         try { 
@@ -807,6 +809,7 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
 
                                     Instance.host.SetDeviceString(hsBacnetDevRef, vs, true);
+                     
 
 
                         } catch (Exception ex)
@@ -1347,8 +1350,8 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
 
                     if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
                     {
-                        UpdateExtraData(device, "RawValue", vals[0].ToString());
-                        UpdateExtraData(device, "ProcessedValue", vals[0].ToString());
+                        UpdateExtraData(device, "RawValue",prop.ValueString());
+                        UpdateExtraData(device, "ProcessedValue", prop.ValueString());
                      
                 }
 

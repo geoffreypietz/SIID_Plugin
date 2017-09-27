@@ -1620,12 +1620,11 @@ namespace HSPI_SIID.BACnet
                         });
 
 
-                    //.closest('form').css('display','');
+                   
                 
                 
                 });
-                //replace 'Submit' button text with 'Command' (in context of priority array)
-                //and change styling of parent form so that the buttons stack
+        
                 
                 </script>
                 
@@ -1960,8 +1959,19 @@ namespace HSPI_SIID.BACnet
 
 
             //sure, for now...will have to tap into Present_Value property if present.  Won't apply for devices.
-            parts["RawValue"] = "0";
-            parts["ProcessedValue"] = "0";
+            try
+            {
+               
+                parts["RawValue"] = bacnetNodeData["Present_Value"].ToString();
+                parts["ProcessedValue"] = bacnetNodeData["Present_Value"].ToString();
+            }
+            catch
+            {
+                parts["RawValue"] = "0";
+                parts["ProcessedValue"] = "0";
+
+            }
+         
 
 
             return parts.ToString();
