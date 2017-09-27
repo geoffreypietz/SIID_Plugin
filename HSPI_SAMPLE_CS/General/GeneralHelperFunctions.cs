@@ -37,10 +37,40 @@ namespace HSPI_SIID.General
             StringBuilder FinalString = new StringBuilder(ScratchPadString);
             foreach (int dv in Raws)
             {
-                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);// (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv);
-                if (TempDev != null)
+        
+                SiidDevice TempDev = SiidDevice.GetFromListByID(Instance.Devices, dv);
+            
+
+
+
+                if (TempDev == null) 
                 {
-                    var TempEDO = TempDev.Extra;
+                    try
+                    {
+                        Scheduler.Classes.DeviceClass newDevice = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(dv); //If the device exists and is a SIID device, adds it into the list
+      
+                        var E = newDevice.get_PlugExtraData_Get(Instance.host);
+                        if (E.GetNamed("SSIDKey") != null)
+                        {
+                            TempDev = new SiidDevice(Instance, newDevice);
+                            Instance.Devices.Add(TempDev);
+                        }
+
+                    }
+                    catch
+                    {
+                        //Device reference either incorrect or not a SIID device.
+                    }
+                    
+
+                }
+
+                if (TempDev != null) 
+                {
+                    //OK the extradata store in the SIID device list is outdated. grab from the device...
+                    //var TempEDO = TempDev.Extra;
+                    var TempEDO = TempDev.Device.get_PlugExtraData_Get(Instance.host);
+
                     var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                     try
                     {
@@ -69,7 +99,7 @@ namespace HSPI_SIID.General
 
                     try
                     {
-                        string Rep = Instance.host.DeviceValueEx(dv).ToString(); //OK this is not working correctly.
+                        string Rep = Instance.host.DeviceValueEx(dv).ToString(); //Fails for BACnet devices because the status does not reflect the displayed value
                         if (Rep == null)
                             throw new Exception();
                         FinalString.Replace("$(" + dv + ")", Rep); 

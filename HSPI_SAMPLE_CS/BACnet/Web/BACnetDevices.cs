@@ -361,7 +361,7 @@ namespace HSPI_SIID.BACnet
             if (bno == null)
             {
                 confHtml.add("", "Error: could not connect to device to retrieve object properties.  Please make sure that the BACnet device is present on the network.");
-                
+
 
                 if (device.get_devValue(Instance.host) == 1)    //if was previously in successful communication, but now isn't, turn yellow, otherwise red
                     //setDeviceStatus(dv1, 2, parentDeviceRef);
@@ -377,9 +377,9 @@ namespace HSPI_SIID.BACnet
 
                 bno.FetchProperties();  //force refresh, even if already fetched
 
-                lock(bno.BacnetProperties)  //TODO: find out where this is used
-                foreach (var bacnetProperty in bno.BacnetProperties)
-                {
+                lock (bno.BacnetProperties) {   //TODO: find out where this is used
+                    foreach (var bacnetProperty in bno.BacnetProperties)
+                    {
 
                         try
                         {
@@ -391,7 +391,7 @@ namespace HSPI_SIID.BACnet
 
 
                             //if (propId == BacnetPropertyIds.PROP_PRESENT_VALUE)
-                                //throw new Exception("");
+                            //throw new Exception("");
 
 
                             var propIdNum = (int)propId;
@@ -509,12 +509,14 @@ namespace HSPI_SIID.BACnet
 
 
 
-                        } catch (Exception ex)
+                        }
+                        catch (Exception ex)
                         {
                             Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 1);
                             var t = 2;  //do nothing; just continue to next property.
                         }
-                }
+                    }
+            }
 
             }
 
@@ -1430,6 +1432,8 @@ table." + tableClass + @" td:nth-of-type(2) {width:780px;}/*Setting the width of
                 EDO.RemoveNamed("SSIDKey");
                 EDO.AddNamed("SSIDKey", parts.ToString());
                 Device.set_PlugExtraData_Set(Instance.host, EDO);
+
+            
 
             }
 

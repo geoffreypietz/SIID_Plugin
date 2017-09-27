@@ -318,30 +318,33 @@ namespace HSPI_SIID.BACnet
 
             //TODO: collection was modified, enumeration may not execute
 
-            lock (Instance.Devices)     //TODO: need to lock elsewhere
-            foreach (SiidDevice Dev in Instance.Devices)    //collection modified; enum may not execute
+            lock (Instance.Devices)
             {
-                var hsBacnetDevice = Dev.Device;
-
-                try
+                var Z = Instance.Devices.ToList();
+                foreach (SiidDevice Dev in Z)    //collection modified; enum may not execute
                 {
-                    var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    string s = parts["Type"];
-                    
-                    //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
-                    var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
+                    var hsBacnetDevice = Dev.Device;
+
+                    try
+                    {
+                        var EDO = hsBacnetDevice.get_PlugExtraData_Get(Instance.host);
+                        var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+                        string s = parts["Type"];
+
+                        //var bacnetNodeData = HttpUtility.ParseQueryString(parts["BACnetNodeData"]);
+                        var bacnetNodeData = BACnetDevices.ParseJsonString(parts["BACnetNodeData"]);
 
 
-                    if (parts["Type"] == "BACnet Object" && belongsToThisInstance(hsBacnetDevice) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
-                        //listOfDevices.Add(hsBacnetDevice);
-                        devIds.Add(Dev.Ref);
+                        if (parts["Type"] == "BACnet Object" && belongsToThisInstance(hsBacnetDevice) && bacnetNodeData["node_type"] == "object" && bacnetNodeData["device_instance"] == bacnetDeviceInstance)
+                            //listOfDevices.Add(hsBacnetDevice);
+                            devIds.Add(Dev.Ref);
+                    }
+                    catch
+                    {
+
+                    }
+
                 }
-                catch
-                {
-
-                }
-
             }
 
             //return listOfDevices;

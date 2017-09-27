@@ -35,14 +35,18 @@ namespace HSPI_SIID.General
 
         public static SiidDevice GetFromListByID(List<SiidDevice> li, int R)
         {
-            lock(li)
-            foreach (SiidDevice Dev in li)
+            lock (li)
             {
-                if (Dev.Ref == R)
+                foreach (SiidDevice Dev in li)
                 {
-                    return Dev;
+                    if (Dev.Ref == R)
+                    {
+                        return Dev;
+                    }
                 }
             }
+            //check to see if it is a SIID device that just didn't make it into the list
+
             return null;
         }
         public static void removeDev(List<SiidDevice> li, int R)
@@ -54,14 +58,17 @@ namespace HSPI_SIID.General
         public static void Update(InstanceHolder I)
         {
             List<SiidDevice> UpdatedDevs = new List<SiidDevice>();
-            lock(I.Devices)
-            foreach (SiidDevice D in I.Devices.ToList())
+            lock (I.Devices)
             {
-                if (I.host.DeviceExistsRef(D.Ref)) {
-                    UpdatedDevs.Add(D);
-                }
-              
+                foreach (SiidDevice D in I.Devices.ToList())
+                {
+                    if (I.host.DeviceExistsRef(D.Ref))
+                    {
+                        UpdatedDevs.Add(D);
+                    }
 
+
+                }
             }
             I.Devices = UpdatedDevs;
         }
