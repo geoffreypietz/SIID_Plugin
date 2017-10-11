@@ -573,7 +573,7 @@ public string GetReg(string instring)
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
             ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(RetTypeArray, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
-                        ModbusConfHtml.add(" Calculator: ", "<div style: 'display:inline;'><div style = 'float:left;'> "+ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"]).print() + "</div><div style='float:left;' id='HelpText'>$(DeviceID) is the raw value for the homeseer device with ID DeviceID. #(DeviceID) is the value resulting from the device's calculator. Any SIID device's value can be called here.</div>");
+                        ModbusConfHtml.add(" Calculator: ", "<div style: 'display:inline;'><div style = 'float:left;'> "+ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"].Replace("(^p^)", "+")).print() + "</div><div style='float:left;' id='HelpText'>$(DeviceID) is the raw value for the homeseer device with ID DeviceID. #(DeviceID) is the value resulting from the device's calculator. Any SIID device's value can be called here.</div>");
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
                         ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
 
@@ -1366,7 +1366,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 SiidDevice device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(GatewaysStatus[0]));
           
 
-            var parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+            var parts = HttpUtility.ParseQueryString(device.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
             int GatewayID = Int32.Parse(parts["GateID"]);
             SiidDevice Gateway = SiidDevice.GetFromListByID(Instance.Devices, GatewayID);
             var EDOGate = Gateway.Extra;
@@ -1386,7 +1386,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
 
                 device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(key));
-                parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+                parts = HttpUtility.ParseQueryString(device.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
 
 
 
@@ -1484,7 +1484,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
 
                     device = SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(key));
-                    parts = HttpUtility.ParseQueryString(device.Extra.GetNamed("SSIDKey").ToString());
+                    parts = HttpUtility.ParseQueryString(device.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
                     bool Signed = bool.Parse(parts["SignedValue"]);
 
                     var TheReturned = Return[key];

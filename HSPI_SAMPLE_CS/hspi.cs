@@ -480,8 +480,8 @@ namespace HSPI_SIID
 	public string PostBackProc(string pageName, string data, string user, int userRights)
 	{
             //If you have more than one web page, use pageName to route it to the proper postBackProc
-          //  Console.WriteLine("PostBackProc pageName: " + pageName);
-            
+            //  Console.WriteLine("PostBackProc pageName: " + pageName);
+            Log(data, 0);
             if (pageName == "SIIDPage"+Instance.ajaxName)
             {
                 
@@ -506,6 +506,7 @@ namespace HSPI_SIID
             }
            else if(pageName == "Scratch" + Instance.ajaxName)
             {
+                
                 data = data.Replace("+", "%2B");
 
                 return Instance.scrPage.parseInstances(data);
@@ -609,7 +610,7 @@ namespace HSPI_SIID
                             {
                               
 
-                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.resetOrSetDateOrRate(CC));
+                                    System.Threading.Tasks.Task.Factory.StartNew(() => Instance.scrPage.scratchpadCommandIn(CC));
                                 
 
 

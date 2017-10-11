@@ -46,7 +46,7 @@ namespace HSPI_SIID.ScratchPad
         }
         public void doLiveRule(SiidDevice Rule)
         {
-            var parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+            var parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
 
             string RawNumberString = GeneralHelperFunctions.GetValues(Instance, parts["LiveUpdateID"]);
             double CalculatedString = CalculateString(RawNumberString);
@@ -73,7 +73,7 @@ namespace HSPI_SIID.ScratchPad
         {
             try
             {
-                var parts=HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+                var parts=HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
                
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
@@ -111,7 +111,7 @@ namespace HSPI_SIID.ScratchPad
                 // EDO.RemoveNamed("SSIDKey");
                 //  EDO.AddNamed("SSIDKey", parts.ToString());
 
-                 parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+                 parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
 
                 string userNote = Rule.Device.get_UserNote(Instance.host);
                 userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
@@ -257,8 +257,12 @@ namespace HSPI_SIID.ScratchPad
             parts["RateValue"] = "";
             parts["LiveValue"] ="0";
 
-
-
+            parts["FixedCost"] = "0";
+            parts["RateTier1"] = "0";
+            parts["RateTier2"] = "0";
+            parts["RateTier3"] = "0";
+            parts["AWCOrLot"] = "8000";
+            parts["showTier"] = "False";
 
             return parts.ToString();
         }
@@ -383,33 +387,31 @@ namespace HSPI_SIID.ScratchPad
                 htmlBuilder ScratchBuilder = new htmlBuilder("Scratch" + Instance.ajaxName);
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
+            ScratchTable.addHead(new string[] { "Rule Name", "Value", "Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Fixed Cost","Show Tiered Rates", "Rate ($ per unit)", "Real Time Data Rule String", "Rule Formatting", "HomeseerID" }); //0,1,2,3,4,5
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value", "Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
+            int ID = Dev.Ref;
+            List<string> Row = new List<string>();
+            var EDO = Dev.Extra;
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.Device.get_Name(Instance.host)).print());
+            Row.Add(parts["DisplayedValue"]);
+            Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
+            Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
 
-              
-                    int ID = Dev.Ref;
-                    List<string> Row = new List<string>();
-                    var EDO = Dev.Extra;
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.Device.get_Name(Instance.host)).print());
-                    Row.Add(parts["DisplayedValue"]);
-                    Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
-                    Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
+            //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
 
-                    //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
-
-                    Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
-                    //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
+            Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
+            //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
 
 
 
-                    StringBuilder ComplexCell = new StringBuilder();
+            StringBuilder ComplexCell = new StringBuilder();
 
-                    ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
-                    ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
-                    ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
-                    ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
-                    ComplexCell.Append(@"<script>
+            ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+            ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
+            ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
+            ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
+            ComplexCell.Append(@"<script>
 UpdateDisplay=function(id){
 console.log('UPDATING DISPLAY '+id);
 $('#0_'+id)[0].style.display='none';
@@ -428,16 +430,113 @@ UpdateDisplay(" + ID + @");
 $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 </script>");
-                    Row.Add(ComplexCell.ToString());
 
-                    Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
-                    Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+            Row.Add(ComplexCell.ToString());
+
+            Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"].Replace("(^p^)", "+")).print());
+            if (parts["FixedCost"] == null)
+            {
+                parts["FixedCost"] = "0";
+            }
+            Row.Add(ScratchBuilder.stringInput("FixedCost_" + ID, parts["FixedCost"].Replace("(^p^)", "+")).print());
+
+            if (parts["showTier"] == null)
+            {
+                parts["showTier"] = "False";
+            }
+            Row.Add(ScratchBuilder.checkBoxInput("showTier_" + ID, bool.Parse(parts["showTier"])).print());
+            if (parts["RateTier1"] == null)
+            {
+                parts["RateTier1"] = "0";
+            }
+            if (parts["RateTier2"] == null)
+            {
+                parts["RateTier2"] = "0";
+            }
+            if (parts["RateTier3"] == null)
+            {
+                parts["RateTier3"] = "0";
+            }
+            if (parts["AWCOrLot"] == null)
+            {
+                parts["AWCOrLot"] = "8000";
+            }
+
+            if (parts["showTier"] == "True")
+            {
+                Row.Add("<div id='tiers" + ID + "' style='display:inline'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>" + @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
 
 
-                    ScratchTable.addArrayRow(Row.ToArray());
-                
 
-                sb.Append(ScratchTable.print());
+            }
+            else
+            {
+                Row.Add("<div id='tiers" + ID + "' style='display:none'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>" + @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
+            }
+
+
+            Row.Add(ScratchBuilder.stringInput("LiveUpdateID_" + ID, parts["LiveUpdateID"]).print());
+            //Instance.hspi.Log(parts["ScratchPadString"],0);
+            Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+            Row.Add("" + Dev.Ref);
+
+            Row.Add(ScratchBuilder.button("R_" + ID.ToString(), "Reset").print());
+            Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
+            //  Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
+
+            ScratchTable.addArrayRow(Row.ToArray());
+
+
+
+        
+
+        sb.Append(ScratchTable.print());
 
                 sb.Append("</div>");
             
@@ -471,45 +570,167 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
              
 
         }
+        /// <summary>
+        /// SIID set rate(units per dollar):		   float between 200 and 1000 (subtract 200 round to 4 decimal places), rate range between 0 and 800
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="RatePlus200"></param>
         public void SetRate(SiidDevice Device, double RatePlus200) {
             double Rate = 0;
-            if (RatePlus200 < 0)
-            {
-                Rate = RatePlus200 + 200;
-            }
-            else
-            {
+     //       if (RatePlus200 < 0)
+      //      {
+      //          Rate = RatePlus200 + 200;
+      //      }
+       //     else
+    //        {
                 Rate = RatePlus200 - 200;
-            }
-            Rate= Double.Parse(Rate.ToString("0.00000"));
+      //      }
+            Rate= Double.Parse(Rate.ToString("0.0000"));
             Device.UpdateExtraData("RateValue", Rate.ToString());
             UpdateDisplay(Device);
             CheckForReset(Device);
 
         }
-        public void resetOrSetDateOrRate(CAPI.CAPIControl ActionIn)
+
+        /// <summary>
+        /// SIID fixed cost: Between 1000 and 2000(subtract 1000 round to 4 decmil, range from 0 to 1000)
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="FixedCostPlus1000"></param>
+        public void SetFixedCost(SiidDevice Device, double FixedCostPlus1000)
         {
-            var devID = ActionIn.Ref;
-            var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+            double FixedCost = 0;
 
-            if (Math.Abs(ActionIn.ControlValue) >= 200)
+            FixedCost = FixedCostPlus1000 - 1000;
+
+            FixedCost = Double.Parse(FixedCost.ToString("0.00000"));
+            Device.UpdateExtraData("FixedCost", FixedCost.ToString());
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+        }
+
+        /// <summary>
+        ///SIID Tiers(4 tiers with boundaries based on AWC or Lotsize), each tier needs an editable rate.
+        ///        Tier 1 rate between 2000 and 3000(subtract 2000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 2 rate between 3000 and 4000(subtract 3000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 3 rate between 4000 and 5000(subtract 4000, round to 4 decmil, range 0 to 1000)
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="TieredRate"></param>
+        public void SetTieredRate(SiidDevice Device, double TieredRate)
+        {
+            String Tier = "Rate_Tier_";
+            Double Rate = 0;
+            //Tier 3 rate
+            if (TieredRate > 4000) {
+                Rate = TieredRate - 4000;
+                Tier += "3";
+            }
+            //Tier 2 rate
+            else if (TieredRate > 3000) {
+                Rate = TieredRate - 3000;
+                Tier += "2";
+            }
+            //Tier 1 rate
+            else {
+                Rate = TieredRate - 2000;
+                Tier += "1";
+            }
+
+            Rate = Double.Parse(Rate.ToString("0.0000"));
+            Device.UpdateExtraData(Tier, Rate.ToString());
+            Device.UpdateExtraData("showTier", "True");
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+
+        }
+
+        /// <summary>
+        ///SIID AWC: Negative number less than - 10(negate, subtract 10) No hardcoded upper range
+        ///SIID LotSize: -Either AWC or LOTSIZE depending on indooor / outdoor, can use the same range for setting
+        ///
+        /// SIID stores AWX/LotSize, Steward decides what to do with it and with the tiered rates
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="AWCOrLot"></param>
+        public void SetAWC_LotSize(SiidDevice Device, double AWCOrLot)
+        {
+          
+           //
+      
+            double AWC_Lot = 8000;
+            AWC_Lot = -(AWCOrLot + 10);
+
+
+            AWC_Lot = Double.Parse(AWC_Lot.ToString("0.00000"));
+            Device.UpdateExtraData("AWCOrLot", AWC_Lot.ToString());
+            Device.UpdateExtraData("showTier", "True");
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+        }
+
+        /// <summary>
+        /// for all accumulators:					 float/double value
+        ///SIID reset accumulator: 			  -1
+        ///SIID set day of monthly reset:			   integer between 0 and 28
+        ///SIID set rate(units per dollar):		   float between 200 and 1000 (subtract 200 round to 4 decimal places), rate range between 0 and 800
+        ///SIID fixed cost: Between 1000 and 2000(subtract 1000 round to 4 decmil, range from 0 to 1000)
+        ///For indoor / outdoor water:
+        ///SIID Tiers(4 tiers with boundaries based on AWC or Lotsize), each tier needs an editable rate.
+        ///        Tier 1 rate between 2000 and 3000(subtract 2000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 2 rate between 3000 and 4000(subtract 3000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 3 rate between 4000 and 5000(subtract 4000, round to 4 decmil, range 0 to 1000)
+
+        ///SIID AWC: Negative number less than - 10(negate, subtract 10) No hardcoded upper range
+        ///SIID LotSize: -Either AWC or LOTSIZE depending on indooor / outdoor, can use the same range for setting
+
+        /// </summary>
+        /// <param name="ActionIn"></param>
+        public void scratchpadCommandIn(CAPI.CAPIControl ActionIn)
+        {
+            try
             {
-                SetRate(newDevice, ActionIn.ControlValue);
-                return;
-            }
+                var devID = ActionIn.Ref;
+                var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+                if (ActionIn.ControlValue == -1)
+                { //reset if -1
+                    Reset(newDevice);
+                }
+                else if (ActionIn.ControlValue >= 0 && ActionIn.ControlValue < 35)
+                {
+                    newDevice.UpdateExtraData("IsEnabled", "True");
+                    newDevice.UpdateExtraData("IsAccumulator", "True");
+                    newDevice.UpdateExtraData("ResetType", "3");
+                    newDevice.UpdateExtraData("DayOfMonth", "" + Math.Round(ActionIn.ControlValue).ToString() + "");
+                }
+                else if (ActionIn.ControlValue >= 200 && ActionIn.ControlValue < 1000)
+                {
+                    SetRate(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue >= 1000 && ActionIn.ControlValue < 2000)
+                {
+                    SetFixedCost(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue >= 2000)
+                {
+                    SetTieredRate(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue <= -10)
+                {
+                    SetAWC_LotSize(newDevice, ActionIn.ControlValue);
+                }
 
-            if (ActionIn.ControlValue < 0){
-                Reset(newDevice);
+                else
+                { //Set to monthly, accumulator, active, with date as value
+                    Instance.hspi.Log("Error when parsing scratchpad command: Command was not in a recognised range. \nDevice: " + ActionIn.Ref + " Command: " + ActionIn.ControlValue.ToString(), 2);
+                }
 
             }
-            else { //Set to monthly, accumulator, active, with date as value
-                newDevice.UpdateExtraData("IsEnabled", "True");
-                newDevice.UpdateExtraData("IsAccumulator", "True");
-                newDevice.UpdateExtraData("ResetType", "3");
-                newDevice.UpdateExtraData("DayOfMonth", ""+ActionIn.ControlValue+"");
+            catch(Exception E)
+            {
+                Instance.hspi.Log("Error when parsing scratchpad command " + E.Message+"\nDevice: "+ ActionIn.Ref+" Command: "+ ActionIn.ControlValue.ToString(), 2);
             }
-             
-
+        
         }
 
         public string addSubrule(string data)
@@ -628,10 +849,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 else
                 {
                     newDevice.UpdateExtraData(partID, changed["value"]);
-                    if (partID == "ScratchPadString")
-                    {
-                        UpdateDisplay(newDevice);
-                    }
+                    UpdateDisplay(newDevice);
+              
                 }
             }
 

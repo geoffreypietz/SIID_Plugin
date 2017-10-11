@@ -1134,7 +1134,7 @@ namespace HSPI_SIID
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String","Rate ($ per unit)","Real Time Data Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
+                ScratchTable.addHead(new string[] { "Rule Name", "Value","Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String","Fixed Cost","Show Tiered Rates","Rate ($ per unit)","Real Time Data Rule String", "Rule Formatting","HomeseerID" }); //0,1,2,3,4,5
 
                 bool EvenOdd = false;
                 string BG1 = "#eeeeee";
@@ -1194,11 +1194,98 @@ UpdateDisplay("+ID+ @");
 $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 </script>");
+
                     Row.Add(ComplexCell.ToString());
 
-                    Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
-                    Row.Add(ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print());
+                       Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"].Replace("(^p^)", "+")).print());
+                    if (parts["FixedCost"] == null)
+                    {
+                        parts["FixedCost"] = "0";
+                    }
+                    Row.Add(ScratchBuilder.stringInput("FixedCost_" + ID, parts["FixedCost"].Replace("(^p^)", "+")).print());
+
+                    if (parts["showTier"] == null)
+                    {
+                        parts["showTier"] = "False";
+                    }
+                    Row.Add(ScratchBuilder.checkBoxInput("showTier_" + ID, bool.Parse(parts["showTier"])).print());
+                    if (parts["RateTier1"] == null)
+                    {
+                        parts["RateTier1"] = "0";
+                    }
+                    if (parts["RateTier2"] == null)
+                    {
+                        parts["RateTier2"] = "0";
+                    }
+                    if (parts["RateTier3"] == null)
+                    {
+                        parts["RateTier3"] = "0";
+                    }
+                    if (parts["AWCOrLot"] == null)
+                    {
+                        parts["AWCOrLot"] = "8000";
+                    }
+
+                    if (parts["showTier"] == "True")
+                    {
+                        Row.Add("<div id='tiers" + ID + "' style='display:inline'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>"+ @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
+                     
+
+
+                    }
+                    else{
+                        Row.Add("<div id='tiers"+ID+"' style='display:none'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>"+ "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>"+ @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
+                    }
+                  
+
                     Row.Add(ScratchBuilder.stringInput("LiveUpdateID_" + ID, parts["LiveUpdateID"]).print());
+                    //Instance.hspi.Log(parts["ScratchPadString"],0);
                     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
                     Row.Add("" + Dev.Ref);
 
@@ -1208,61 +1295,7 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                
                     ScratchTable.addArrayRow(Row.ToArray(), Back);
 
-                 /*   var ASSOCIATES = Dev.Device.get_AssociatedDevices_List(Instance.host);
-                    if (ASSOCIATES != null)
-                    {
-                        foreach (string IDstr in ASSOCIATES.Split(','))
-                        {
-                            try
-                            {
-
-                                var Sub = HSPI_SIID.General.SiidDevice.GetFromListByID(Instance.Devices, Convert.ToInt32(IDstr));
-
-
-                                ID = Sub.Ref;
-                                Row = new List<string>();
-                        
-                                EDO = Sub.Extra;
-                                parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                                Row.Add(ScratchBuilder.stringInput("Name_" + ID, Sub.Device.get_Name(Instance.host)).print());
-                                Row.Add(parts["DisplayedValue"]);
-                                //  Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
-                                Row.Add("<div/>");
-                                // Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
-                                Row.Add("<div/>");
-                                //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
-
-                                //Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
-                                //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
-                                Row.Add("<div/>");
-
-
-                                // Row.Add(ComplexCell.ToString());
-                                Row.Add("<div/>");
-
-                                Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
-                                Row.Add("<div/>");
-                                Row.Add("<div/>");
-                                //     Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
-                                Row.Add("<div/>");
-                                Row.Add("" + Sub.Ref);
-
-                                Row.Add("<div/>");
-                                Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
-                                Row.Add("<div/>");
-                                // Row.Add(ScratchBuilder.Qbutton("S_" + ID.ToString(), "Add Associated Device").print());
-
-                                ScratchTable.addArrayRow(Row.ToArray(), Back);
-                            }
-                            catch(Exception e)
-                                    {
-                                        Console.WriteLine(e.ToString());
-                                    }
-
-                        }
-                 
-
-                    }*/
+              
 
                     }
 
