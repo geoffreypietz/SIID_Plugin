@@ -30,7 +30,13 @@
         "LiveUpdateID",
         "RateValue",
         "LiveValue",
-
+        "FixedCost",
+        "showTier",
+        "RateTier1",
+        "RateTier2",
+        "RateTier3",
+          "RateTier4",
+        "AWCOrLot"
         };
 
         public static string[] ResetType = new string[] {

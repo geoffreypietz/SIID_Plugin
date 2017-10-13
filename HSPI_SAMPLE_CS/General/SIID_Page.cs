@@ -527,16 +527,30 @@ namespace HSPI_SIID
                                                     parts["RateValue"] = FetchAttribute(CodeLookup, "ratevalue");
                                                     parts["LiveValue"] = FetchAttribute(CodeLookup, "livevalue");
 
-                                                  
+
+                                                    //
+      
+                                                    parts["showTier"] = FetchAttribute(CodeLookup, "showtier");
+                                                    parts["RateTier1"] = FetchAttribute(CodeLookup, "ratetier1");
+                                                    parts["RateTier2"] = FetchAttribute(CodeLookup, "ratetier2");
+                                                    parts["RateTier3"] = FetchAttribute(CodeLookup, "ratetier3");
+                                                    parts["RateTier4"] = FetchAttribute(CodeLookup, "ratetier4");
+                                                    parts["AWCOrLot"] = FetchAttribute(CodeLookup, "awcorlot");
+                                                    parts["FixedCost"] = FetchAttribute(CodeLookup, "fixedcost");
+
+                                             
+
+                                                    //
 
                                                     EDO.AddNamed("SSIDKey", parts.ToString());
 
                                                     var DevINFO = new DeviceTypeInfo_m.DeviceTypeInfo();
                                                     DevINFO.Device_API = DeviceTypeInfo_m.DeviceTypeInfo.eDeviceAPI.Plug_In;
-                                                   if (!hasStatus)
-                                                    {
-                                                        Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]);
-                                                    }
+                                                    //    if (!hasStatus)
+                                                    //     {
+                                                    Instance.host.DeviceVSP_ClearAll(OldToNew[int.Parse(CodeLookup["id"])], true);
+                                                        Instance.scrPage.MakeStewardVSP(OldToNew[int.Parse(CodeLookup["id"])]); //Scratchpad rules have hardcoded control input range
+                                                  //  }
                                                 }
                                                 catch (Exception e)
                                                 {
@@ -1221,6 +1235,10 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     {
                         parts["RateTier3"] = "0";
                     }
+                    if (parts["RateTier4"] == null)
+                    {
+                        parts["RateTier4"] = "0";
+                    }
                     if (parts["AWCOrLot"] == null)
                     {
                         parts["AWCOrLot"] = "8000";
@@ -1230,7 +1248,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                     {
                         Row.Add("<div id='tiers" + ID + "' style='display:inline'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
 ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
-ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  Tier 4:" +
+ScratchBuilder.stringInput("RateTier4_" + ID, parts["RateTier4"]).print() + "  AWC or LotSize:" +
 ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>"+ @"<script>
 UpdateTier=function(id){
 IsChecked = $('#showTier_' + id)[0].checked;
@@ -1259,7 +1278,8 @@ $('#showTier_" + ID + @"').change(TierChange); //OK HERE
                     else{
                         Row.Add("<div id='tiers"+ID+"' style='display:none'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
 ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
-ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  Tier 4:" +
+ScratchBuilder.stringInput("RateTier4_" + ID, parts["RateTier4"]).print() + "  AWC or LotSize:" +
 ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>"+ "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>"+ @"<script>
 UpdateTier=function(id){
 IsChecked = $('#showTier_' + id)[0].checked;
