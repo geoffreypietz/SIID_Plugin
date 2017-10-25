@@ -186,8 +186,8 @@ namespace HSPI_SIID.ScratchPad
                     Out = Rate1 * Amount1 + Rate2 * Amount2 + Rate3 * Amount3 + Rate4 * Amount4;
                 }
                 else
-                {
-                    Out = 0;
+                { //If the allowence is zero, just apply Rate1 to full amount
+                    Out = MeterValue * Rate1;
                 }
             }
             return Out;
@@ -212,7 +212,9 @@ namespace HSPI_SIID.ScratchPad
                     CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
 
                 }
-
+                Rule.UpdateExtraData("RawValue", "" + CalculatedString); //Raw value is before rate
+                //So to get the pre-rate value from another scratchpad rule do $(ruleID)
+                //To get the post rate value do #(ruleID)
 
                 try
                 {
@@ -244,7 +246,7 @@ namespace HSPI_SIID.ScratchPad
                 }
                
               
-                Rule.UpdateExtraData("RawValue", ""+CalculatedString);
+              //processed value is after rate  
                 Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
                 Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
 
