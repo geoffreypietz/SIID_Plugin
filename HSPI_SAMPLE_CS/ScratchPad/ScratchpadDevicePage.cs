@@ -139,7 +139,7 @@ namespace HSPI_SIID.ScratchPad
                  */
                  //Definitely a better way to do this. 
                 double[] MonthRate = new double[]{ 700, 1600, 1900, 2100, 1900, 1300, 500 ,0,0,0,0,0};
-                String[] MonthIndex = new String[] { "April", "May", "June", "July", "August", "September", "October","November","December","January","February","March" };
+                String[] MonthIndex = new String[] { "4", "5", "6", "7", "8", "9", "10","11","12","1","2","3" };
                 double[] SizeCap = new double[] { 3001, 4001, 5001, 6001, 7001, 8001, 11001, 20001, 30001 };
                 double[] MultPlier = new double[] { 1, 1.25, 1.5, 2.7, 3.2, 3.9, 4.9, 6, 8,10};
                 int index = 0;
@@ -152,7 +152,9 @@ namespace HSPI_SIID.ScratchPad
                     index++;
                 }
                 double Mult = MultPlier[index];
-                double MonthVal = Array.IndexOf(MonthIndex,DateTime.Now.ToString("MM"));
+              //  int thisMonth = int.Parse(DateTime.Now.ToString("MM")); //this is the month number
+                double MonthVal = MonthRate[Array.IndexOf(MonthIndex,DateTime.Now.ToString("MM"))];
+              
                 double ALT = Mult * MonthVal;
                 Rule.UpdateExtraData("OutdoorWaterBudget", "" + ALT);
                 //ALT is the budget. Want to return this to STEWARD also.
