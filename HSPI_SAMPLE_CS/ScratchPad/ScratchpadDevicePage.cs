@@ -46,7 +46,7 @@ namespace HSPI_SIID.ScratchPad
         }
         public void doLiveRule(SiidDevice Rule)
         {
-            var parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+            var parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
 
             string RawNumberString = GeneralHelperFunctions.GetValues(Instance, parts["LiveUpdateID"]);
             double CalculatedString = CalculateString(RawNumberString);
@@ -69,11 +69,140 @@ namespace HSPI_SIID.ScratchPad
 
 
         }
+
+        /// <summary>
+        /// Turns a raw meter read into a tiered value according to hardcoded rules
+        /// </summary>
+        /// <param name="MeterValue"></param>
+        /// <param name="Rule"></param>
+        /// <returns></returns>
+        public Double TieredRate(Double MeterValue, SiidDevice Rule)
+        {
+            Double Out = 0;
+            var parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
+
+                /*       
+        "showTier",
+        "RateTier1",
+        "RateTier2",
+        "RateTier3",
+        "AWCOrLot"
+        */
+
+            Double AWCorLot = Double.Parse(parts["AWCOrLot"]);
+            Double Rate1 = Double.Parse(parts["RateTier1"]);
+            Double Rate2 = Double.Parse(parts["RateTier2"]);
+            Double Rate3 = Double.Parse(parts["RateTier3"]);
+
+            String Name = Rule.Device.get_Name(Instance.host).ToLower();
+            if (Name.Contains("indoor"))
+            {
+                //Indoor water meter
+                //AWCOrLot is AWC
+                //Final Amount = Rate1 * (Meter Value up to AWC) + Rate2 * (Meter value from AWC up to AWC*1.2) + Rate3 * (Meter value greater than AMC*1.2)
+                Double Amount1 = 0;
+                Double Amount2 = 0;
+                Double Amount3 = 0;
+                if (MeterValue > AWCorLot * 1.2) {
+                    Amount3 = MeterValue - (AWCorLot * 1.2);
+                    MeterValue -= Amount3;
+                }
+                if (MeterValue > AWCorLot) {
+                    Amount2 = MeterValue - AWCorLot;
+                    MeterValue -= Amount2;
+                }
+                Amount1 = MeterValue;
+                Out = Rate1 * Amount1 + Rate2 * Amount2 + Rate3 * Amount3;
+
+
+            }
+            else
+            {
+                //Outdoor water meter, AWC
+                //AWCOrLot is LotSize
+                //Use lot size to calculate outdoor allotment ALT 
+
+                //ALT follows the table in the Sterling Ranch Outdoor Water Allotment Table
+                //10/13/2017
+                /*Lot Size      Gal/year        Apr         May         June         July       Aug     Set     Oct         Multiplier
+                 * 0 - 3000     10000           700         1600        1900        2100        1900    1300    500         1
+                 * 3001-4000    12500           875         2000        2375        2625        2375    1625    625         1.25
+                 * 4001-5000    15000           1050        2400        2850        3150        2850    1950    750         1.5
+                 * 5001-6000    27000           1890        4320        5130        5670        5130    3510    1350        2.7
+                 * 6001-7000    32000           2240        5120        6080        6720        6080    4160    1600        3.2
+                 * 7001-8000    39000           2730        6240        7410        8190        7410    5070    1950        3.9
+                 * 8001-11000   49000           3430        7840        9310        10290       9310    6370    2450        4.9
+                 * 11001-20000  60000           4200        9600        11400       12600       11400   7800    3000        6
+                 * 20001-30000  80000           5600        12800       15200       16800       15200   10400   4000        8
+                 * 30001 ++     100000          7000        1600        19000       21000       19000   13000   5000        10
+              
+                 */
+                 //Definitely a better way to do this. 
+                double[] MonthRate = new double[]{ 700, 1600, 1900, 2100, 1900, 1300, 500 ,0,0,0,0,0};
+                String[] MonthIndex = new String[] { "4", "5", "6", "7", "8", "9", "10","11","12","1","2","3" };
+                double[] SizeCap = new double[] { 3001, 4001, 5001, 6001, 7001, 8001, 11001, 20001, 30001 };
+                double[] MultPlier = new double[] { 1, 1.25, 1.5, 2.7, 3.2, 3.9, 4.9, 6, 8,10};
+                int index = 0;
+                foreach (double Cap in SizeCap)
+                {
+                    if (Cap > AWCorLot)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                double Mult = MultPlier[index];
+              //  int thisMonth = int.Parse(DateTime.Now.ToString("MM")); //this is the month number
+                double MonthVal = MonthRate[Array.IndexOf(MonthIndex,DateTime.Now.ToString("MM"))];
+              
+                double ALT = Mult * MonthVal;
+                Rule.UpdateExtraData("OutdoorWaterBudget", "" + ALT);
+                //ALT is the budget. Want to return this to STEWARD also.
+                //Final Amount = Rate1 * (Meter Value up to ALT) + Rate2 * (Meter value from ALT up to ALT*1.2) + Rate3 * (Meter value from ALT*1.2 to 1.4*ALT) + Rate4 * (Meter value greater than AMC*1.4)
+
+                if (ALT > 0)
+                {
+
+
+                    Double Rate4 = Double.Parse(parts["RateTier4"]);
+                    Double Amount1 = 0;
+                    Double Amount2 = 0;
+                    Double Amount3 = 0;
+                    Double Amount4 = 0;
+                    if (MeterValue > AWCorLot * 1.4)
+                    {
+                        Amount4 = MeterValue - (AWCorLot * 1.4);
+                        MeterValue -= Amount4;
+                    }
+                    if (MeterValue > AWCorLot * 1.2)
+                    {
+                        Amount3 = MeterValue - (AWCorLot * 1.2);
+                        MeterValue -= Amount3;
+                    }
+                    if (MeterValue > AWCorLot)
+                    {
+                        Amount2 = MeterValue - AWCorLot;
+                        MeterValue -= Amount2;
+                    }
+                    Amount1 = MeterValue;
+                    Out = Rate1 * Amount1 + Rate2 * Amount2 + Rate3 * Amount3 + Rate4 * Amount4;
+                }
+                else
+                { //If the allowence is zero, just apply Rate1 to full amount
+                    Out = MeterValue * Rate1;
+                }
+            }
+            return Out;
+
+            }
+
+
+
         public void UpdateDisplay(SiidDevice Rule)
         {
             try
             {
-                var parts=HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+                var parts=HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
                
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
@@ -85,19 +214,41 @@ namespace HSPI_SIID.ScratchPad
                     CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
 
                 }
-
+                Rule.UpdateExtraData("RawValue", "" + CalculatedString); //Raw value is before rate
+                //So to get the pre-rate value from another scratchpad rule do $(ruleID)
+                //To get the post rate value do #(ruleID)
 
                 try
                 {
-                    double Rate = Double.Parse(parts["RateValue"]);
-                    CalculatedString = CalculatedString * Rate;
+
+                    //In a meter setting the Calculated String is the raw meter read. Now we multiply it by the rate (because the output should be the cost of the meter)
+
+                    //SO Time for some odd hardcoding.
+
+                    //Every meter uses rate Unless it's an indoor water meter or an outdoor water meter.  We will check for those and apply the tiered rates if so.
+                    //In the future we may want to genealize this
+                    String Name = Rule.Device.get_Name(Instance.host).ToLower();
+                    if (Name.Contains("water") && Name.Contains("meter") && (Name.Contains("indoor") || Name.Contains("outdoor")))
+                    {
+                        CalculatedString = TieredRate(CalculatedString, Rule);
+                            
+                          
+                    }
+                    else
+                    {
+                        double Rate = Double.Parse(parts["RateValue"]);
+                        CalculatedString = CalculatedString * Rate;
+                    }
+
+
+
                 }
                 catch
                 {
                 }
                
               
-                Rule.UpdateExtraData("RawValue", ""+CalculatedString);
+              //processed value is after rate  
                 Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
                 Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
 
@@ -111,7 +262,7 @@ namespace HSPI_SIID.ScratchPad
                 // EDO.RemoveNamed("SSIDKey");
                 //  EDO.AddNamed("SSIDKey", parts.ToString());
 
-                 parts = HttpUtility.ParseQueryString(Rule.Extra.GetNamed("SSIDKey").ToString());
+                 parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
 
                 string userNote = Rule.Device.get_UserNote(Instance.host);
                 userNote = userNote.Split("PLUGIN EXTRA DATA:".ToCharArray())[0];
@@ -257,8 +408,13 @@ namespace HSPI_SIID.ScratchPad
             parts["RateValue"] = "";
             parts["LiveValue"] ="0";
 
-
-
+            parts["FixedCost"] = "0";
+            parts["RateTier1"] = "0";
+            parts["RateTier2"] = "0";
+            parts["RateTier3"] = "0";
+            parts["RateTier4"] = "0";
+            parts["AWCOrLot"] = "8000";
+            parts["showTier"] = "False";
 
             return parts.ToString();
         }
@@ -316,8 +472,8 @@ namespace HSPI_SIID.ScratchPad
            
             var Control = new VSVGPairs.VSPair(ePairStatusControl.Both);
             Control.PairType = VSVGPairs.VSVGPairType.Range;
-            Control.RangeStart = -100;
-            Control.RangeEnd = 1000;
+            Control.RangeStart = -100000;
+            Control.RangeEnd = 100000;
             Control.Render = Enums.CAPIControlType.TextBox_Number;
           var IS =  Instance.host.DeviceVSP_AddPair(deviceID, Control);
 
@@ -383,33 +539,31 @@ namespace HSPI_SIID.ScratchPad
                 htmlBuilder ScratchBuilder = new htmlBuilder("Scratch" + Instance.ajaxName);
                 sb.Append("<div><h2>ScratchPad Rules:<h2><hl>");
                 htmlTable ScratchTable = ScratchBuilder.htmlTable();
+            ScratchTable.addHead(new string[] { "Rule Name", "Value", "Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Fixed Cost","Show Tiered Rates", "Rate ($ per unit)", "Real Time Data Rule String", "Rule Formatting", "HomeseerID" }); //0,1,2,3,4,5
 
-                ScratchTable.addHead(new string[] { "Rule Name", "Value", "Enable Rule", "Is Accumulator", "Reset Type", "Reset Interval", "Rule String", "Rule Formatting" }); //0,1,2,3,4,5
+            int ID = Dev.Ref;
+            List<string> Row = new List<string>();
+            var EDO = Dev.Extra;
+            var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
+            Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.Device.get_Name(Instance.host)).print());
+            Row.Add(parts["DisplayedValue"]);
+            Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
+            Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
 
-              
-                    int ID = Dev.Ref;
-                    List<string> Row = new List<string>();
-                    var EDO = Dev.Extra;
-                    var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
-                    Row.Add(ScratchBuilder.stringInput("Name_" + ID, Dev.Device.get_Name(Instance.host)).print());
-                    Row.Add(parts["DisplayedValue"]);
-                    Row.Add(ScratchBuilder.checkBoxInput("IsEnabled_" + ID, bool.Parse(parts["IsEnabled"])).print());
-                    Row.Add(ScratchBuilder.checkBoxInput("IsAccumulator_" + ID, bool.Parse(parts["IsAccumulator"])).print());
+            //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
 
-                    //Reset type is 0=periodically, 1=daily,2=weekly,3=monthly
-
-                    Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
-                    //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
+            Row.Add(ScratchBuilder.selectorInput(ScratchpadDevice.ResetType, "ResetType_" + ID, "ResetType_" + ID, Convert.ToInt32(parts["ResetType"])).print());
+            //Based on what selector input, this next cell will be crowded with the different input possibilities where all but one have display none
 
 
 
-                    StringBuilder ComplexCell = new StringBuilder();
+            StringBuilder ComplexCell = new StringBuilder();
 
-                    ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
-                    ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
-                    ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
-                    ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
-                    ComplexCell.Append(@"<script>
+            ComplexCell.Append("<div id=0_" + ID + " style=display:none>Interval in minutes: " + ScratchBuilder.numberInput("ResetInterval_" + ID + "_0", Convert.ToInt32(parts["ResetInterval"])).print() + "</div>");
+            ComplexCell.Append("<div id=1_" + ID + " style=display:none>" + ScratchBuilder.timeInput("ResetTime_" + ID + "_1", parts["ResetTime"]).print() + "</div>");
+            ComplexCell.Append("<div id=2_" + ID + " style=display:none>" + ScratchBuilder.selectorInput(GeneralHelperFunctions.DaysOfWeek, "DayOfWeek_" + ID + "_2", "DayOfWeek_" + ID + "_2", Convert.ToInt32(parts["DayOfWeek"])).print() + "</div>");
+            ComplexCell.Append("<div id=3_" + ID + " style=display:none>Day of the month: " + ScratchBuilder.numberInput("DayOfMonth_" + ID + "_3", Convert.ToInt32(parts["DayOfMonth"])).print() + "</div>");
+            ComplexCell.Append(@"<script>
 UpdateDisplay=function(id){
 console.log('UPDATING DISPLAY '+id);
 $('#0_'+id)[0].style.display='none';
@@ -428,16 +582,119 @@ UpdateDisplay(" + ID + @");
 $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
 
 </script>");
-                    Row.Add(ComplexCell.ToString());
 
-                    Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"]).print());
-                    Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+            Row.Add(ComplexCell.ToString());
+
+            Row.Add(ScratchBuilder.stringInput("ScratchPadString_" + ID, parts["ScratchPadString"].Replace("(^p^)", "+")).print());
+            if (parts["FixedCost"] == null)
+            {
+                parts["FixedCost"] = "0";
+            }
+            Row.Add(ScratchBuilder.stringInput("FixedCost_" + ID, parts["FixedCost"].Replace("(^p^)", "+")).print());
+
+            if (parts["showTier"] == null)
+            {
+                parts["showTier"] = "False";
+            }
+            Row.Add(ScratchBuilder.checkBoxInput("showTier_" + ID, bool.Parse(parts["showTier"])).print());
+            if (parts["RateTier1"] == null)
+            {
+                parts["RateTier1"] = "0";
+            }
+            if (parts["RateTier2"] == null)
+            {
+                parts["RateTier2"] = "0";
+            }
+            if (parts["RateTier3"] == null)
+            {
+                parts["RateTier3"] = "0";
+            }
+            if (parts["RateTier4"] == null)
+            {
+                parts["RateTier4"] = "0";
+            }
+            if (parts["AWCOrLot"] == null)
+            {
+                parts["AWCOrLot"] = "8000";
+            }
+
+            if (parts["showTier"] == "True")
+            {
+                Row.Add("<div id='tiers" + ID + "' style='display:inline'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  Tier 4:" +
+ScratchBuilder.stringInput("RateTier4_" + ID, parts["RateTier4"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>" + @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
 
 
-                    ScratchTable.addArrayRow(Row.ToArray());
-                
 
-                sb.Append(ScratchTable.print());
+            }
+            else
+            {
+                Row.Add("<div id='tiers" + ID + "' style='display:none'>Tier 1:" + ScratchBuilder.stringInput("RateTier1_" + ID, parts["RateTier1"]).print() + "  Tier 2:" +
+ScratchBuilder.stringInput("RateTier2_" + ID, parts["RateTier2"]).print() + "  Tier 3:" +
+ScratchBuilder.stringInput("RateTier3_" + ID, parts["RateTier3"]).print() + "  Tier 4:" +
+ScratchBuilder.stringInput("RateTier4_" + ID, parts["RateTier4"]).print() + "  AWC or LotSize:" +
+ScratchBuilder.stringInput("AWCOrLot_" + ID, parts["AWCOrLot"]).print() + "</div>" + "<div id='rate" + ID + "' style='display:none'>" + ScratchBuilder.stringInput("RateValue_" + ID, parts["RateValue"]).print() + "</div>" + @"<script>
+UpdateTier=function(id){
+IsChecked = $('#showTier_' + id)[0].checked;
+if(IsChecked){
+$('#tiers'+id)[0].style.display='inline';
+$('#rate'+id)[0].style.display='none';
+}
+else{
+$('#tiers'+id)[0].style.display='none';
+$('#rate'+id)[0].style.display='inline';
+}
+}
+TierChange=function(){
+console.log('TierChange');
+console.log(this);
+UpdateTier(this.id.split('_')[1]);
+}
+UpdateTier(" + ID + @");
+$('#showTier_" + ID + @"').change(TierChange); //OK HERE
+
+</script>");
+            }
+
+
+            Row.Add(ScratchBuilder.stringInput("LiveUpdateID_" + ID, parts["LiveUpdateID"]).print());
+            //Instance.hspi.Log(parts["ScratchPadString"],0);
+            Row.Add(ScratchBuilder.stringInput("DisplayString_" + ID, parts["DisplayString"]).print());
+            Row.Add("" + Dev.Ref);
+
+            Row.Add(ScratchBuilder.button("R_" + ID.ToString(), "Reset").print());
+            Row.Add(ScratchBuilder.DeleteDeviceButton(ID.ToString()).print());
+            //  Row.Add(ScratchBuilder.button("S_" + ID.ToString(), "Add Associated Device").print());
+
+            ScratchTable.addArrayRow(Row.ToArray());
+
+
+
+        
+
+        sb.Append(ScratchTable.print());
 
                 sb.Append("</div>");
             
@@ -471,45 +728,174 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
              
 
         }
+        /// <summary>
+        /// SIID set rate(units per dollar):		   float between 200 and 1000 (subtract 200 round to 4 decimal places), rate range between 0 and 800
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="RatePlus200"></param>
         public void SetRate(SiidDevice Device, double RatePlus200) {
             double Rate = 0;
-            if (RatePlus200 < 0)
-            {
-                Rate = RatePlus200 + 200;
-            }
-            else
-            {
+     //       if (RatePlus200 < 0)
+      //      {
+      //          Rate = RatePlus200 + 200;
+      //      }
+       //     else
+    //        {
                 Rate = RatePlus200 - 200;
-            }
-            Rate= Double.Parse(Rate.ToString("0.00000"));
+      //      }
+            Rate= Double.Parse(Rate.ToString("0.0000"));
             Device.UpdateExtraData("RateValue", Rate.ToString());
             UpdateDisplay(Device);
             CheckForReset(Device);
 
         }
-        public void resetOrSetDateOrRate(CAPI.CAPIControl ActionIn)
+
+        /// <summary>
+        /// SIID fixed cost: Between 1000 and 2000(subtract 1000 round to 4 decmil, range from 0 to 1000)
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="FixedCostPlus1000"></param>
+        public void SetFixedCost(SiidDevice Device, double FixedCostPlus1000)
         {
-            var devID = ActionIn.Ref;
-            var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+            double FixedCost = 0;
 
-            if (Math.Abs(ActionIn.ControlValue) >= 200)
+            FixedCost = FixedCostPlus1000 - 1000;
+
+            FixedCost = Double.Parse(FixedCost.ToString("0.00000"));
+            Device.UpdateExtraData("FixedCost", FixedCost.ToString());
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+        }
+
+        /// <summary>
+        ///SIID Tiers(4 tiers with boundaries based on AWC or Lotsize), each tier needs an editable rate.
+        ///        Tier 1 rate between 2000 and 3000(subtract 2000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 2 rate between 3000 and 4000(subtract 3000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 3 rate between 4000 and 5000(subtract 4000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 4 rate between 5000 and 6000(subtract 4000, round to 4 decmil, range 0 to 1000)
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="TieredRate"></param>
+        public void SetTieredRate(SiidDevice Device, double TieredRate)
+        {
+            String Tier = "RateTier";
+            Double Rate = 0;
+            //Tier 4 rate
+            if (TieredRate >= 5000)
             {
-                SetRate(newDevice, ActionIn.ControlValue);
-                return;
+                Rate = TieredRate - 5000;
+                Tier += "4";
+            }
+            //Tier 3 rate
+            if (TieredRate >= 4000) {
+                Rate = TieredRate - 4000;
+                Tier += "3";
+            }
+            //Tier 2 rate
+            else if (TieredRate >= 3000) {
+                Rate = TieredRate - 3000;
+                Tier += "2";
+            }
+            //Tier 1 rate
+            else {
+                Rate = TieredRate - 2000;
+                Tier += "1";
             }
 
-            if (ActionIn.ControlValue < 0){
-                Reset(newDevice);
+            Rate = Double.Parse(Rate.ToString("0.0000"));
+            Device.UpdateExtraData(Tier, Rate.ToString());
+            Device.UpdateExtraData("showTier", "True");
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+
+        }
+
+        /// <summary>
+        ///SIID AWC: Negative number less than - 10(negate, subtract 10) No hardcoded upper range
+        ///SIID LotSize: -Either AWC or LOTSIZE depending on indooor / outdoor, can use the same range for setting
+        ///
+        /// SIID stores AWX/LotSize, Steward decides what to do with it and with the tiered rates
+        /// </summary>
+        /// <param name="Device"></param>
+        /// <param name="AWCOrLot"></param>
+        public void SetAWC_LotSize(SiidDevice Device, double AWCOrLot)
+        {
+          
+           //
+      
+            double AWC_Lot = 8000;
+            AWC_Lot = -(AWCOrLot + 10);
+
+
+            AWC_Lot = Double.Parse(AWC_Lot.ToString("0.00000"));
+            Device.UpdateExtraData("AWCOrLot", AWC_Lot.ToString());
+            Device.UpdateExtraData("showTier", "True");
+            UpdateDisplay(Device);
+            CheckForReset(Device);
+        }
+
+        /// <summary>
+        /// for all accumulators:					 float/double value
+        ///SIID reset accumulator: 			  -1
+        ///SIID set day of monthly reset:			   integer between 0 and 28
+        ///SIID set rate(units per dollar):		   float between 200 and 1000 (subtract 200 round to 4 decimal places), rate range between 0 and 800
+        ///SIID fixed cost: Between 1000 and 2000(subtract 1000 round to 4 decmil, range from 0 to 1000)
+        ///For indoor / outdoor water:
+        ///SIID Tiers(4 tiers with boundaries based on AWC or Lotsize), each tier needs an editable rate.
+        ///        Tier 1 rate between 2000 and 3000(subtract 2000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 2 rate between 3000 and 4000(subtract 3000, round to 4 decmil, range 0 to 1000)
+        ///        Tier 3 rate between 4000 and 5000(subtract 4000, round to 4 decmil, range 0 to 1000)
+
+        ///SIID AWC: Negative number less than - 10(negate, subtract 10) No hardcoded upper range
+        ///SIID LotSize: -Either AWC or LOTSIZE depending on indooor / outdoor, can use the same range for setting
+
+        /// </summary>
+        /// <param name="ActionIn"></param>
+        public void scratchpadCommandIn(CAPI.CAPIControl ActionIn)
+        {
+            try
+            {
+                var devID = ActionIn.Ref;
+                var newDevice = SiidDevice.GetFromListByID(Instance.Devices, devID);
+                if (ActionIn.ControlValue == -1)
+                { //reset if -1
+                    Reset(newDevice);
+                }
+                else if (ActionIn.ControlValue >= 0 && ActionIn.ControlValue < 35)
+                {
+                    newDevice.UpdateExtraData("IsEnabled", "True");
+                    newDevice.UpdateExtraData("IsAccumulator", "True");
+                    newDevice.UpdateExtraData("ResetType", "3");
+                    newDevice.UpdateExtraData("DayOfMonth", "" + Math.Round(ActionIn.ControlValue).ToString() + "");
+                }
+                else if (ActionIn.ControlValue >= 200 && ActionIn.ControlValue < 1000)
+                {
+                    SetRate(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue >= 1000 && ActionIn.ControlValue < 2000)
+                {
+                    SetFixedCost(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue >= 2000)
+                {
+                    SetTieredRate(newDevice, ActionIn.ControlValue);
+                }
+                else if (ActionIn.ControlValue <= -10)
+                {
+                    SetAWC_LotSize(newDevice, ActionIn.ControlValue);
+                }
+
+                else
+                { //Set to monthly, accumulator, active, with date as value
+                    Instance.hspi.Log("Error when parsing scratchpad command: Command was not in a recognised range. \nDevice: " + ActionIn.Ref + " Command: " + ActionIn.ControlValue.ToString(), 2);
+                }
 
             }
-            else { //Set to monthly, accumulator, active, with date as value
-                newDevice.UpdateExtraData("IsEnabled", "True");
-                newDevice.UpdateExtraData("IsAccumulator", "True");
-                newDevice.UpdateExtraData("ResetType", "3");
-                newDevice.UpdateExtraData("DayOfMonth", ""+ActionIn.ControlValue+"");
+            catch(Exception E)
+            {
+                Instance.hspi.Log("Error when parsing scratchpad command " + E.Message+"\nDevice: "+ ActionIn.Ref+" Command: "+ ActionIn.ControlValue.ToString(), 2);
             }
-             
-
+        
         }
 
         public string addSubrule(string data)
@@ -628,10 +1014,8 @@ $('#ResetType_" + ID + @"').change(DoChange); //OK HERE
                 else
                 {
                     newDevice.UpdateExtraData(partID, changed["value"]);
-                    if (partID == "ScratchPadString")
-                    {
-                        UpdateDisplay(newDevice);
-                    }
+                    UpdateDisplay(newDevice);
+              
                 }
             }
 

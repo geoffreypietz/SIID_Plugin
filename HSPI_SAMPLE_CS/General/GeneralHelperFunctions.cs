@@ -13,6 +13,7 @@ namespace HSPI_SIID.General
 
         public static string GetValues(InstanceHolder Instance, string ScratchPadString)
         {
+            ScratchPadString= ScratchPadString.Replace("(^p^)", "+");
             List<int> Raws = new List<int>();
             List<int> Processed = new List<int>();
             Match m = Regex.Match(ScratchPadString, @"(\$\()+(\d+)(\))+");
