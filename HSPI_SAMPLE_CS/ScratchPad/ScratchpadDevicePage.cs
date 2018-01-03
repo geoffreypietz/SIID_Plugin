@@ -52,8 +52,23 @@ namespace HSPI_SIID.ScratchPad
             double CalculatedString = CalculateString(RawNumberString);
             try
             {
-                double Rate = Double.Parse(parts["RateValue"]);
-                CalculatedString = CalculatedString * Rate;
+                String Name=Rule.Device.get_Name(Instance.host).ToLower();
+                //OK should apply tiered rate to the Calculated string if appropriate.
+                if (Name.Contains("water") && Name.Contains("meter") && (Name.Contains("indoor") || Name.Contains("outdoor")))
+                {
+                    double MeterString = Double.Parse(parts["RawValue"]);
+                    CalculatedString = LiveTier(MeterString,CalculatedString, Rule);
+               
+
+
+                }
+                else
+                {
+                    double Rate = Double.Parse(parts["RateValue"]);
+                    CalculatedString = CalculatedString * Rate;
+
+                }
+              
 
           
             }
@@ -67,6 +82,120 @@ namespace HSPI_SIID.ScratchPad
             Rule.UpdateExtraData("LiveValue", "" + CalculatedString.ToString());
              
 
+
+        }
+
+        //Functions like TieredRates, but just gets the tier and applies that rate to LiveValue
+        public Double LiveTier(Double MeterValue,Double LiveValue, SiidDevice Rule)
+        {
+        
+
+            var parts = HttpUtility.ParseQueryString(Rule.Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
+            Double AWCorLot = Double.Parse(parts["AWCOrLot"]);
+            Double Rate1 = Double.Parse(parts["RateTier1"]);
+            Double Rate2 = Double.Parse(parts["RateTier2"]);
+            Double Rate3 = Double.Parse(parts["RateTier3"]);
+
+            String Name = Rule.Device.get_Name(Instance.host).ToLower();
+            if (Name.Contains("indoor"))
+            {
+                //Indoor water meter
+                //AWCOrLot is AWC
+                //Final Amount = Rate1 * (Meter Value up to AWC) + Rate2 * (Meter value from AWC up to AWC*1.2) + Rate3 * (Meter value greater than AMC*1.2)
+                Double Amount1 = 0;
+                Double Amount2 = 0;
+                Double Amount3 = 0;
+                if (MeterValue > AWCorLot * 1.2)
+                {
+                    return Rate3 * LiveValue;
+
+
+                }
+                if (MeterValue > AWCorLot)
+                {
+                    return Rate2 * LiveValue;
+                }
+                return Rate1 * LiveValue;
+
+
+            }
+            else
+            {
+                //Outdoor water meter, AWC
+                //AWCOrLot is LotSize
+                //Use lot size to calculate outdoor allotment ALT 
+
+                //ALT follows the table in the Sterling Ranch Outdoor Water Allotment Table
+                //10/13/2017
+                /*Lot Size      Gal/year        Apr         May         June         July       Aug     Set     Oct         Multiplier
+                 * 0 - 3000     10000           700         1600        1900        2100        1900    1300    500         1
+                 * 3001-4000    12500           875         2000        2375        2625        2375    1625    625         1.25
+                 * 4001-5000    15000           1050        2400        2850        3150        2850    1950    750         1.5
+                 * 5001-6000    27000           1890        4320        5130        5670        5130    3510    1350        2.7
+                 * 6001-7000    32000           2240        5120        6080        6720        6080    4160    1600        3.2
+                 * 7001-8000    39000           2730        6240        7410        8190        7410    5070    1950        3.9
+                 * 8001-11000   49000           3430        7840        9310        10290       9310    6370    2450        4.9
+                 * 11001-20000  60000           4200        9600        11400       12600       11400   7800    3000        6
+                 * 20001-30000  80000           5600        12800       15200       16800       15200   10400   4000        8
+                 * 30001 ++     100000          7000        1600        19000       21000       19000   13000   5000        10
+              
+                 */
+                //Definitely a better way to do this. 
+                double[] MonthRate = new double[] { 700, 1600, 1900, 2100, 1900, 1300, 500, 0, 0, 0, 0, 0 };
+                String[] MonthIndex = new String[] { "4", "5", "6", "7", "8", "9", "10", "11", "12", "1", "2", "3" };
+                double[] SizeCap = new double[] { 3001, 4001, 5001, 6001, 7001, 8001, 11001, 20001, 30001 };
+                double[] MultPlier = new double[] { 1, 1.25, 1.5, 2.7, 3.2, 3.9, 4.9, 6, 8, 10 };
+                int index = 0;
+                foreach (double Cap in SizeCap)
+                {
+                    if (Cap > AWCorLot)
+                    {
+                        break;
+                    }
+                    index++;
+                }
+                double Mult = MultPlier[index];
+                //  int thisMonth = int.Parse(DateTime.Now.ToString("MM")); //this is the month number
+
+
+                double MonthVal = MonthRate[Array.IndexOf(MonthIndex, DateTime.Now.Month.ToString())];
+
+
+                double ALT = Mult * MonthVal;
+                Rule.UpdateExtraData("OutdoorWaterBudget", "" + ALT);
+                //ALT is the budget. Want to return this to STEWARD also.
+                //Final Amount = Rate1 * (Meter Value up to ALT) + Rate2 * (Meter value from ALT up to ALT*1.2) + Rate3 * (Meter value from ALT*1.2 to 1.4*ALT) + Rate4 * (Meter value greater than AMC*1.4)
+
+                if (ALT > 0)
+                {
+
+
+                    Double Rate4 = Double.Parse(parts["RateTier4"]);
+                
+                    if (MeterValue > AWCorLot * 1.4)
+                    {
+                        return Rate4 * LiveValue;
+                    }
+                    if (MeterValue > AWCorLot * 1.2)
+                    {
+                        return Rate3 * LiveValue;
+                    }
+                    if (MeterValue > AWCorLot)
+                    {
+                        return Rate2 * LiveValue;
+                    }
+                    return Rate1 * LiveValue;
+                }
+                else
+                { //If the allowence is zero, just apply Rate1 to full amount
+                   return  LiveValue * Rate1;
+                }
+            }
+          //  double Rate = Double.Parse(parts["RateValue"]);
+        //   return LiveValue * Rate1;
+          
+
+          
 
         }
 
