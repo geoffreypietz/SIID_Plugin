@@ -152,8 +152,11 @@ namespace HSPI_SIID.ScratchPad
                     index++;
                 }
                 double Mult = MultPlier[index];
-              //  int thisMonth = int.Parse(DateTime.Now.ToString("MM")); //this is the month number
-                double MonthVal = MonthRate[Array.IndexOf(MonthIndex,DateTime.Now.ToString("MM"))];
+                //  int thisMonth = int.Parse(DateTime.Now.ToString("MM")); //this is the month number
+              
+
+                    double MonthVal = MonthRate[Array.IndexOf(MonthIndex, DateTime.Now.Month.ToString())];
+              
               
                 double ALT = Mult * MonthVal;
                 Rule.UpdateExtraData("OutdoorWaterBudget", "" + ALT);
@@ -243,8 +246,9 @@ namespace HSPI_SIID.ScratchPad
 
 
                 }
-                catch
+                catch (Exception e)
                 {
+                    Instance.hspi.Log("Problem rendering scratchpad rule " + e.Message, 2);
                 }
                
               
