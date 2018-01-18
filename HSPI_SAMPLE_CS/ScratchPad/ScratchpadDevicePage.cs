@@ -454,6 +454,7 @@ namespace HSPI_SIID.ScratchPad
             Rule.Device.set_UserNote(Instance.host, userNote);
             
            Rule.Extra = EDO;
+            UpdateDisplay(Rule);
         }
         public void CheckForReset(SiidDevice Rule)
         {
