@@ -443,7 +443,7 @@ namespace HSPI_SIID.ScratchPad
             var EDO = Rule.Extra;
             var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
             parts["OldValue"] = parts["NewValue"];
-            parts["DateOfLastReset"] = DateTime.Now.ToString();
+            parts["DateOfLastReset"] = DateTime.Now.AddHours(-1).ToString();
            
             EDO.RemoveNamed("SSIDKey");
             EDO.AddNamed("SSIDKey", parts.ToString());
