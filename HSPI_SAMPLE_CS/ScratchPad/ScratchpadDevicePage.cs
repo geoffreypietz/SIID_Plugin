@@ -64,7 +64,19 @@ namespace HSPI_SIID.ScratchPad
                 }
                 else
                 {
-                    double Rate = Double.Parse(parts["RateValue"]);
+
+
+                    double Rate = 1;
+                    if (Boolean.Parse(parts["showTier"])){
+                        Rate = Double.Parse(parts["RateTier1"]);
+                    }
+                    else if (!String.IsNullOrEmpty(parts["RateValue"]))
+                    {
+                        Rate = Double.Parse(parts["RateValue"]);
+
+                    }
+
+               
                     CalculatedString = CalculatedString * Rate;
 
                 }
@@ -368,7 +380,17 @@ namespace HSPI_SIID.ScratchPad
                     }
                     else
                     {
-                        double Rate = Double.Parse(parts["RateValue"]);
+                        double Rate = 1;
+                        if (Boolean.Parse(parts["showTier"])){
+                            Rate = Double.Parse(parts["RateTier1"]);
+                        }
+                        else if (!String.IsNullOrEmpty(parts["RateValue"]))
+                        {
+                            Rate = Double.Parse(parts["RateValue"]);
+
+                        }
+
+                      
                         CalculatedString = CalculatedString * Rate;
                     }
 
