@@ -122,6 +122,9 @@ namespace HSPI_SIID.BACnet
         {
             List<string> ips = new List<string>();
             System.Net.NetworkInformation.NetworkInterface[] interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+
+            Console.WriteLine("Available IPS:"+ interfaces.Length);
+
             foreach (System.Net.NetworkInformation.NetworkInterface inf in interfaces)
             {
 

@@ -167,6 +167,7 @@ namespace HSPI_SIID.BACnet
             catch (Exception ex)
             {
                 Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+
                 Console.WriteLine("Exception in GetBacnetObject: " + ex.StackTrace);
                 return null;
 

@@ -174,7 +174,7 @@ namespace HSPI_SIID.BACnet
                         for (int i = 0; i < BacnetClient.Retries; i++)
                         {
                             BacnetClient.WhoIs();
-                            Console.WriteLine("Sent WhoIs");
+                            Console.WriteLine("Sent WhoIs"); //OK, So we do WhoIs, write this line, and then sleep 
                             System.Threading.Thread.Sleep(BacnetClient.Timeout);
                         }
                     }, null);
@@ -200,7 +200,7 @@ namespace HSPI_SIID.BACnet
             //BacnetClient.WhoIs();
             //System.Threading.Thread.Sleep(BacnetClient.Timeout);
 
-
+            //not actually waiting for this, just getting here right away
             Console.WriteLine("Done getting devices");
         }
 

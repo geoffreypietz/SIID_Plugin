@@ -370,7 +370,7 @@ namespace System.IO.BACnet
             foreach (System.Net.NetworkInformation.NetworkInterface adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
                 foreach (System.Net.NetworkInformation.UnicastIPAddressInformation ip in adapter.GetIPProperties().UnicastAddresses)
                    if (LocalEndPoint.Address.Equals(ip.Address))
-                   {
+                   {/*
                        try
                        {
                            string[] strCurrentIP = ip.Address.ToString().Split('.');
@@ -384,6 +384,8 @@ namespace System.IO.BACnet
                            ep = new Net.IPEndPoint(System.Net.IPAddress.Parse(BroadcastStr.ToString()), m_port);
                        }
                        catch { }  //On mono IPv4Mask feature not implemented
+                       //Mark L 1/25/2018 Actually in Mono5 it is, and it messes up everything else when it does work, so I commented this out.
+                        */
                    }
             BacnetAddress broadcast;
             Convert(ep, out broadcast);
