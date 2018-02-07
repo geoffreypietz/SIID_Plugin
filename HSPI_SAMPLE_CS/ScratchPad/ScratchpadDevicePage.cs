@@ -91,6 +91,9 @@ namespace HSPI_SIID.ScratchPad
             {
                 CalculatedString = 0;
             }
+
+           
+
             Rule.UpdateExtraData("LiveValue", "" + CalculatedString.ToString());
              
 
@@ -351,6 +354,9 @@ namespace HSPI_SIID.ScratchPad
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
                 double CalculatedString = CalculateString(RawNumberString);
+
+             
+
                 Rule.UpdateExtraData("NewValue", "" + CalculatedString.ToString());
              
                 if (bool.Parse(parts["IsAccumulator"]))
@@ -358,6 +364,9 @@ namespace HSPI_SIID.ScratchPad
                     CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
 
                 }
+
+
+
                 Rule.UpdateExtraData("RawValue", "" + CalculatedString); //Raw value is before rate
                 //So to get the pre-rate value from another scratchpad rule do $(ruleID)
                 //To get the post rate value do #(ruleID)
@@ -406,6 +415,13 @@ namespace HSPI_SIID.ScratchPad
               //processed value is after rate  
                 Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
                 Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
+
+                //If the reset time was too soon, set CalculatedString to be 0
+                if (DateTime.Now.AddHours(-1).Subtract(DateTime.Parse(parts["DateOfLastReset"])).Seconds < 45)  //If the reset was less than 45 seconds ago, display 0 as the scratchpad value
+                {
+
+                    CalculatedString = 0;
+                }
 
                 string ValueString = String.Format(parts["DisplayString"], CalculatedString);
 
