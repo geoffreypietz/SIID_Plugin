@@ -417,9 +417,12 @@ namespace HSPI_SIID.ScratchPad
                 Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
 
                 //If the reset time was too soon, set CalculatedString to be 0
-                if (DateTime.Now.AddHours(-1).Subtract(DateTime.Parse(parts["DateOfLastReset"])).Seconds < 45)  //If the reset was less than 45 seconds ago, display 0 as the scratchpad value
-                {
 
+
+               
+                if (DateTime.Now.AddHours(-1).Subtract(DateTime.Parse(parts["DateOfLastReset"])).TotalSeconds < 45)  //If the reset was less than 45 seconds ago, display 0 as the scratchpad value
+                {
+                   
                     CalculatedString = 0;
                 }
 

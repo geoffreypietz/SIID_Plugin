@@ -35,7 +35,7 @@ NESTSIID, 	HSPI_NESTSIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	NestSIID-3.0.1.4.z
 
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
-SIID,	HSPI_SIID.exe,		,3.0.2.6,	 63, 2, local, Zips,	HSPI_SIID_3.0.2.6.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
+SIID,	HSPI_SIID.exe,		,3.0.2.7,	 63, 2, local, Zips,	HSPI_SIID_3.0.2.7.zip,	4,	Free,			Siemens,					SIIDSIID,					,						,,
 
 %<HS TYPE=SUBCAT>ECOBEESIID Plugin
 ' -------------------------------------------------------------
