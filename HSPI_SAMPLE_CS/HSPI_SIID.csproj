@@ -43,13 +43,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>CBD3480ACC8A196680E49F8E908D140F2DDEBE35</ManifestCertificateThumbprint>
@@ -62,6 +63,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>HSPI_SIID.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HomeSeerAPI">
@@ -179,6 +183,28 @@
     <Folder Include="images\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if not exist "$(TargetDir)$(ProjectName)" mkdir" "$(TargetDir)$(ProjectName)
+
+xcopy "$(TargetDir)\*.dll" "$(TargetDir)$(ProjectName)\" /F /Y
+
+
+xcopy "$(TargetDir)\Yabe.exe" "$(TargetDir)$(ProjectName)\" /F /Y
+xcopy "$(TargetDir)\YABE.pdb" "$(TargetDir)$(ProjectName)\" /F /Y
+xcopy  "$(TargetDir)\js" "$(TargetDir)$(ProjectName)\js\" /E /Y
+
+rmdir "$(TargetDir)\js\" /Q /S
+rmdir "$(TargetDir)\es-MX\" /Q /S
+rmdir "$(TargetDir)\app.publish\" /Q /S
+del "$(TargetDir)\*.dll"
+del "$(TargetDir)\*.application"
+del "$(TargetDir)\*.pdb"
+del "$(TargetDir)\*vshost*"
+del "$(TargetDir)\*.xml"
+del "$(TargetDir)\Yabe.exe"
+del "$(TargetDir)\*manifest"
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

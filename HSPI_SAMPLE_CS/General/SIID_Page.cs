@@ -1559,8 +1559,9 @@ $('#showTier_" + ID + @"').change(TierChange); //OK HERE
 
                 DiscoverTab.Append(PageBuilderAndMenu.clsPageBuilder.DivEnd());
 
-
-                string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+                ///Bin/HSPI_SIID/js
+               
+                string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"Bin/HSPI_SIID");
 
 
                 DiscoverTab.Append("<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css' />");
