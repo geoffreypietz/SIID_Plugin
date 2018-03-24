@@ -185,7 +185,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("ConfirmedServiceRequest", null);
+                Console.WriteLine("ConfirmedServiceRequest", null);
 
                 raw_buffer = buffer;
                 raw_length = length;
@@ -451,7 +451,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("UnconfirmedServiceRequest", null);
+                Console.WriteLine("UnconfirmedServiceRequest", null);
                 if (OnUnconfirmedServiceRequest != null) OnUnconfirmedServiceRequest(this, adr, type, service, buffer, offset, length);
                 if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM && OnIam != null)
                 {
@@ -543,7 +543,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("SimpleAck", null);
+                Console.WriteLine("SimpleAck", null);
                 if (OnSimpleAck != null) OnSimpleAck(this, adr, type, service, invoke_id, buffer, offset, length);
             }
             catch (Exception ex)
@@ -559,7 +559,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("ComplexAck", null);
+                Console.WriteLine("ComplexAck", null);
                 if (OnComplexAck != null) OnComplexAck(this, adr, type, service, invoke_id, buffer, offset, length);
             }
             catch (Exception ex)
@@ -575,7 +575,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("Error", null);
+                Console.WriteLine("Error", null);
 
                 BacnetErrorClasses error_class;
                 BacnetErrorCodes error_code;
@@ -597,7 +597,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("Abort", null);
+                Console.WriteLine("Abort", null);
                 if (OnAbort != null) OnAbort(this, adr, type, invoke_id, reason, buffer, offset, length);
             }
             catch (Exception ex)
@@ -613,7 +613,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Trace.WriteLine("SegmentAck", null);
+                Console.WriteLine("SegmentAck", null);
                 if (OnSegmentAck != null) OnSegmentAck(this, adr, type, original_invoke_id, sequence_number, actual_window_size, buffer, offset, length);
             }
             catch (Exception ex)
@@ -638,7 +638,7 @@ namespace System.IO.BACnet
                 if (sequence_number != (m_last_sequence_number + 1))
                 {
                     SegmentAckResponse(adr, true, server, invoke_id, m_last_sequence_number, proposed_window_number);
-                    Trace.WriteLine("Segment sequence out of order", null);
+                    Console.WriteLine("Segment sequence out of order", null);
                     return;
                 }
             }
@@ -884,7 +884,7 @@ namespace System.IO.BACnet
                 if (sent==false)
                     Trace.TraceWarning("The given address do not match with the IP version");
                 else
-                    Trace.WriteLine("Sending Register as a Foreign Device ... ", null);
+                    Console.WriteLine("Sending Register as a Foreign Device ... ", null);
             }
             catch (Exception ex)
             {
@@ -914,7 +914,7 @@ namespace System.IO.BACnet
                 if (sent == false)
                     Trace.TraceWarning("The given address do not match with the IP version");
                 else
-                    Trace.WriteLine("Sending Remote Whois ... ", null);
+                    Console.WriteLine("Sending Remote Whois ... ", null);
             }
             catch (Exception ex)
             {
@@ -924,10 +924,14 @@ namespace System.IO.BACnet
         }
         public void WhoIs(int low_limit = -1, int high_limit = -1, BacnetAddress _receiver= null)
         {
-            Trace.WriteLine("Sending WhoIs ... ", null);
+
+            Console.WriteLine("Sending WhoIs ... ", null);
+            Console.WriteLine("Am in here woo");
+
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             BacnetAddress receiver;
+
 
             // _receiver could be an unicast @ : for direct acces 
             // usefull on BIP for a known IP:Port, unknown device Id
@@ -936,6 +940,8 @@ namespace System.IO.BACnet
             else
                 receiver = m_client.GetBroadcastAddress();
 
+
+            Console.WriteLine("receiver "+ receiver.ToString(), null);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
             Services.EncodeWhoIsBroadcast(b, low_limit, high_limit);
@@ -945,7 +951,7 @@ namespace System.IO.BACnet
 
         public void Iam(uint device_id, BacnetSegmentations segmentation = BacnetSegmentations.SEGMENTATION_BOTH, ushort vendor_id = 260)
         {
-            Trace.WriteLine("Sending Iam ... ", null);
+            Console.WriteLine("Sending Iam ... ", null);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             BacnetAddress broadcast=m_client.GetBroadcastAddress();
@@ -958,7 +964,7 @@ namespace System.IO.BACnet
 
         public void IHave(BacnetObjectId device_id, BacnetObjectId ObjId, string ObjName)
         {
-            Trace.WriteLine("Sending IHave ... ", null);
+            Console.WriteLine("Sending IHave ... ", null);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             BacnetAddress broadcast = m_client.GetBroadcastAddress();
@@ -972,7 +978,7 @@ namespace System.IO.BACnet
 
         public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData)
         {
-            Trace.WriteLine("Sending Event Notification ... ", null);
+            Console.WriteLine("Sending Event Notification ... ", null);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
@@ -983,7 +989,7 @@ namespace System.IO.BACnet
 
         public void SendConfirmedServiceReject(BacnetAddress adr, byte invoke_id, BacnetRejectReasons reason)
         {
-            Trace.WriteLine("Sending Service reject ... ", null);
+            Console.WriteLine("Sending Service reject ... ", null);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
 
@@ -994,7 +1000,7 @@ namespace System.IO.BACnet
 
         public void SynchronizeTime(BacnetAddress adr, DateTime dateTime, bool utc)
         {
-            Trace.WriteLine("Sending Time Synchronize ... ", null);
+            Console.WriteLine("Sending Time Synchronize ... ", null);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
@@ -1069,7 +1075,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginWriteFileRequest(BacnetAddress adr, BacnetObjectId object_id, int position, int count, byte[] file_buffer, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending AtomicWriteFileRequest ... ", null);
+            Console.WriteLine("Sending AtomicWriteFileRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1108,7 +1114,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginReadFileRequest(BacnetAddress adr, BacnetObjectId object_id, int position, uint count, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending AtomicReadFileRequest ... ", null);
+            Console.WriteLine("Sending AtomicReadFileRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             //encode
@@ -1178,7 +1184,7 @@ namespace System.IO.BACnet
         // Fc
         public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId object_id,  uint idxBegin, uint Quantity, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending ReadRangeRequest ... ", null);
+            Console.WriteLine("Sending ReadRangeRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             //encode
@@ -1259,7 +1265,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginSubscribeCOVRequest(BacnetAddress adr, BacnetObjectId object_id, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, uint lifetime, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending SubscribeCOVRequest ... ", null);
+            Console.WriteLine("Sending SubscribeCOVRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1315,7 +1321,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginSubscribePropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyReference monitored_property, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending SubscribePropertyRequest ... ", null);
+            Console.WriteLine("Sending SubscribePropertyRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1372,7 +1378,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, bool wait_for_transmit, byte invoke_id = 0, uint array_index = ASN1.BACNET_ARRAY_ALL)
         {
-            Trace.WriteLine("Sending ReadPropertyRequest ... ", null);
+            Console.WriteLine("Sending ReadPropertyRequest ... ", null);
             if(invoke_id == 0) invoke_id = unchecked ( m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1454,7 +1460,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginWritePropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, IEnumerable<BacnetValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending WritePropertyRequest ... ", null);
+            Console.WriteLine("Sending WritePropertyRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1471,7 +1477,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, ICollection<BacnetPropertyValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending WritePropertyMultipleRequest ... ", null);
+            Console.WriteLine("Sending WritePropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1529,7 +1535,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending WritePropertyMultipleRequest ... ", null);
+            Console.WriteLine("Sending WritePropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1569,7 +1575,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, IList<BacnetPropertyReference> property_id_and_array_index, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
+            Console.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1608,7 +1614,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
+            Console.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1670,7 +1676,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginCreateObjectRequest(BacnetAddress adr, BacnetObjectId object_id, ICollection<BacnetPropertyValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending CreateObjectRequest ... ", null);
+            Console.WriteLine("Sending CreateObjectRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1730,7 +1736,7 @@ namespace System.IO.BACnet
         //******************************************************
         public IAsyncResult BeginDeleteObjectRequest(BacnetAddress adr, BacnetObjectId object_id, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending DeleteObjectRequest ... ", null);
+            Console.WriteLine("Sending DeleteObjectRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1814,7 +1820,7 @@ namespace System.IO.BACnet
         //***********************************************************************
         public IAsyncResult BeginRemoveListElementRequest(BacnetAddress adr, BacnetObjectId object_id,BacnetPropertyReference reference, IList<BacnetValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending RemoveListElementRequest ... ", null);
+            Console.WriteLine("Sending RemoveListElementRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1832,7 +1838,7 @@ namespace System.IO.BACnet
         //******************************************************************************
         public IAsyncResult BeginAddListElementRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyReference reference, IList<BacnetValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending AddListElementRequest ... ", null);
+            Console.WriteLine("Sending AddListElementRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1891,7 +1897,7 @@ namespace System.IO.BACnet
         // Fc
         public IAsyncResult BeginRawEncodedDecodedPropertyConfirmedRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetConfirmedServices service_id, byte[] InOutBuffer, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending RawEncodedRequest ... ", null);
+            Console.WriteLine("Sending RawEncodedRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -1975,7 +1981,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginDeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enable_disable, string password, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending DeviceCommunicationControlRequest ... ", null);
+            Console.WriteLine("Sending DeviceCommunicationControlRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -2037,7 +2043,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, IList<BacnetGetEventInformationData> Alarms, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending Alarm summary request... ", null);
+            Console.WriteLine("Sending Alarm summary request... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -2105,7 +2111,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginAlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objid, BacnetEventNotificationData.BacnetEventStates eventState, String AckText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending AlarmAcknowledgement ... ", null);
+            Console.WriteLine("Sending AlarmAcknowledgement ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -2156,7 +2162,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginReinitializeRequest(BacnetAddress adr, BacnetReinitializedStates state, string password, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending ReinitializeRequest ... ", null);
+            Console.WriteLine("Sending ReinitializeRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -2190,7 +2196,7 @@ namespace System.IO.BACnet
 
         public IAsyncResult BeginConfirmedNotify(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IList<BacnetPropertyValue> values, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending Notify (confirmed) ... ", null);
+            Console.WriteLine("Sending Notify (confirmed) ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
@@ -2224,7 +2230,7 @@ namespace System.IO.BACnet
         {
             if (!issueConfirmedNotifications)
             {
-                Trace.WriteLine("Sending Notify (unconfirmed) ... ", null);
+                Console.WriteLine("Sending Notify (unconfirmed) ... ", null);
                 EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
                 NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
                 APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
@@ -2403,7 +2409,7 @@ namespace System.IO.BACnet
                         }
                         if (segmentation.sequence_number != current_number)
                         {
-                            Trace.WriteLine("Oh, a retransmit", null);
+                            Console.WriteLine("Oh, a retransmit", null);
                             more_follows = true;
                         }
                     }
@@ -2414,7 +2420,7 @@ namespace System.IO.BACnet
                         WaitForSegmentAck(adr, invoke_id, segmentation, 0);      //don't wait
                         if (segmentation.sequence_number != current_number)
                         {
-                            Trace.WriteLine("Oh, a retransmit", null);
+                            Console.WriteLine("Oh, a retransmit", null);
                             more_follows = true;
                         }
                     }
@@ -2430,7 +2436,7 @@ namespace System.IO.BACnet
         }
         private void SendComplexAck(BacnetAddress adr, byte invoke_id, Segmentation segmentation, BacnetConfirmedServices service, Action<EncodeBuffer> apdu_content_encode)
         {
-            Trace.WriteLine("Sending " + System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(service.ToString().ToLower()) + " ... ", null);
+            Console.WriteLine("Sending " + System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(service.ToString().ToLower()) + " ... ", null);
 
             //encode
             EncodeBuffer buffer;
@@ -2456,7 +2462,7 @@ namespace System.IO.BACnet
                         return;
                     }
                     else
-                        Trace.WriteLine("Segmentation required", null);
+                        Console.WriteLine("Segmentation required", null);
                 }
 
                 //increment before ack can do so (race condition)
@@ -2533,7 +2539,7 @@ namespace System.IO.BACnet
 
         public void ErrorResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invoke_id, BacnetErrorClasses error_class, BacnetErrorCodes error_code)
         {
-            Trace.WriteLine("Sending ErrorResponse ... ", null);
+            Console.WriteLine("Sending ErrorResponse ... ", null);
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_ERROR, service, invoke_id);
@@ -2543,7 +2549,7 @@ namespace System.IO.BACnet
 
         public void SimpleAckResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invoke_id)
         {
-            Trace.WriteLine("Sending SimpleAckResponse ... ", null);
+            Console.WriteLine("Sending SimpleAckResponse ... ", null);
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeSimpleAck(b, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK, service, invoke_id);
@@ -2552,7 +2558,7 @@ namespace System.IO.BACnet
 
         public void SegmentAckResponse(BacnetAddress adr, bool negative, bool server, byte original_invoke_id, byte sequence_number, byte actual_window_size)
         {
-            Trace.WriteLine("Sending SimpleAckResponse ... ", null);
+            Console.WriteLine("Sending SimpleAckResponse ... ", null);
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeSegmentAck(b, BacnetPduTypes.PDU_TYPE_SEGMENT_ACK | (negative ? BacnetPduTypes.NEGATIVE_ACK : 0) | (server ? BacnetPduTypes.SERVER : 0), original_invoke_id, sequence_number, actual_window_size);

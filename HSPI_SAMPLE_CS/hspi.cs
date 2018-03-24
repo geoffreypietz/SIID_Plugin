@@ -1,8 +1,5 @@
-﻿using Microsoft.VisualBasic;
-using System;
+﻿using System;
 using HomeSeerAPI;
-using Scheduler;
-using System.Reflection;
 using System.Text;
 using HSPI_SIID.BACnet;
 using System.Web;
