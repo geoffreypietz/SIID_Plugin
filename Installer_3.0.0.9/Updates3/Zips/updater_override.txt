@@ -27,11 +27,11 @@ homeseer.com,anonymous,user@updates,updates3,,,0.0.0.0
 
 %<HS TYPE=SUBCAT>RACHIOSIID Plugin
 ' -------------------------------------------------------------
-RACHIOSIID, 	HSPI_RACHIOSIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	RachioSIID-3.0.1.4.zip,	4,	Free,			Siemens,					RACHIOSIID,					,						,,
+RACHIOSIID, 	HSPI_RACHIOSIID.exe,		,3.0.2.0,	 63, 2, local, Zips,	RachioSIID-3.0.2.0.zip,	4,	Free,			Siemens,					RACHIOSIID,					,						,,
 
 %<HS TYPE=SUBCAT>NESTSIID Plugin
 ' -------------------------------------------------------------
-NESTSIID, 	HSPI_NESTSIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	NestSIID-3.0.1.4.zip,	4,	Free,			Siemens,					NESTSIID,					,						,,
+NESTSIID, 	HSPI_NESTSIID.exe,		,3.0.2.0,	 63, 2, local, Zips,	NestSIID-3.0.2.0.zip,	4,	Free,			Siemens,					NESTSIID,					,						,,
 
 %<HS TYPE=SUBCAT>SIIDSIID Plugin
 ' -------------------------------------------------------------
@@ -39,4 +39,4 @@ SIID,	HSPI_SIID.exe,		,3.0.3.00,	 63, 2, local, Zips,	HSPI_SIID_3.0.3.00.zip,	4,
 
 %<HS TYPE=SUBCAT>ECOBEESIID Plugin
 ' -------------------------------------------------------------
-ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,3.0.1.4,	 63, 2, local, Zips,	EcobeeSIID-3.0.1.4.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,
+ECOBEESIID, 	HSPI_ECOBEESIID.exe,		,3.0.2.0,	 63, 2, local, Zips,	EcobeeSIID-3.0.2.0.zip,	4,	Free,			Siemens,					ECOBEESIID,					,						,,
