@@ -128,7 +128,9 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="HSPI_SAMPLE_CS_TemporaryKey.pfx" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -187,7 +189,7 @@
     <PostBuildEvent>if not exist "$(TargetDir)$(ProjectName)" mkdir" "$(TargetDir)$(ProjectName)
 
 xcopy "$(TargetDir)\*.dll" "$(TargetDir)$(ProjectName)\" /F /Y
-
+xcopy "$(TargetDir)\*.xml" "$(TargetDir)$(ProjectName)\" /F /Y
 
 xcopy "$(TargetDir)\Yabe.exe" "$(TargetDir)$(ProjectName)\" /F /Y
 xcopy "$(TargetDir)\YABE.pdb" "$(TargetDir)$(ProjectName)\" /F /Y
