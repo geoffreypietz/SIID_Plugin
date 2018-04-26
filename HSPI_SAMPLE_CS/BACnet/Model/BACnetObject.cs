@@ -569,7 +569,9 @@ namespace HSPI_SIID.BACnet
                 //System.Reflection.Assembly _assembly;
                 //_assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 //sr = new StreamReader(_assembly.GetManifestResourceStream("ReadSinglePropDescrDefault.xml"));
-                sr = new StreamReader("ReadSinglePropDescrDefault.xml");
+                string basePath = Path.Combine("bin","HSPI_SIID");
+
+                sr = new StreamReader(Path.Combine(basePath,"ReadSinglePropDescrDefault.xml"));
                 BACnetGlobalNetwork.objectsDescriptionDefault = (List<BacnetObjectDescription>)xs.Deserialize(sr);
 
                 try  // External optional file

@@ -1191,7 +1191,8 @@ namespace Yabe
 
                 try  // External optional file
                 {
-                    sr = new StreamReader("ReadSinglePropDescr.xml");
+               //     String basePath = Path.Combine("bin", "HSPI_SIID"); 
+                    sr = new StreamReader( "ReadSinglePropDescr.xml"); //YABE is in the /bin/HSPI_SIID directory with the xml
                     objectsDescriptionExternal = (List<BacnetObjectDescription>)xs.Deserialize(sr);
                 }
                 catch { }
