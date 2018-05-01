@@ -683,7 +683,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 }*/
                 if (Socket.Connected)
                 {
-                    Instance.host.SetDeviceValueByRef(deviceId, 1, true);
+                    Instance.host.SetDeviceValueByRef(deviceId, 1, true); //gateway stuff, keep this
                     Socket.Close();
                     return "Connection Successfull.";
                 }
@@ -789,7 +789,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             }
             NewDevice.UpdateExtraData(partID, changed["value"]);
-            Instance.host.SetDeviceValueByRef(devId, 0, false);
+         //   Instance.host.SetDeviceValueByRef(devId, 0, false);
             //  ModbusTcpMasterReadInputs();
              
             return "True";
@@ -1054,12 +1054,12 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                                 Instance.host.SetDeviceString(Convert.ToInt32(devID), OldM, true);
                                 if (ModDev.get_devValue(Instance.host) == 2 || ModDev.get_devValue(Instance.host) == 1)
                                 {
-                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
+                                  //  Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 2, true);
                                 }
                                 else
                                 {
 
-                                    Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
+                                  //  Instance.host.SetDeviceValueByRef(Convert.ToInt32(devID), 3, true);
                                 }
 
 
@@ -1218,7 +1218,10 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
             string ValueString = String.Format(parts["DisplayFormatString"], OutValue);
             Instance.host.SetDeviceString(devID,ValueString,true);
-            Instance.host.SetDeviceValueByRef(devID, 1, true);
+
+            double OutNumber = 0;
+            Double.TryParse(OutValue, out OutNumber);
+            Instance.host.SetDeviceValueByRef(devID, OutNumber, true);
            // Console.WriteLine(devID+ " : " + ValueString);
 
             Instance.host.SetDeviceValueByRef(Convert.ToInt32(parts["GateID"]), 1, true);
@@ -1657,11 +1660,11 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
 
                     if (device.Device.get_devValue(Instance.host) == 2 || device.Device.get_devValue(Instance.host) == 1)
                     {
-                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 2, true);
+                      //  Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 2, true);
                     }
                     else
                     {
-                        Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 3, true);
+                      //  Instance.host.SetDeviceValueByRef(Convert.ToInt32(key), 3, true);
                         Instance.host.SetDeviceString(Convert.ToInt32(key), Exception, true);
                     }
                 }

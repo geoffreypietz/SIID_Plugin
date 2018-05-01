@@ -8,6 +8,7 @@ using HSPI_SIID.Modbus;
 using HSPI_SIID.BACnet;
 using HSPI_SIID.ScratchPad;
 using HSPI_SIID.General;
+using System.IO;
 
 namespace HSPI_SIID
 {
@@ -287,6 +288,31 @@ namespace HSPI_SIID
             //BACnetGlobalNetwork.Discover();
 
             //return;
+
+            try
+            {
+                //check the /bin/HSPI_SIID directory for a file called flag.flag
+                //if that file does not exist then create it, and check to see if the SIID, plugins is installed correctly
+                //check to make sure the .config file is correct, fix it if not
+                string basePath = Path.Combine("bin", "HSPI_SIID"); 
+             if(!File.Exists(Path.Combine(basePath,"flag.flag"))){
+                    
+                    File.Create((Path.Combine(basePath, "flag.flag")));
+                    Directory.Delete("js");
+                    String[] FileList = new String[] { "ADODB.dll", "CalendarView.dll", "FireBase.dll", "HSPI_SIID.application", "HSPI_SIID.exe.manifest", "HSPI_SIID.pdb", "Newtonsoft.Json.dll", "NModbus4.dll", "NModbus4.xml", "PacketDotNet.dll", "ReadSinglePropDescr.xml", "ReadSinglePropDescrDefault.xml", "RestSharp.dll", "SharpPcap.dll", "System.Reactive.Core.dll", "System.Reactive.Interfaces.dll", "System.Reactive.Linq.dll", "System.Reactive.PlatformServices.dll", "System.Reactive.Windows.Threading.dll", "Yabe.exe", "Yabe.pdb" };
+                    foreach (var file in FileList)
+                    {
+                        File.Delete(file);
+                    }
+
+                    //Need to modify HSPI_SIID.exe.conf and other configs to include the new paths. THis is bad design btw
+                }
+
+
+            }
+            catch
+            {
+            }
 
             string sIp = "127.0.0.1";
             string Instance = "";
