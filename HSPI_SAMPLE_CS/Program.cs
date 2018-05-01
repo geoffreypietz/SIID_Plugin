@@ -288,7 +288,7 @@ namespace HSPI_SIID
             //BACnetGlobalNetwork.Discover();
 
             //return;
-
+/*
             try
             {
                 //check the /bin/HSPI_SIID directory for a file called flag.flag
@@ -312,7 +312,7 @@ namespace HSPI_SIID
             }
             catch
             {
-            }
+            }*/
 
             string sIp = "127.0.0.1";
             string Instance = "";
