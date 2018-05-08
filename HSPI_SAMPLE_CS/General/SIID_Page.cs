@@ -9,15 +9,15 @@ using System.Threading;
 using System.IO;
 using HomeSeerAPI;
 using Microsoft.VisualBasic.FileIO;
-using HSPI_SIID.ScratchPad;
-using HSPI_SIID.General;
+using HSPI_Utilities_Plugin.ScratchPad;
+using HSPI_Utilities_Plugin.General;
 using System.Reflection;
 using System.IO.BACnet;
 using System.Text.RegularExpressions;
 using System.Collections.Specialized;
-using HSPI_SIID.BACnet;
+using HSPI_Utilities_Plugin.BACnet;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
     public class SIID_Page : PageBuilderAndMenu.clsPageBuilder
 
@@ -60,7 +60,7 @@ namespace HSPI_SIID
            // Console.WriteLine("IN LOAD "+ OurPageName);
             selectedPlugin = Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Selected_Plugin", "1", OurPageName.Replace(":", "") + ".INI"));
        
-            Instance.hspi.LogLevel = (HSPI_SIID.HSPI.LogType)Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Log_Level", "2" , OurPageName.Replace(":", "") + ".INI"));
+            Instance.hspi.LogLevel = (HSPI_Utilities_Plugin.HSPI.LogType)Convert.ToInt32(Instance.host.GetINISetting("CONFIG", "Log_Level", "2" , OurPageName.Replace(":", "") + ".INI"));
             Instance.modAjax.loadModbusConfig();
     
 
@@ -816,37 +816,37 @@ namespace HSPI_SIID
             if (BackNetDevices.Count > 0)
             {
                 FileContent.Append("Backnet Devices\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(BackNetDevices[0],Instance).ReturnCSVHead());
+                FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(BackNetDevices[0],Instance).ReturnCSVHead());
                 foreach (SiidDevice DV in BackNetDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(DV, Instance).ReturnCSVRow());
+                    FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(DV, Instance).ReturnCSVRow());
                 }
             }
             if (ModGateways.Count > 0)
             {
                 FileContent.Append("Modbus Gateways\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(ModGateways[0],Instance).ReturnCSVHead());
+                FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ModGateways[0],Instance).ReturnCSVHead());
                 foreach (SiidDevice ID in ModGateways)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
+                    FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
             if (ModDevices.Count > 0)
             {
                 FileContent.Append("Modbus Devices\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(ModDevices[0],Instance).ReturnCSVHead());
+                FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ModDevices[0],Instance).ReturnCSVHead());
                 foreach (SiidDevice ID in ModDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID,Instance).ReturnCSVRow());
+                    FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ID,Instance).ReturnCSVRow());
                 }
             }
             if (ScratchDevices.Count > 0)
             {
                 FileContent.Append("Scratchpad Rules\r\n");
-                FileContent.Append(new HSPI_SIID.SIIDDevice(ScratchDevices[0], Instance).ReturnCSVHead());
+                FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ScratchDevices[0], Instance).ReturnCSVHead());
                 foreach (SiidDevice ID in ScratchDevices)
                 {
-                    FileContent.Append(new HSPI_SIID.SIIDDevice(ID, Instance).ReturnCSVRow());
+                    FileContent.Append(new HSPI_Utilities_Plugin.SIIDDevice(ID, Instance).ReturnCSVRow());
                 }
             }
 
@@ -910,7 +910,7 @@ namespace HSPI_SIID
                 case "LogLevel":
                     {
         
-                        Instance.hspi.LogLevel = (HSPI_SIID.HSPI.LogType)Convert.ToInt32(parts["value"]);
+                        Instance.hspi.LogLevel = (HSPI_Utilities_Plugin.HSPI.LogType)Convert.ToInt32(parts["value"]);
                         SaveAllINISettings();
                         Instance.hspi.Log("Logging level changed to:" + Instance.hspi.LogLevel, 0);
 
@@ -1344,11 +1344,11 @@ $('#showTier_" + ID + @"').change(TierChange); //OK HERE
                 page.AddHeader(Instance.host.GetPageHeader(pageName, Util.IFACE_NAME + " main plugin page", "", "", false, true));
 
                 htmlBuilder GeneralPageStuff = new htmlBuilder(OurPageName + Instance.ajaxName);
-                stb.Append("<h2>SIID Page "+ OurPageName + "</h2><br><br>");
-                stb.Append("<hr>SIID Options<br><br>");
+                stb.Append("<h2>"+ OurPageName + "</h2><br><br>");
+                stb.Append("<hr>Options<br><br>");
                 stb.Append("<div>");
-                stb.Append(GeneralPageStuff.Uploadbutton("Import", "Import SIID Devices from CSV File").print());
-                stb.Append(GeneralPageStuff.Downloadbutton("Export", "Export SIID Devices to CSV File").print());
+                stb.Append(GeneralPageStuff.Uploadbutton("Import", "Import Utilities Devices from CSV File").print());
+                stb.Append(GeneralPageStuff.Downloadbutton("Export", "Export Utilities Devices to CSV File").print());
                 stb.Append(GeneralPageStuff.button("Scratchpad", "Make new Scratchpad Rule").print());
                 stb.Append("<div>Log Level:"+ GeneralPageStuff.selectorInput(new string[] { "Info", "Warning", "Error", "None" }, "LogLevel", "LogLevel", (int)Instance.hspi.LogLevel).print()+"</div>");
                 //stb.Append(GeneralPageStuff.button("Instance", "Switch Instances").print());
@@ -1561,7 +1561,7 @@ $('#showTier_" + ID + @"').change(TierChange); //OK HERE
 
                 ///Bin/HSPI_SIID/js
                
-                string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"bin/HSPI_SIID");
+                string basePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "bin/HSPI_Utilities_Plugin");
 
 
                 DiscoverTab.Append("<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/v/ju/dt-1.10.13/datatables.min.css' />");

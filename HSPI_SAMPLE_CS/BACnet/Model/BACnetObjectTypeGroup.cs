@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO.BACnet;
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     public class BACnetObjectTypeGroup : IBACnetTreeDataObject
     {

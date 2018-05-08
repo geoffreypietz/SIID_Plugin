@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.IO.BACnet;
 
 
-namespace HSPI_SIID.BACnet.Model
+namespace HSPI_Utilities_Plugin.BACnet.Model
 {
     /// <summary>
     /// Custom PropertyDescriptor

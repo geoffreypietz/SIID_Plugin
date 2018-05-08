@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace HSPI_SIID.General
+namespace HSPI_Utilities_Plugin.General
 {
     public class SiidDevice
     {

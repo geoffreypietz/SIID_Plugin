@@ -1,10 +1,10 @@
 ﻿using System;
 using HomeSeerAPI;
 using System.Text;
-using HSPI_SIID.BACnet;
+using HSPI_Utilities_Plugin.BACnet;
 using System.Web;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
     public class HSPI : IPlugInAPI
     {
@@ -215,7 +215,7 @@ namespace HSPI_SIID
 
                 //Instance.host.RegisterPage("SIIDPage" + Instance.name, Util.IFACE_NAME, Instance.name); //Necessary to do the GetPagePlugin  Want also for postbackproc
                                                                                                      //Doesn't seem to work for multiple instances for postback
-                   Instance.host.RegisterPage("SIIDPage", Util.IFACE_NAME, Instance.name);
+                   Instance.host.RegisterPage(Util.IFACE_NAME, Util.IFACE_NAME, Instance.name);
                 Instance.host.RegisterPage("ModBus", Util.IFACE_NAME, Instance.name);                                                                                                                                                                       //  Console.WriteLine(MainSiidPageName + "  " + Util.IFACE_NAME+"  "+ Instance.name);
 
                 Instance.host.RegisterPage("Scratch", Util.IFACE_NAME, Instance.name);
@@ -273,20 +273,20 @@ namespace HSPI_SIID
 
                 // register a normal page to appear in the HomeSeer menu
                 WebPageDesc wpd = new WebPageDesc();
-                wpd.link = "SIIDPage";
+                wpd.link = Util.IFACE_NAME;
 
 
 
                 if (!string.IsNullOrEmpty(Instance.name))
                 {
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Instance.name;
+                    wpd.linktext = Util.IFACE_NAME + " main page instance " + Instance.name;
               
                 }
                 else
                 {
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page";
+                    wpd.linktext = Util.IFACE_NAME + " main page";
                 }
-                wpd.page_title = "SIIDPage" + Instance.name;
+                wpd.page_title = Util.IFACE_NAME + Instance.name;
                 wpd.plugInName = Util.IFACE_NAME;
                 wpd.plugInInstance = Instance.name;
                 Instance.callback.RegisterLink(wpd); //THis page used in the GenPagePlugin function.  Returns our webpage when the address goes to the one we registered
@@ -297,15 +297,15 @@ namespace HSPI_SIID
 
                   if (!string.IsNullOrEmpty(Instance.name))
                   {
-                    wpd.link = "SIIDPage";// + "?instance=" + Instance.name;
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page instance " + Instance.name;
+                    wpd.link = Util.IFACE_NAME;// + "?instance=" + Instance.name;
+                    wpd.linktext = Util.IFACE_NAME + " main page instance " + Instance.name;
                 }
                 else
                 {
-                    wpd.link = "SIIDPage";
-                    wpd.linktext = Util.IFACE_NAME + " SIID main page";
+                    wpd.link = Util.IFACE_NAME;
+                    wpd.linktext = Util.IFACE_NAME + "  main page";
                 }
-                wpd.page_title = "SIIDPage" + Instance.name;
+                wpd.page_title = Util.IFACE_NAME + Instance.name;
                 wpd.plugInName = Util.IFACE_NAME;
                 wpd.plugInInstance =  Instance.name;
            
@@ -404,7 +404,7 @@ namespace HSPI_SIID
 		//If you have more than one web page, use pageName to route it to the proper GetPagePlugin
 		Console.WriteLine("GetPagePlugin pageName: " + pageName +" "+queryString);
             // get the correct page
-            if (pageName == "SIIDPage")
+            if (pageName == Util.IFACE_NAME)
             {
                 //Console.WriteLine("IN SIID PAGE");
                 return (Instance.siidPage.GetPagePlugin(pageName, user, userRights, queryString));
@@ -479,7 +479,7 @@ namespace HSPI_SIID
             //If you have more than one web page, use pageName to route it to the proper postBackProc
             //  Console.WriteLine("PostBackProc pageName: " + pageName);
             Log(data, 0);
-            if (pageName == "SIIDPage"+Instance.ajaxName)
+            if (pageName == Util.IFACE_NAME + Instance.ajaxName)
             {
                 
                 return Instance.siidPage.postbackSSIDConfigPage(pageName, data, user, userRights);
@@ -599,7 +599,7 @@ namespace HSPI_SIID
                 var devID = CC.Ref;
                 try
                 {
-                    var NewDevice = HSPI_SIID.General.SiidDevice.GetFromListByID(Instance.Devices, devID);
+                    var NewDevice = HSPI_Utilities_Plugin.General.SiidDevice.GetFromListByID(Instance.Devices, devID);
                     var EDO = NewDevice.Extra;
                     var parts = HttpUtility.ParseQueryString(EDO.GetNamed("SSIDKey").ToString());
                     switch (parts["type"]) {

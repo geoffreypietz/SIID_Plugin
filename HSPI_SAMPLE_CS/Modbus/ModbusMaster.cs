@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HSPI_SIID.Modbus
+namespace HSPI_Utilities_Plugin.Modbus
 {
     class ModbusMaster
     {

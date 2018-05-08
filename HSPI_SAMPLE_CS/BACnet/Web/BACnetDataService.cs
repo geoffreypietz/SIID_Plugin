@@ -5,7 +5,7 @@ using Scheduler;
 using System.Web.Script.Serialization;
 using System.IO.BACnet;
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     public class BACnetDataService : PageBuilderAndMenu.clsPageBuilder
     {

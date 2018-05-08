@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Xml.Serialization;
 
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     [DataContract]
     public class BACnetObject : IBACnetTreeDataObject
@@ -569,7 +569,7 @@ namespace HSPI_SIID.BACnet
                 //System.Reflection.Assembly _assembly;
                 //_assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 //sr = new StreamReader(_assembly.GetManifestResourceStream("ReadSinglePropDescrDefault.xml"));
-                string basePath = Path.Combine("bin","HSPI_SIID");
+                string basePath = Path.Combine("bin", "HSPI_Utilities_Plugin");
 
                 sr = new StreamReader(Path.Combine(basePath,"ReadSinglePropDescrDefault.xml"));
                 BACnetGlobalNetwork.objectsDescriptionDefault = (List<BacnetObjectDescription>)xs.Deserialize(sr);

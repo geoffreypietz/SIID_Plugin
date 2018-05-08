@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web;
 
-namespace HSPI_SIID.Modbus
+namespace HSPI_Utilities_Plugin.Modbus
 {
     public class MosbusAjaxReceivers
     {

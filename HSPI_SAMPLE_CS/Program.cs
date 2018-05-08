@@ -4,13 +4,13 @@ using HomeSeerAPI;
 
 using HSCF.Communication.Scs.Communication.EndPoints.Tcp;
 using HSCF.Communication.ScsServices.Client;
-using HSPI_SIID.Modbus;
-using HSPI_SIID.BACnet;
-using HSPI_SIID.ScratchPad;
-using HSPI_SIID.General;
+using HSPI_Utilities_Plugin.Modbus;
+using HSPI_Utilities_Plugin.BACnet;
+using HSPI_Utilities_Plugin.ScratchPad;
+using HSPI_Utilities_Plugin.General;
 using System.IO;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
 
 
@@ -69,7 +69,7 @@ namespace HSPI_SIID
             bacnetHomeSeerDevices = new BACnetHomeSeerDevices(BACnetHomeSeerDevices.BaseUrl, this);
 
 
-            siidPage = new SIID_Page("SIIDPage", this);
+            siidPage = new SIID_Page(Util.IFACE_NAME, this);
 
             //bacnetDevices = new BACnetDevices(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);
             //bacnetDataService = new BACnetDataService(BACnetDataService.BaseUrl + this.ajaxName.Replace(":", "_"), this);

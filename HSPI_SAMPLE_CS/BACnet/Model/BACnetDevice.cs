@@ -4,7 +4,7 @@ using System.Linq;
 using System.IO.BACnet;
 
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     //Mostly for use with import and export function, not yet used for any more
     public class BACnetDevice : IBACnetTreeDataObject

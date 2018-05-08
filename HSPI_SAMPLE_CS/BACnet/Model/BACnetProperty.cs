@@ -5,10 +5,10 @@ using System.IO.BACnet;
 using Utilities;
 using System.ComponentModel;
 
-using HSPI_SIID.BACnet.Model;   //namespaces got screwed up by arranging things into folders...
+using HSPI_Utilities_Plugin.BACnet.Model;   //namespaces got screwed up by arranging things into folders...
 
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     [DataContract]
     public class BACnetProperty

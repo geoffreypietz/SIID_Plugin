@@ -1,12 +1,12 @@
 ﻿using HomeSeerAPI;
-using HSPI_SIID.General;
+using HSPI_Utilities_Plugin.General;
 using Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Web;
 
-namespace HSPI_SIID.ScratchPad
+namespace HSPI_Utilities_Plugin.ScratchPad
 {
     public  class ScratchpadDevicePage : PageBuilderAndMenu.clsPageBuilder
     {

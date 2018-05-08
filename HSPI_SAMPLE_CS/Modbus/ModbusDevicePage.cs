@@ -8,9 +8,9 @@ using HomeSeerAPI;
 using Modbus.Device;
 using System.Net.Sockets;
 //using System.Data;
-using HSPI_SIID.General;
+using HSPI_Utilities_Plugin.General;
 
-namespace HSPI_SIID.Modbus
+namespace HSPI_Utilities_Plugin.Modbus
 {
 
 

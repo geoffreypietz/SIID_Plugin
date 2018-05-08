@@ -1,4 +1,4 @@
-﻿namespace HSPI_SIID.ScratchPad
+﻿namespace HSPI_Utilities_Plugin.ScratchPad
 {
     class ScratchpadDevice
     {

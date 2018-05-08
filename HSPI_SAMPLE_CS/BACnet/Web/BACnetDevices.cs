@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
-using HSPI_SIID.General;
+using HSPI_Utilities_Plugin.General;
 using Scheduler;
 using System.Web;
 using System.IO.BACnet;
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     public class BACnetDevices : PageBuilderAndMenu.clsPageBuilder
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
 
     static class Classes

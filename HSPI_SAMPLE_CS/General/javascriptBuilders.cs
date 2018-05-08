@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
     public class htmlBuilder //interface for the html buidling functions, to enable one to set the AJax destination
     {

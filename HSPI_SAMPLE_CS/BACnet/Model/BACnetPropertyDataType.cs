@@ -1,4 +1,4 @@
-﻿namespace HSPI_SIID.BACnet
+﻿namespace HSPI_Utilities_Plugin.BACnet
 {
 
     //each property contains one of these.

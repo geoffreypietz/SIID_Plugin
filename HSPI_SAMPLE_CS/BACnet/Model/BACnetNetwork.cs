@@ -6,7 +6,7 @@ using System.IO.BACnet;
 using System.IO.BACnet.Storage;
 
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     [DataContract]
     public class BACnetNetwork : IBACnetTreeDataObject

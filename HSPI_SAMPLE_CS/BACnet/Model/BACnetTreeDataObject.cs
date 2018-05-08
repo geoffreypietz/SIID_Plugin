@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HSPI_SIID.BACnet
+namespace HSPI_Utilities_Plugin.BACnet
 {
     //maybe make this an interface instead.
     public interface IBACnetTreeDataObject

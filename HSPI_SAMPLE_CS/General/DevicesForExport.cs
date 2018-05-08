@@ -1,14 +1,14 @@
-﻿using HSPI_SIID.BACnet;
-using HSPI_SIID.General;
-using HSPI_SIID.ScratchPad;
-using HSPI_SIID.Modbus;
+﻿using HSPI_Utilities_Plugin.BACnet;
+using HSPI_Utilities_Plugin.General;
+using HSPI_Utilities_Plugin.ScratchPad;
+using HSPI_Utilities_Plugin.Modbus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
 
-namespace HSPI_SIID
+namespace HSPI_Utilities_Plugin
 {
 
     public class HomeSeerDevice

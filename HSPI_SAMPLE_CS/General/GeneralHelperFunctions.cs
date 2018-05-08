@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using SoftCircuits;
 
-namespace HSPI_SIID.General
+namespace HSPI_Utilities_Plugin.General
 {
     class GeneralHelperFunctions
     {
