@@ -1642,7 +1642,7 @@ $('#showTier_" + ID + @"').change(TierChange); //OK HERE
 
             catch (Exception ex)
             {
-                Instance.hspi.Log("Error building SIID page: " + ex.Message, 2);
+                Instance.hspi.Log("Error building Utilities page: " + ex.Message, 2);
                 stb.Append("Test page error: " + ex.Message);
             }
             stb.Append("<br>");

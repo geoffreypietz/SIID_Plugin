@@ -573,7 +573,7 @@ public string GetReg(string instring)
             //Rest are 16 bit stuff and every mutiple of 16 is number of registers to read
             ModbusConfHtml.add("Return Type: ", ModbusBuilder.selectorInput(RetTypeArray, dv + "_ReturnType", "RegisterType", Convert.ToInt32(parts["ReturnType"])).print());
                         ModbusConfHtml.add("Signed Value: ", ModbusBuilder.checkBoxInput(dv + "_SignedValue", Boolean.Parse(parts["SignedValue"])).print());
-                        ModbusConfHtml.add(" Calculator: ", "<div style: 'display:inline;'><div style = 'float:left;'> "+ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"].Replace("(^p^)", "+")).print() + "</div><div style='float:left;' id='HelpText'>$(DeviceID) is the raw value for the homeseer device with ID DeviceID. #(DeviceID) is the value resulting from the device's calculator. Any SIID device's value can be called here.</div>");
+                        ModbusConfHtml.add(" Calculator: ", "<div style: 'display:inline;'><div style = 'float:left;'> "+ModbusBuilder.stringInput(dv + "_ScratchpadString", parts["ScratchpadString"].Replace("(^p^)", "+")).print() + "</div><div style='float:left;' id='HelpText'>$(DeviceID) is the raw value for the homeseer device with ID DeviceID. #(DeviceID) is the value resulting from the device's calculator. Any Utilities plugin's device's value can be called here.</div>");
                         ModbusConfHtml.add("Display Format: ", ModbusBuilder.stringInput(dv + "_DisplayFormatString", parts["DisplayFormatString"]).print());
                         ModbusConfHtml.add("Read Only Device: ", ModbusBuilder.checkBoxInput(dv + "_ReadOnlyDevice", Boolean.Parse(parts["ReadOnlyDevice"])).print());
 
