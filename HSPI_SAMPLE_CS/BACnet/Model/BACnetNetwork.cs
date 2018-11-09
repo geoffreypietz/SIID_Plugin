@@ -190,7 +190,7 @@ namespace HSPI_Utilities_Plugin.BACnet
             catch (Exception ex)
             {
                 Console.WriteLine("Error getting devices:" + ex.Message + "\n" + ex.StackTrace);
-                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                Instance.hspi.Log("BACnetDevice Exception in GetDevices " + ex.Message, 2);
 
                 //m_devices.Remove(bacnetClient);
                 //node.Remove();
@@ -258,7 +258,7 @@ namespace HSPI_Utilities_Plugin.BACnet
                 }
                 catch (Exception ex)
                 {
-                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                    Instance.hspi.Log("BACnetDevice Exception in OnReadPropertyRequest " + ex.Message, 2);
                     sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                 }
             }
@@ -292,7 +292,7 @@ namespace HSPI_Utilities_Plugin.BACnet
                 }
                 catch (Exception ex)
                 {
-                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                    Instance.hspi.Log("BACnetDevice Exception in OnReadPropertyMultipleRequest " + ex.Message, 2);
                     sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                 }
             }

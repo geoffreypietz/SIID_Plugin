@@ -312,38 +312,7 @@ namespace HSPI_Utilities_Plugin.BACnet
 
 
 
-        //not used anymore...
-        private IList<BacnetValue> FetchStructuredObjects()
-        {
-            IList<BacnetValue> ret;
-            var comm = BacnetNetwork.BacnetClient;
-            int old_reties = comm.Retries;
-
-
-            //TODO: replace InstanceNumber with thing from required properties...
-
-            try
-            {
-                comm.Retries = 1;       //only do 1 retry
-                if (!comm.ReadPropertyRequest(BacnetAddress, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, InstanceNumber), BacnetPropertyIds.PROP_STRUCTURED_OBJECT_LIST, out ret))
-                {
-                    //Trace.TraceInformation("Didn't get response from 'Structured Object List'");
-                    return null;
-                }
-                return ret == null || ret.Count == 0 ? null : ret;
-            }
-            catch (Exception E)
-            {
-                Instance.hspi.Log("BACnetDevice Exception " + E.Message, 2);
-                //Trace.TraceInformation("Got exception from 'Structured Object List'");
-                return null;
-            }
-            finally
-            {
-                comm.Retries = old_reties;
-            }
-        }
-
+      
 
         private IList<BacnetValue> FetchObjects()
         {
@@ -360,7 +329,7 @@ namespace HSPI_Utilities_Plugin.BACnet
             catch (Exception E)
             {
                 //Trace.TraceWarning("Got exception from 'Object List'");
-                Instance.hspi.Log("BACnetDevice Exception " + E.Message, 2);
+                Instance.hspi.Log("BACnetDevice Exception in FetchObjects " + E.Message, 2);
                 value_list = null;
             }
 
@@ -457,7 +426,7 @@ namespace HSPI_Utilities_Plugin.BACnet
                 }
                 catch (Exception ex)
                 {
-                Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                Instance.hspi.Log("BACnetDevice Exception in AddObjectListOneByOne " + ex.Message, 2);
                 //MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 //return;
             }
@@ -509,7 +478,7 @@ namespace HSPI_Utilities_Plugin.BACnet
                 }
                 catch (Exception ex)
                 {
-                    Instance.hspi.Log("BACnetDevice Exception " + ex.Message, 2);
+                    Instance.hspi.Log("BACnetDevice Exception in AddObjectListOneByOneAsync " + ex.Message, 2);
                     //MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
