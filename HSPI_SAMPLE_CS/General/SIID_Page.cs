@@ -951,13 +951,23 @@ namespace HSPI_Utilities_Plugin
 
                 if (!PluginTimerDictionary.ContainsKey(Siid.Ref))
                 {
+                    int val = 0;
+                    try
+                    {
+                        val = Convert.ToInt32(parts["Poll"]);
+                    }
+                    catch { }
+                    int PollVal = Math.Max(val, 10000);
 
-                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 10000, Convert.ToInt32(parts["Poll"]));
+                        System.Threading.Timer GateTimer = new System.Threading.Timer(Instance.modPage.PollActiveFromGate, Siid, 10000,val );
                         Console.WriteLine("Starting Polling timer for gateway: " + Siid.Ref);
                     Instance.hspi.Log("Starting Polling timer for gateway: " + Siid.Ref, 0);
                     PluginTimerDictionary.Add(Siid.Ref, GateTimer);
                 }
+                
             }
+
+          
 
             
         }

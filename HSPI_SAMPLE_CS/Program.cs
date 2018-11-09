@@ -242,79 +242,79 @@ namespace HSPI_Utilities_Plugin
                     int Count = 0;
                     do
                     {
-                        System.Threading.Thread.Sleep(1000);
-                        Count = (Count + 1) % 60;
-                        if (Count == 0)
-                        {
-                            foreach (var Instance in AllInstances)
-                            {
-                                Instance.Value.hspi.Log("Saving devices for Instance "+Instance.Key, 0);
-                                Instance.Value.host.SaveEventsDevices();
-                            }
-                        }
-                       
-                    } while (client.CommunicationState == HSCF.Communication.Scs.Communication.CommunicationStates.Connected & !HSPI.bShutDown);
-                    Console.WriteLine("Connection lost, exiting");
+                     System.Threading.Thread.Sleep(1000);
+                        /*     Count = (Count + 1) % (60*5);//save every 5 minutes, not every minute   
+                          if (Count == 0)
+                          {
+                              foreach (var Instance in AllInstances)
+                              {
+                                  Instance.Value.hspi.Log("Saving devices for Instance "+Instance.Key, 0);
+                                  Instance.Value.host.SaveEventsDevices();  //THis function doesn't save plugin created devices, so not necessary to call
+                              }
+                          }*/
 
-                    // disconnect from server for good here
-                    // 
-                    // clientCallback.Disconnect();
-                    //wait(2);
-                    if (AllInstances.Count == 0)
-                    {
-                        client.Disconnect();
-                        wait(2);
-                        System.Environment.Exit(0);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Cannot connect(2): " + ex.Message);
-                    wait(2);
-                    System.Environment.Exit(0);
-                    return;
-                }
-            }
+                      } while (client.CommunicationState == HSCF.Communication.Scs.Communication.CommunicationStates.Connected & !HSPI.bShutDown);
+                      Console.WriteLine("Connection lost, exiting");
 
-        }
+                      // disconnect from server for good here
+                      // 
+                      // clientCallback.Disconnect();
+                      //wait(2);
+                      if (AllInstances.Count == 0)
+                      {
+                          client.Disconnect();
+                          wait(2);
+                          System.Environment.Exit(0);
+                      }
+                  }
+                  catch (Exception ex)
+                  {
+                      Console.WriteLine("Cannot connect(2): " + ex.Message);
+                      wait(2);
+                      System.Environment.Exit(0);
+                      return;
+                  }
+              }
 
-
+          }
 
 
 
 
-        public static void Main(string[] args) //To start a new instance, run command ...plugIn.exe instance=InstanceName
-        {
-            //BACnetGlobalNetwork.Discover();
-
-            //return;
-/*
-            try
-            {
-                //check the /bin/HSPI_SIID directory for a file called flag.flag
-                //if that file does not exist then create it, and check to see if the SIID, plugins is installed correctly
-                //check to make sure the .config file is correct, fix it if not
-                string basePath = Path.Combine("bin", "HSPI_SIID"); 
-             if(!File.Exists(Path.Combine(basePath,"flag.flag"))){
-                    
-                    File.Create((Path.Combine(basePath, "flag.flag")));
-                    Directory.Delete("js");
-                    String[] FileList = new String[] { "ADODB.dll", "CalendarView.dll", "FireBase.dll", "HSPI_SIID.application", "HSPI_SIID.exe.manifest", "HSPI_SIID.pdb", "Newtonsoft.Json.dll", "NModbus4.dll", "NModbus4.xml", "PacketDotNet.dll", "ReadSinglePropDescr.xml", "ReadSinglePropDescrDefault.xml", "RestSharp.dll", "SharpPcap.dll", "System.Reactive.Core.dll", "System.Reactive.Interfaces.dll", "System.Reactive.Linq.dll", "System.Reactive.PlatformServices.dll", "System.Reactive.Windows.Threading.dll", "Yabe.exe", "Yabe.pdb" };
-                    foreach (var file in FileList)
-                    {
-                        File.Delete(file);
-                    }
-
-                    //Need to modify HSPI_SIID.exe.conf and other configs to include the new paths. THis is bad design btw
-                }
 
 
-            }
-            catch
-            {
-            }*/
+          public static void Main(string[] args) //To start a new instance, run command ...plugIn.exe instance=InstanceName
+          {
+              //BACnetGlobalNetwork.Discover();
 
-            string sIp = "127.0.0.1";
+              //return;
+  /*
+              try
+              {
+                  //check the /bin/HSPI_SIID directory for a file called flag.flag
+                  //if that file does not exist then create it, and check to see if the SIID, plugins is installed correctly
+                  //check to make sure the .config file is correct, fix it if not
+                  string basePath = Path.Combine("bin", "HSPI_SIID"); 
+               if(!File.Exists(Path.Combine(basePath,"flag.flag"))){
+
+                      File.Create((Path.Combine(basePath, "flag.flag")));
+                      Directory.Delete("js");
+                      String[] FileList = new String[] { "ADODB.dll", "CalendarView.dll", "FireBase.dll", "HSPI_SIID.application", "HSPI_SIID.exe.manifest", "HSPI_SIID.pdb", "Newtonsoft.Json.dll", "NModbus4.dll", "NModbus4.xml", "PacketDotNet.dll", "ReadSinglePropDescr.xml", "ReadSinglePropDescrDefault.xml", "RestSharp.dll", "SharpPcap.dll", "System.Reactive.Core.dll", "System.Reactive.Interfaces.dll", "System.Reactive.Linq.dll", "System.Reactive.PlatformServices.dll", "System.Reactive.Windows.Threading.dll", "Yabe.exe", "Yabe.pdb" };
+                      foreach (var file in FileList)
+                      {
+                          File.Delete(file);
+                      }
+
+                      //Need to modify HSPI_SIID.exe.conf and other configs to include the new paths. THis is bad design btw
+                  }
+
+
+              }
+              catch
+              {
+              }*/
+
+                        string sIp = "127.0.0.1";
             string Instance = "";
             string sCmd = null;
             foreach (string sCmd_loopVariable in args)

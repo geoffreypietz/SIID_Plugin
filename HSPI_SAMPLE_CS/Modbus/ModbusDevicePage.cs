@@ -439,6 +439,18 @@ public string GetReg(string instring)
             return page.BuildPage();
         }
 
+        private int safeInt(String input) {
+
+
+            int val = 0;
+            try
+            {
+                val = Convert.ToInt32(input);
+            }
+            catch { }
+            return val;
+        }
+
         public string BuildModbusGatewayTab(int dv1)
         {//Need to pull from device associated modbus information. Need to create when new device is made
            var NewDevice = SiidDevice.GetFromListByID(Instance.Devices, dv1);
@@ -498,25 +510,25 @@ public string GetReg(string instring)
                 Instance.hspi.Log("Problem building Modbus Gateway page " + E.Message, 1);
             }
 
-          
-           
+
+        
 
             StringBuilder stb = new StringBuilder();
             htmlBuilder ModbusBuilder = new htmlBuilder("ModBusGateTab" + Instance.ajaxName);
             htmlTable ModbusConfHtml = ModbusBuilder.htmlTable();
             ModbusConfHtml.addT("Gateway Settings");
             ModbusConfHtml.add("Modbus Gateway hostname or IP address: ", ModbusBuilder.stringInput(dv+"_Gateway", parts["Gateway"]).print());
-            ModbusConfHtml.add("TCP Port:", ModbusBuilder.numberInput(dv+"_TCP", Int32.Parse(parts["TCP"])).print());
-            ModbusConfHtml.add("Poll Interval:", ModbusBuilder.numberInput(dv+"_Poll", Int32.Parse(parts["Poll"])).print());
+            ModbusConfHtml.add("TCP Port:", ModbusBuilder.numberInput(dv+"_TCP",safeInt(parts["TCP"])).print());
+            ModbusConfHtml.add("Poll Interval:", ModbusBuilder.numberInput(dv+"_Poll",safeInt(parts["Poll"])).print());
             ModbusConfHtml.add("Gateway Enabled:", ModbusBuilder.checkBoxInput(dv+"_Enabled", Enabled).print());
             ModbusConfHtml.addT("Advanced Settings");
             ModbusConfHtml.add("Reverse Register word order:", ModbusBuilder.checkBoxInput(dv+"_BigE",RevOrd).print());
             ModbusConfHtml.add("Reverse word byte order:", ModbusBuilder.checkBoxInput(dv + "_RevByte", RevByt).print());
             ModbusConfHtml.add("Zero-based Addressing:", ModbusBuilder.checkBoxInput(dv+"_ZeroB", ZeroByt).print());
-            ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry", Int32.Parse(parts["RWRetry"])).print());
-            ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime", Int32.Parse(parts["RWTime"])).print());
-            ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay", Int32.Parse(parts["Delay"])).print());
-        //    ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" }, Int32.Parse(parts["RegWrite"])).print());
+            ModbusConfHtml.add("Read/Write Retries:", ModbusBuilder.numberInput(dv+"_RWRetry",safeInt(parts["RWRetry"])).print());
+            ModbusConfHtml.add("Read/Write Timeout (ms):", ModbusBuilder.numberInput(dv+"_RWTime",safeInt(parts["RWTime"])).print());
+            ModbusConfHtml.add("Delay between each address poll (ms):", ModbusBuilder.numberInput(dv+"_Delay",safeInt(parts["Delay"])).print());
+        //    ModbusConfHtml.add("Register Write Function:", ModbusBuilder.radioButton(dv + "_RegWrite", new string[] { "Write Single Register", "Write Multiple Registers" },safeInt(parts["RegWrite"])).print());
             stb.Append(ModbusConfHtml.print());
         //    stb.Append(ModbusBuilder.button(dv + "_Done", "Done").print());
             stb.Append("<br><br>"+ModbusBuilder.ShowMesbutton(dv + "_Test", "Test").print());
@@ -733,7 +745,13 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             if(partID== "Poll")
             {
                 //Update timer dictionary
-                int PollVal = Math.Max(Convert.ToInt32(changed["value"]), 10000);
+                int val = 0;
+                try
+                {
+                    val = Convert.ToInt32(changed["value"]);
+                }
+                catch { }
+                int PollVal = Math.Max(val, 10000);
                 if (SIID_Page.PluginTimerDictionary.ContainsKey(devId)){
                     SIID_Page.PluginTimerDictionary[devId].Change(0, PollVal);
                 }
@@ -806,7 +824,7 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             //First, check if device even exits
         
             SiidDevice Gate =(SiidDevice)RawID;
-            if (WhoIsBeingPolled.Contains(Gate.Ref.ToString())){
+            if (WhoIsBeingPolled.Contains(Gate.Ref.ToString())    ){
                 return;
 
             }
@@ -820,15 +838,19 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
                 Scheduler.Classes.DeviceClass Gateway = null;
                 try
                 {
-                    Gate.Device.get_Ref(Instance.host);
-                    Gateway = Gate.Device;
+                    var RRE= Gate.Device.get_Ref(Instance.host);
+                        Gateway  = (Scheduler.Classes.DeviceClass)Instance.host.GetDeviceByRef(RRE);
+                        Gate.Device= Gateway;
 
                 }
                 catch
                 {//If gateway doesn't exist, we need to stop this timer and remove it from our timer dictionary.
-                    SIID_Page.PluginTimerDictionary[Gate.Ref].Dispose();
-                    SIID_Page.PluginTimerDictionary.Remove(Gate.Ref);
-
+                        try
+                        {
+                            SIID_Page.PluginTimerDictionary[Gate.Ref].Dispose();
+                            SIID_Page.PluginTimerDictionary.Remove(Gate.Ref);
+                        }
+                        catch { }
 
                 }
                 if (Gateway != null)

@@ -69,7 +69,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HomeSeerAPI">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HomeSeerAPI.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HomeSeerAPI.dll</HintPath>
     </Reference>
     <Reference Include="HSCF">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\HomeSeer HS3\HSCF.dll</HintPath>
