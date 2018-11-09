@@ -1093,23 +1093,28 @@ namespace System.IO.BACnet
         public void EndWriteFileRequest(IAsyncResult result, out int position, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-                //decode
-                bool is_stream;
-                if (Services.DecodeAtomicWriteFileAcknowledge(res.Result, 0, res.Result.Length, out is_stream, out position) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                position = -1;
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                    //decode
+                    bool is_stream;
+                    if (Services.DecodeAtomicWriteFileAcknowledge(res.Result, 0, res.Result.Length, out is_stream, out position) < 0)
+                        ex = new Exception("Decode");
+                }
+                else
+                {
+                    position = -1;
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         public IAsyncResult BeginReadFileRequest(BacnetAddress adr, BacnetObjectId object_id, int position, uint count, bool wait_for_transmit, byte invoke_id = 0)
@@ -1133,27 +1138,33 @@ namespace System.IO.BACnet
         public void EndReadFileRequest(IAsyncResult result, out uint count, out int position, out bool end_of_file, out byte[] file_buffer, out int file_buffer_offset, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-                //decode
-                bool is_stream;
-                if (Services.DecodeAtomicReadFileAcknowledge(res.Result, 0, res.Result.Length, out end_of_file, out is_stream, out position, out count, out file_buffer, out file_buffer_offset) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                count = 0;
-                end_of_file = true;
-                position = -1;
-                file_buffer_offset = -1;
-                file_buffer = new byte[0];
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                    //decode
+                    bool is_stream;
+                    if (Services.DecodeAtomicReadFileAcknowledge(res.Result, 0, res.Result.Length, out end_of_file, out is_stream, out position, out count, out file_buffer, out file_buffer_offset) < 0)
+                        ex = new Exception("Decode");
+                }
+                else
+                {
+                    count = 0;
+                    end_of_file = true;
+                    position = -1;
+                    file_buffer_offset = -1;
+                    file_buffer = new byte[0];
+                }
+            }
+            finally
+            {
+
+                res.Dispose();
+            }
         }
 
         public bool ReadFileRequest(BacnetAddress adr, BacnetObjectId object_id, ref int position, ref uint count, out bool end_of_file, out byte[] file_buffer, out int file_buffer_offset, byte invoke_id = 0)
@@ -1204,21 +1215,27 @@ namespace System.IO.BACnet
         public void EndReadRangeRequest(IAsyncResult result, out byte[] trendbuffer, out uint ItemCount, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ItemCount = 0;
-            trendbuffer = null;
-
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(40*1000))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-                ItemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
-                if (ItemCount == 0)
-                    ex = new Exception("Decode");
-            }
+                ItemCount = 0;
+                trendbuffer = null;
 
-            res.Dispose();
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(40 * 1000))
+                    ex = new Exception("Wait Timeout");
+
+                if (ex == null)
+                {
+                    ItemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
+                    if (ItemCount == 0)
+                        ex = new Exception("Decode");
+                }
+            }
+            finally
+            {
+
+                res.Dispose();
+            }
         }
 
         // Fc
@@ -1283,20 +1300,25 @@ namespace System.IO.BACnet
         public void EndSubscribeCOVRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
+                if (ex == null)
+                {
+
+                }
+                else
+                {
+
+                }
             }
-            else
+            finally
             {
-
+                res.Dispose();
             }
-
-            res.Dispose();
         }
 
         public bool SubscribePropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyReference monitored_property, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, byte invoke_id = 0)
@@ -1339,20 +1361,26 @@ namespace System.IO.BACnet
         public void EndSubscribePropertyRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
+            try
+            {
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            if (ex == null)
+                if (ex == null)
+                {
+
+                }
+                else
+                {
+
+                }
+            }
+            finally
             {
 
+                res.Dispose();
             }
-            else
-            {
-
-            }
-
-            res.Dispose();
         }
 
         public bool ReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, out IList<BacnetValue> value_list, byte invoke_id = 0, uint array_index = ASN1.BACNET_ARRAY_ALL)
@@ -1395,25 +1423,33 @@ namespace System.IO.BACnet
 
         public void EndReadPropertyRequest(IAsyncResult result, out IList<BacnetValue> value_list, out Exception ex)
         {
-            BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+           
+                BacnetAsyncResult res = (BacnetAsyncResult)result;
+            try
             {
-                //decode
-                BacnetObjectId response_object_id;
-                BacnetPropertyReference response_property;
-                if (Services.DecodeReadPropertyAcknowledge(res.Result, 0, res.Result.Length, out response_object_id, out response_property, out value_list) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                value_list = null;
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                    //decode
+                    BacnetObjectId response_object_id;
+                    BacnetPropertyReference response_property;
+                    if (Services.DecodeReadPropertyAcknowledge(res.Result, 0, res.Result.Length, out response_object_id, out response_property, out value_list) < 0)
+                        ex = new Exception("Decode");
+                }
+                else
+                {
+                    value_list = null;
+                }
+
+               
+            }
+            finally
+            { //Dispose never reached?
+                res.Dispose();
+            }
         }
 
         public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, IEnumerable<BacnetValue> value_list, byte invoke_id = 0)
@@ -1497,18 +1533,23 @@ namespace System.IO.BACnet
         public void EndWritePropertyRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         // By Chritopher Günter : Write multiple properties on multiple objects
@@ -1632,22 +1673,28 @@ namespace System.IO.BACnet
         public void EndReadPropertyMultipleRequest(IAsyncResult result, out IList<BacnetReadAccessResult> values, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-                //decode
-                if (Services.DecodeReadPropertyMultipleAcknowledge(res.Result, 0, res.Result.Length, out values) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                values = null;
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                    //decode
+                    if (Services.DecodeReadPropertyMultipleAcknowledge(res.Result, 0, res.Result.Length, out values) < 0)
+                        ex = new Exception("Decode");
+                }
+                else
+                {
+                    values = null;
+                }
+            }
+            finally
+            {
+
+                res.Dispose();
+            }
         }
 
         //*********************************************************************************
@@ -1697,18 +1744,23 @@ namespace System.IO.BACnet
         public void EndCreateObjectRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         //***************************************************************************************************
@@ -1759,18 +1811,23 @@ namespace System.IO.BACnet
         public void EndDeleteObjectRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
         //*************************************************************
 
@@ -1856,18 +1913,23 @@ namespace System.IO.BACnet
         public void EndAddListElementRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         // Fc
@@ -1921,42 +1983,47 @@ namespace System.IO.BACnet
         public void EndRawEncodedDecodedPropertyConfirmedRequest(IAsyncResult result, BacnetConfirmedServices service_id, out byte[] InOutBuffer, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            InOutBuffer = null;
-
-            if (ex == null)
+            try
             {
-                if (service_id == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY)
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
+
+                InOutBuffer = null;
+
+                if (ex == null)
                 {
-                    //decode
-                    BacnetObjectId response_object_id;
-                    BacnetPropertyReference response_property;
-                    int offset = 0; int len = 0;
-                    byte[] buffer = res.Result; byte tag_number; uint len_value_type;
+                    if (service_id == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY)
+                    {
+                        //decode
+                        BacnetObjectId response_object_id;
+                        BacnetPropertyReference response_property;
+                        int offset = 0; int len = 0;
+                        byte[] buffer = res.Result; byte tag_number; uint len_value_type;
 
-                    ex = new Exception("Decode");
+                        ex = new Exception("Decode");
 
-                    if (!ASN1.decode_is_context_tag(buffer, offset, 0))
-                        return;
-                    len = 1;
-                    len += ASN1.decode_object_id(buffer, offset + len, out response_object_id.type, out response_object_id.instance);
-                    /* Tag 1: Property ID */
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
-                    if (tag_number != 1)
-                        return;
-                    len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out response_property.propertyIdentifier);
+                        if (!ASN1.decode_is_context_tag(buffer, offset, 0))
+                            return;
+                        len = 1;
+                        len += ASN1.decode_object_id(buffer, offset + len, out response_object_id.type, out response_object_id.instance);
+                        /* Tag 1: Property ID */
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        if (tag_number != 1)
+                            return;
+                        len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out response_property.propertyIdentifier);
 
-                    InOutBuffer = new byte[buffer.Length - len];
-                    Array.Copy(buffer, len, InOutBuffer, 0, InOutBuffer.Length);
+                        InOutBuffer = new byte[buffer.Length - len];
+                        Array.Copy(buffer, len, InOutBuffer, 0, InOutBuffer.Length);
 
-                    ex = null;
+                        ex = null;
+                    }
                 }
             }
-
-            res.Dispose();
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         public bool DeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enable_disable, string password, byte invoke_id = 0)
@@ -1999,18 +2066,23 @@ namespace System.IO.BACnet
         public void EndDeviceCommunicationControlRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {   
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         // FChaxel
@@ -2069,21 +2141,26 @@ namespace System.IO.BACnet
         {
             MoreEvent = false;
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-                if (Services.DecodeAlarmSummaryOrEvent(res.Result, 0, res.Result.Length, GetEvent, ref Alarms, out MoreEvent) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                ex = new Exception("Service not available");
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                    if (Services.DecodeAlarmSummaryOrEvent(res.Result, 0, res.Result.Length, GetEvent, ref Alarms, out MoreEvent) < 0)
+                        ex = new Exception("Decode");
+                }
+                else
+                {
+                    ex = new Exception("Service not available");
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
 
@@ -2180,18 +2257,23 @@ namespace System.IO.BACnet
         public void EndReinitializeRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(m_timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            try
             {
-            }
-            else
-            {
-            }
+                ex = res.Error;
+                if (ex == null && !res.WaitForDone(m_timeout))
+                    ex = new Exception("Wait Timeout");
 
-            res.Dispose();
+                if (ex == null)
+                {
+                }
+                else
+                {
+                }
+            }
+            finally
+            {
+                res.Dispose();
+            }
         }
 
         public IAsyncResult BeginConfirmedNotify(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IList<BacnetPropertyValue> values, bool wait_for_transmit, byte invoke_id = 0)
