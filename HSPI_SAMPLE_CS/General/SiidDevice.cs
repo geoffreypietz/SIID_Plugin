@@ -72,6 +72,37 @@ namespace HSPI_Utilities_Plugin.General
             }
             I.Devices = UpdatedDevs;
         }
+        public void LoadExtraData()
+        {
+            var parts = HttpUtility.ParseQueryString(Device.get_PlugExtraData_Get(Instance.host).GetNamed("SSIDKey").ToString());
+            Extra.RemoveNamed("SSIDKey");
+            Extra.AddNamed("SSIDKey", parts.ToString());
+
+        }
+
+        public void UpdateExtraDataNoCall(string key, string value)
+        {
+
+            var parts = HttpUtility.ParseQueryString(Extra.GetNamed("SSIDKey").ToString());
+            value = value.Replace("+", "(^p^)"); //OK clearly + and 2B are all sorts of messed up
+
+            //I think the parts.ToString() is setting + and %2B to %20 which is a white space, which is really obnoxious
+            //(Only on homeseer boxes)
+            //My workaround is to replace all "+" with "(^p^)", and replace those back later
+            parts[key] = value;
+            Extra.RemoveNamed("SSIDKey");
+            Extra.AddNamed("SSIDKey", parts.ToString());
+            // Instance.hspi.Log("Set " + key + " + " + value,0);
+        //    Device.set_PlugExtraData_Set(Instance.host, Extra);
+
+
+        }
+        public void SaveExtraData()
+        {
+            Device.set_PlugExtraData_Set(Instance.host, Extra);
+
+        }
+
 
         public void UpdateExtraData(string key, string value)
         {
@@ -90,6 +121,7 @@ namespace HSPI_Utilities_Plugin.General
             
 
         }
+       
     
 
 

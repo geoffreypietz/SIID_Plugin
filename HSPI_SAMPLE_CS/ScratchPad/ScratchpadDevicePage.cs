@@ -357,7 +357,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
              
 
-                Rule.UpdateExtraData("NewValue", "" + CalculatedString.ToString());
+               
              
                 if (bool.Parse(parts["IsAccumulator"]))
                 {
@@ -365,9 +365,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
                 }
 
-
-
-                Rule.UpdateExtraData("RawValue", "" + CalculatedString); //Raw value is before rate
+ //Raw value is before rate
                 //So to get the pre-rate value from another scratchpad rule do $(ruleID)
                 //To get the post rate value do #(ruleID)
 
@@ -410,11 +408,11 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                 {
                     Instance.hspi.Log("Problem rendering scratchpad rule " + e.Message, 2);
                 }
-               
-              
-              //processed value is after rate  
-                Rule.UpdateExtraData("ProcessedValue", ""+CalculatedString);
-                Rule.UpdateExtraData("CurrentTime", "" + DateTime.Now.ToString());
+
+
+                //processed value is after rate  
+
+        
 
                 //If the reset time was too soon, set CalculatedString to be 0
 
@@ -430,8 +428,14 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
                 Instance.host.SetDeviceString(Rule.Ref, ValueString, true);
                 Instance.host.SetDeviceValueByRef(Rule.Ref, CalculatedString, true);
-                Rule.UpdateExtraData("DisplayedValue", "" + ValueString);
 
+                Rule.LoadExtraData();
+                Rule.UpdateExtraDataNoCall("NewValue", "" + CalculatedString.ToString());
+                Rule.UpdateExtraDataNoCall("RawValue", "" + CalculatedString);
+                Rule.UpdateExtraDataNoCall("ProcessedValue", "" + CalculatedString);
+                Rule.UpdateExtraDataNoCall("CurrentTime", "" + DateTime.Now.ToString());
+                Rule.UpdateExtraDataNoCall("DisplayedValue", "" + ValueString);
+                Rule.SaveExtraData();
 
                 // EDO.RemoveNamed("SSIDKey");
                 //  EDO.AddNamed("SSIDKey", parts.ToString());

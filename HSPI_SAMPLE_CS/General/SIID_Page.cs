@@ -931,7 +931,7 @@ namespace HSPI_Utilities_Plugin
         public void InitializeScratchpadTimer()
         {
 
-          ScratchTimer = new System.Threading.Timer(Instance.scrPage.DoScratchRules, true, 3000,3000);
+          ScratchTimer = new System.Threading.Timer(Instance.scrPage.DoScratchRules, true, 10000,10000);
 
         }
 
