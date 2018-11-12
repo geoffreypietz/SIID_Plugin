@@ -75,7 +75,9 @@ namespace HSPI_Utilities_Plugin.General
                     var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                     try
                     {
-                        string Rep = Tempparts["RawValue"];
+                        Double results = 0;
+                        Double.TryParse(Tempparts["RawValue"], out results);
+                        string Rep = results.ToString(".#####################################################################################################################################################################################################################################################################################################################################");
                         if (Rep == null)
                             throw new Exception();
                         FinalString.Replace("$(" + dv + ")", Rep);
@@ -84,7 +86,7 @@ namespace HSPI_Utilities_Plugin.General
                     {
                         try
                         {
-                            string Rep = Instance.host.DeviceValueEx(dv).ToString(); //Problem, device values return as int
+                            string Rep = Instance.host.DeviceValueEx(dv).ToString(".#####################################################################################################################################################################################################################################################################################################################################"); //Problem, device values return as int
                             if (Rep == null)
                                 throw new Exception();
                             FinalString.Replace("$(" + dv + ")", Rep);
@@ -103,6 +105,11 @@ namespace HSPI_Utilities_Plugin.General
                         string Rep = Instance.host.DeviceValueEx(dv).ToString(); //Fails for BACnet devices because the status does not reflect the displayed value
                         if (Rep == null)
                             throw new Exception();
+
+                        Double results = 0;
+                        Double.TryParse(Rep, out results);
+                         Rep = results.ToString(".#####################################################################################################################################################################################################################################################################################################################################");
+
                         FinalString.Replace("$(" + dv + ")", Rep); 
                     }
                     catch(Exception E)

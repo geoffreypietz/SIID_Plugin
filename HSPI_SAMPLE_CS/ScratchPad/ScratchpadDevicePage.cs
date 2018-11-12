@@ -418,7 +418,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
 
                
-                if (DateTime.Now.AddHours(-1).Subtract(DateTime.Parse(parts["DateOfLastReset"])).TotalSeconds < 45)  //If the reset was less than 45 seconds ago, display 0 as the scratchpad value
+                if (bool.Parse(parts["IsAccumulator"])&&DateTime.Now.AddHours(-1).Subtract(DateTime.Parse(parts["DateOfLastReset"])).TotalSeconds < 45)  //If the reset was less than 45 seconds ago, display 0 as the scratchpad value
                 {
                    
                     CalculatedString = 0;
