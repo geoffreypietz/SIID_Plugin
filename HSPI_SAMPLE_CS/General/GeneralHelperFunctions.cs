@@ -75,6 +75,8 @@ namespace HSPI_Utilities_Plugin.General
                     var Tempparts = HttpUtility.ParseQueryString(TempEDO.GetNamed("SSIDKey").ToString());
                     try
                     {
+
+                     
                         Double results = 0;
                         Double.TryParse(Tempparts["RawValue"], out results);
                         string Rep = results.ToString("0.#####################################################################################################################################################################################################################################################################################################################################");

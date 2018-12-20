@@ -1184,6 +1184,9 @@ $('#" + dv + @"_RegisterAddress').change(UpdateTrue);
             {
                 if (int.Parse(parts["ReturnType"]) > 5 || int.Parse(parts["ReturnType"]) ==0) //return is a string or a bool
                 {
+                    //final string is the number, but in this case we want to work with the raw string
+                    FinalString=new StringBuilder(parts["RawValue"]);
+
                     if (int.Parse(parts["ReturnType"]) == 0)//is bool check for bool controlls, make status that status
                     {
                         double val = 0;
