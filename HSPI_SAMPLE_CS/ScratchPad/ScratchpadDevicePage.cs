@@ -355,6 +355,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
                 double CalculatedString = CalculateString(RawNumberString);
 
+                double RatedString = 0;
              
 
                
@@ -381,7 +382,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                     String Name = Rule.Device.get_Name(Instance.host).ToLower();
                     if (Name.Contains("water") && Name.Contains("meter") && (Name.Contains("indoor") || Name.Contains("outdoor")))
                     {
-                        CalculatedString = TieredRate(CalculatedString, Rule);
+                        RatedString = TieredRate(CalculatedString, Rule);
                             
                           
                     }
@@ -397,8 +398,8 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
                         }
 
-                      
-                        CalculatedString = CalculatedString * Rate;
+
+                        RatedString = CalculatedString * Rate;
                     }
 
 
@@ -422,9 +423,10 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                 {
                    
                     CalculatedString = 0;
+                    RatedString = 0;
                 }
 
-                string ValueString = String.Format(parts["DisplayString"], CalculatedString);
+                string ValueString = String.Format(parts["DisplayString"], RatedString);
 
                 Instance.host.SetDeviceString(Rule.Ref, ValueString, true);
                 Instance.host.SetDeviceValueByRef(Rule.Ref, CalculatedString, true);
@@ -432,7 +434,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                 Rule.LoadExtraData();
                 Rule.UpdateExtraDataNoCall("NewValue", "" + CalculatedString.ToString());
                 Rule.UpdateExtraDataNoCall("RawValue", "" + CalculatedString);
-                Rule.UpdateExtraDataNoCall("ProcessedValue", "" + CalculatedString);
+                Rule.UpdateExtraDataNoCall("ProcessedValue", "" + RatedString);
                 Rule.UpdateExtraDataNoCall("CurrentTime", "" + DateTime.Now.ToString());
                 Rule.UpdateExtraDataNoCall("DisplayedValue", "" + ValueString);
                 Rule.SaveExtraData();
