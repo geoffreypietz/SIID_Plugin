@@ -398,11 +398,12 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
                         }
 
-
+                        //round calculated string and rated string to nearest hundreths place
                         RatedString = CalculatedString * Rate;
+                       
                     }
 
-
+             
 
                 }
                 catch (Exception e)
@@ -425,6 +426,9 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                     CalculatedString = 0;
                     RatedString = 0;
                 }
+
+                RatedString = Math.Round(RatedString * 1000) / 1000;
+                CalculatedString = Math.Round(CalculatedString * 1000) / 1000;
 
                 string ValueString = String.Format(parts["DisplayString"], RatedString);
 
