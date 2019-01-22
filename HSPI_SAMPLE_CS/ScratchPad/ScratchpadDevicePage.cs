@@ -353,16 +353,16 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                
                 //Do the calculator string parse to get the new value
                 string RawNumberString = GeneralHelperFunctions.GetValues(Instance,parts["ScratchPadString"]);
-                double CalculatedString = CalculateString(RawNumberString);
-
-                double RatedString = 0;
+                double RawCalculatedString = CalculateString(RawNumberString); //Raw meter read
+                double CalculatedString = 0; //difference betweenold and new values
+                double RatedString = 0; //difference multiplied by the rate
              
 
                
              
                 if (bool.Parse(parts["IsAccumulator"]))
                 {
-                    CalculatedString = CalculatedString - Double.Parse(parts["OldValue"]);
+                    CalculatedString = RawCalculatedString - Double.Parse(parts["OldValue"]);
 
                 }
 
@@ -429,6 +429,7 @@ namespace HSPI_Utilities_Plugin.ScratchPad
 
                 RatedString = Math.Round(RatedString * 1000) / 1000;
                 CalculatedString = Math.Round(CalculatedString * 1000) / 1000;
+                RawCalculatedString = Math.Round(RawCalculatedString * 1000) / 1000;
 
                 string ValueString = String.Format(parts["DisplayString"], RatedString);
 
@@ -436,11 +437,11 @@ namespace HSPI_Utilities_Plugin.ScratchPad
                 Instance.host.SetDeviceValueByRef(Rule.Ref, CalculatedString, true);
 
                 Rule.LoadExtraData();
-                Rule.UpdateExtraDataNoCall("NewValue", "" + CalculatedString.ToString());
-                Rule.UpdateExtraDataNoCall("RawValue", "" + CalculatedString);
-                Rule.UpdateExtraDataNoCall("ProcessedValue", "" + RatedString);
+                Rule.UpdateExtraDataNoCall("NewValue", "" + RawCalculatedString.ToString());  //Newest meter read
+                Rule.UpdateExtraDataNoCall("RawValue", "" + CalculatedString);  //Raw meter read for this month
+                Rule.UpdateExtraDataNoCall("ProcessedValue", "" + RatedString);  //Raw meter read multiplied by rate information
                 Rule.UpdateExtraDataNoCall("CurrentTime", "" + DateTime.Now.ToString());
-                Rule.UpdateExtraDataNoCall("DisplayedValue", "" + ValueString);
+                Rule.UpdateExtraDataNoCall("DisplayedValue", "" + ValueString);  //the ProcessedValue displayed on the meter
                 Rule.SaveExtraData();
 
                 // EDO.RemoveNamed("SSIDKey");
